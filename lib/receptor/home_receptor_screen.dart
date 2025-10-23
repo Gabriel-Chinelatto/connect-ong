@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/doador/cadastrar_doacao_screen.dart';
 import 'package:flutter_application_1/widgets/home_card.dart';
 import '../login_page.dart';
-import 'buscar_doador_screen.dart';
+import 'buscar_ong_screen.dart';
 import 'integrantes_projeto_screen.dart';
-import 'cadastrar_pedido_screen.dart';
+import 'cadastrar_ong_screen.dart';
 import '../widgets/descricao_screen.dart';
 
 class HomeReceptorScreen extends StatelessWidget {
@@ -68,7 +68,7 @@ class HomeReceptorScreen extends StatelessWidget {
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            'Bem-vindo, Receptor!',
+                            'Bem-vindo, Usuário(a)!',
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -97,23 +97,23 @@ class HomeReceptorScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     HomeCard(
                       icon: Icons.add,
-                      label: 'Cadastrar Pedido',
+                      label: 'Cadastrar ONG',
                       onTap:
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const CadastrarPedidoScreen(),
+                              builder: (_) => const CadastrarOngScreen(),
                             ),
                           ),
                     ),
                     HomeCard(
                       icon: Icons.search,
-                      label: 'Buscar Doador',
+                      label: 'Buscar ONG',
                       onTap:
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const BuscarDoadorScreen(),
+                              builder: (_) => const BuscarOngScreen(),
                             ),
                           ),
                     ),
