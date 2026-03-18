@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/ong.dart'; // Certifique-se de importar sua classe Ong
+import 'package:flutter_application_1/ong.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -12,14 +12,13 @@ class BuscarOngScreen extends StatefulWidget {
 
 class _BuscarOngScreenState extends State<BuscarOngScreen> {
   final TextEditingController _searchController = TextEditingController();
-  
+
   final List<Ong> _filteredOngs = [];
   bool _isLoading = false;
   bool _hasSearched = false;
 
-  // URL base da sua API
-  // LEMBRE-SE de ajustar para o seu IP correto
-  static const String _baseUrl = 'http://localhost:8080/ongs'; 
+  // 🔥 URL CORRIGIDA COM SEU IP
+  static const String _baseUrl = 'http://192.168.0.27:8080/ongs';
 
   @override
   void dispose() {
@@ -27,7 +26,6 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
     super.dispose();
   }
 
-  // Função para buscar ONGs na API (GET)
   Future<void> _fetchOngs() async {
     final query = _searchController.text.trim();
 
@@ -37,17 +35,15 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
     });
 
     try {
-      // Endpoint que busca todas ou permite filtrar por nome na API (assumindo que sua API suporta)
-      // Se sua API não suporta filtro, busque todas e filtre localmente
-      final url = query.isEmpty 
-          ? Uri.parse('$_baseUrl/buscar')
-          : Uri.parse('$_baseUrl/buscar?nome=$query'); // Exemplo de busca por nome (ajuste conforme sua API)
+      final url = query.isEmpty
+          ? Uri.parse(_baseUrl)
+          : Uri.parse('$_baseUrl?nome=$query');
 
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-        
+
         setState(() {
           _filteredOngs.clear();
           _filteredOngs.addAll(data.map((json) => Ong.fromJson(json)).toList());
@@ -73,7 +69,7 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
       );
     }
   }
-  
+
   Widget _buildOngTile(Ong ong) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -84,13 +80,13 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
           backgroundColor: Color(0xFF0A8449),
           child: Icon(Icons.handshake, color: Colors.white),
         ),
-        title: Text(ong.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(ong.nome,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Cidade: ${ong.cidade}'),
             Text('Email: ${ong.email}'),
-            // Text('Descrição: ${ong.descricao}', maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
         isThreeLine: true,
@@ -109,7 +105,6 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Campo de Busca
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -119,31 +114,36 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
                 ),
                 prefixIcon: const Icon(Icons.search),
               ),
-              onSubmitted: (_) => _fetchOngs(), // Permite buscar ao pressionar Enter
+              onSubmitted: (_) => _fetchOngs(),
             ),
             const SizedBox(height: 12),
-            // Botão de Pesquisa
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _fetchOngs, // Chama a função que busca na API
+                onPressed: _fetchOngs,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0A8449),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: _isLoading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Pesquisar ONGs', style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Text('Pesquisar ONGs',
+                        style:
+                            TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
             const SizedBox(height: 20),
-            
-            // Resultados da Busca
             Expanded(
               child: !_hasSearched && !_isLoading
                   ? const Center(
-                      child: Text('Use a barra de busca acima para encontrar ONGs.'),
+                      child: Text(
+                          'Use a barra de busca acima para encontrar ONGs.'),
                     )
                   : _isLoading
                       ? const Center(child: CircularProgressIndicator())
@@ -151,15 +151,18 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
                           ? Center(
                               child: Text(
                                 'Nenhuma ONG encontrada para "${_searchController.text}"',
-                                style: const TextStyle(fontSize: 18, color: Colors.grey),
+                                style: const TextStyle(
+                                    fontSize: 18, color: Colors.grey),
                                 textAlign: TextAlign.center,
                               ),
                             )
                           : ListView.separated(
                               itemCount: _filteredOngs.length,
-                              separatorBuilder: (_, __) => const Divider(),
+                              separatorBuilder: (_, __) =>
+                                  const Divider(),
                               itemBuilder: (context, index) {
-                                return _buildOngTile(_filteredOngs[index]);
+                                return _buildOngTile(
+                                    _filteredOngs[index]);
                               },
                             ),
             ),

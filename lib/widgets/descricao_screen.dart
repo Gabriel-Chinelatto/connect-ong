@@ -78,7 +78,7 @@ class DescricaoScreen extends StatelessWidget {
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '• Cadastro e busca de doações\n• Cadastro de doadores e receptores\n• Visualização de integrantes do projeto\n• Interface intuitiva e moderna',
+                    '• Cadastro e busca de doações\n• Cadastro de doadores e receptores \n• Cadastro de ONGs\n• Visualização de integrantes do projeto\n• Interface intuitiva e moderna',
                     style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                 ),

@@ -15,30 +15,33 @@ class CadastrarOngScreen extends StatefulWidget {
 class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Campos do formulário da ONG
   String? _nome;
   String? _email;
   String? _telefone;
   String? _cidade;
   String? _descricao;
-  
-  // Lista para armazenar as ONGs cadastradas
-  final List<Ong> _ongs = [];
-  
-  // URL base da sua API
-  // LEMBRE-SE de ajustar para o seu IP real (ex: http://10.0.2.2:8080 para emulador Android)
-  static const String _baseUrl = 'http://localhost:8080/ongs'; 
 
+  final List<Ong> _ongs = [];
+
+  // Para Flutter WEB (Chrome)
+static const String _baseUrl = 'http://localhost:8080/ongs';
+
+// Para celular físico
+// static const String _baseUrl = 'http://192.168.0.27:8080/ongs';
+
+// Para emulador Android
+// static const String _baseUrl = 'http://10.0.2.2:8080/ongs';q
   @override
   void initState() {
     super.initState();
     _fetchOngs();
   }
 
-  // Função para buscar ONGs (GET)
+  // ✅ GET
   Future<void> _fetchOngs() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/buscar'));
+      final response = await http.get(Uri.parse(_baseUrl));
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
@@ -46,20 +49,20 @@ class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
           _ongs.addAll(data.map((json) => Ong.fromJson(json)).toList());
         });
       } else {
-        _showSnackBar('Falha ao carregar ONGs: ${response.statusCode}');
+        _showSnackBar('Erro ao carregar: ${response.statusCode}');
       }
     } catch (e) {
       _showSnackBar('Erro de conexão: $e');
     }
   }
 
-  // Função para salvar a ONG (POST)
+  // ✅ POST
   Future<void> _saveOng() async {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
     _formKey.currentState?.save();
-    
+
     final newOng = Ong(
       nome: _nome!,
       email: _email!,
@@ -70,50 +73,45 @@ class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/criar'),
+        Uri.parse(_baseUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(newOng.toJson()),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final registeredOng = Ong.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
-        
-        setState(() {
-          _ongs.insert(0, registeredOng);
-          _formKey.currentState?.reset();
-          _nome = _email = _telefone = _cidade = _descricao = null;
-        });
+        _showSnackBar('ONG cadastrada!');
 
-        _showSnackBar('ONG cadastrada com sucesso!');
+        _formKey.currentState?.reset();
+        _nome = _email = _telefone = _cidade = _descricao = null;
+
+        await _fetchOngs(); // 🔥 Atualiza lista
       } else {
-        _showSnackBar('Falha ao cadastrar ONG: ${response.statusCode}');
+        _showSnackBar('Erro ao cadastrar: ${response.statusCode}');
       }
     } catch (e) {
-      _showSnackBar('Erro ao tentar conectar com a API: $e');
+      _showSnackBar('Erro de conexão: $e');
     }
   }
-  
-  // Função para deletar a ONG (DELETE)
+
+  // ✅ DELETE
   Future<void> _deleteOng(int id) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$_baseUrl/$id'),
-      );
+      final response = await http.delete(Uri.parse('$_baseUrl/$id'));
 
-      if (response.statusCode == 204) { // 204 No Content é o esperado para DELETE
+      if (response.statusCode == 204) {
         setState(() {
           _ongs.removeWhere((ong) => ong.id == id);
         });
-        _showSnackBar('ONG excluída com sucesso!');
+        _showSnackBar('ONG excluída!');
       } else {
-        _showSnackBar('Falha ao excluir ONG: ${response.statusCode}');
+        _showSnackBar('Erro ao excluir: ${response.statusCode}');
       }
     } catch (e) {
-      _showSnackBar('Erro ao conectar com a API: $e');
+      _showSnackBar('Erro de conexão: $e');
     }
   }
 
-  // Função para navegar e editar (chama a tela EditarOngScreen)
+  // ✅ EDIT
   void _startEditOng(Ong ong) async {
     final updatedOng = await Navigator.of(context).push(
       MaterialPageRoute(
@@ -121,16 +119,14 @@ class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
       ),
     );
 
-    // Verifica se a ONG foi atualizada e retornada
     if (updatedOng != null && updatedOng is Ong) {
       setState(() {
         final index = _ongs.indexWhere((o) => o.id == updatedOng.id);
         if (index >= 0) {
-          // Substitui a ONG antiga pela nova atualizada na lista local
           _ongs[index] = updatedOng;
         }
       });
-      _showSnackBar('ONG "${updatedOng.nome}" atualizada!');
+      _showSnackBar('Atualizada!');
     }
   }
 
@@ -152,7 +148,7 @@ class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Cadastrar ONG')),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Expanded(
@@ -163,61 +159,50 @@ class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
                     child: Column(
                       children: [
                         TextFormField(
-                          decoration: _inputDecoration('Nome da ONG'),
+                          decoration: _inputDecoration('Nome'),
                           onSaved: (val) => _nome = val,
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Informe o nome da ONG' : null,
+                          validator: (val) => val == null || val.isEmpty ? 'Informe o nome' : null,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
                         TextFormField(
                           decoration: _inputDecoration('Email'),
-                          keyboardType: TextInputType.emailAddress,
                           onSaved: (val) => _email = val,
-                          validator: (val) => val == null || !val.contains('@') ? 'Informe um email válido' : null,
+                          validator: (val) => val == null || !val.contains('@') ? 'Email inválido' : null,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
                         TextFormField(
                           decoration: _inputDecoration('Telefone'),
-                          keyboardType: TextInputType.phone,
                           onSaved: (val) => _telefone = val,
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Informe o telefone' : null,
+                          validator: (val) => val == null || val.isEmpty ? 'Informe o telefone' : null,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
                         TextFormField(
                           decoration: _inputDecoration('Cidade'),
                           onSaved: (val) => _cidade = val,
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Informe a cidade' : null,
+                          validator: (val) => val == null || val.isEmpty ? 'Informe a cidade' : null,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
                         TextFormField(
-                          decoration: _inputDecoration('Descrição da ONG'),
+                          decoration: _inputDecoration('Descrição'),
                           maxLines: 3,
                           onSaved: (val) => _descricao = val,
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Informe uma descrição' : null,
+                          validator: (val) => val == null || val.isEmpty ? 'Informe a descrição' : null,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 20),
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0A8449),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
                           onPressed: _saveOng,
-                          child: const Text('Salvar ONG', style: TextStyle(fontSize: 18, color: Colors.white)),
+                          child: const Text('Salvar ONG'),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  if (_ongs.isNotEmpty) ...[
-                    const Text('ONGs cadastradas:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    const SizedBox(height: 16),
-                    // Lista as ONGs com os callbacks de ação
+                  const SizedBox(height: 20),
+                  if (_ongs.isNotEmpty)
                     ..._ongs.map((ong) => OngCard(
-                      ong: ong,
-                      onEdit: _startEditOng, // Passa a função de edição
-                      onDelete: _deleteOng, // Passa a função de deleção
-                    )).toList(),
-                  ],
+                          ong: ong,
+                          onEdit: _startEditOng,
+                          onDelete: _deleteOng,
+                        )),
                 ],
               ),
             ),

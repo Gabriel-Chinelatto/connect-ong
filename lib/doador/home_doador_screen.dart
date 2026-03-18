@@ -11,7 +11,7 @@ class HomeDoadorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = const Color(0xFF0A8449);
+    final _ = const Color(0xFF0A8449);
 
     return Scaffold(
       body: Container(

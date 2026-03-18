@@ -6,27 +6,27 @@ class IntegrantesProjetoScreen extends StatelessWidget {
   final List<Map<String, String>> integrantes = const [
     {
       'nome': 'Lucas Henrique Martins',
-      'descricao': 'Aluno do 3°DSN, Desenvolvedor full-stack e Líder do Projeto',
+      'descricao': 'Desenvolvedor full-stack e Líder do Projeto',
       'foto': 'assets/images/lucas.jpg',
     },
     {
       'nome': 'Gabriel Chinelatto',
-      'descricao': 'Aluno do 3°DSN, Desenvolvedor Back-end e Designer',
+      'descricao': 'Desenvolvedor Back-end e Designer',
       'foto': 'assets/images/gabriel.jpg',
     },
     {
       'nome': 'Arthur Souza',
-      'descricao': 'Aluno do 3°DSN, Designer e Tester',
+      'descricao': 'Designer e Tester',
       'foto': 'assets/images/arthur.jpg',
     },
     {
       'nome': 'Luan Felipe',
-      'descricao': 'Aluno do 3°DSN, Desenvolvedor Back-end e Designer',
+      'descricao': 'Desenvolvedor Back-end e Designer',
       'foto': 'assets/images/luan.png',
     },
     {
       'nome': 'Abner Viola',
-      'descricao': 'Aluno do 3°DSN e Desenvolvedor Front-end',
+      'descricao': 'Desenvolvedor Front-end',
       'foto': 'assets/images/abner.jpg',
     }
   ];
