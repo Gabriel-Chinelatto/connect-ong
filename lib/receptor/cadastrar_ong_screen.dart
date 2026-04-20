@@ -21,44 +21,55 @@ class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
   String? _cidade;
   String? _descricao;
 
+  bool _isLoading = false;
+
   final List<Ong> _ongs = [];
 
-  // Para Flutter WEB (Chrome)
-static const String _baseUrl = 'http://localhost:8080/ongs';
+  static const String _baseUrl = 'http://localhost:8080/ongs';
 
-// Para celular físico
-// static const String _baseUrl = 'http://192.168.0.27:8080/ongs';
-
-// Para emulador Android
-// static const String _baseUrl = 'http://10.0.2.2:8080/ongs';q
   @override
   void initState() {
     super.initState();
     _fetchOngs();
   }
 
-  // ✅ GET
+  // ==========================
+  // BUSCAR ONGS
+  // ==========================
   Future<void> _fetchOngs() async {
     try {
       final response = await http.get(Uri.parse(_baseUrl));
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        final List<dynamic> data =
+            jsonDecode(utf8.decode(response.bodyBytes));
+
         setState(() {
           _ongs.clear();
-          _ongs.addAll(data.map((json) => Ong.fromJson(json)).toList());
+          _ongs.addAll(
+            data.map((json) => Ong.fromJson(json)).toList(),
+          );
         });
       } else {
-        _showSnackBar('Erro ao carregar: ${response.statusCode}');
+        _showSnackBar(
+          'Erro ao carregar ONGs.',
+          isError: true,
+        );
       }
     } catch (e) {
-      _showSnackBar('Erro de conexão: $e');
+      _showSnackBar(
+        'Erro de conexão com servidor.',
+        isError: true,
+      );
     }
   }
 
-  // ✅ POST
+  // ==========================
+  // SALVAR ONG
+  // ==========================
   Future<void> _saveOng() async {
     final isValid = _formKey.currentState?.validate() ?? false;
+
     if (!isValid) return;
 
     _formKey.currentState?.save();
@@ -71,6 +82,8 @@ static const String _baseUrl = 'http://localhost:8080/ongs';
       descricao: _descricao!,
     );
 
+    setState(() => _isLoading = true);
+
     try {
       final response = await http.post(
         Uri.parse(_baseUrl),
@@ -78,75 +91,162 @@ static const String _baseUrl = 'http://localhost:8080/ongs';
         body: jsonEncode(newOng.toJson()),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        _showSnackBar('ONG cadastrada!');
+      if (response.statusCode == 200 ||
+          response.statusCode == 201) {
+        _showSnackBar('ONG cadastrada com sucesso.');
 
         _formKey.currentState?.reset();
-        _nome = _email = _telefone = _cidade = _descricao = null;
 
-        await _fetchOngs(); // 🔥 Atualiza lista
+        _nome = null;
+        _email = null;
+        _telefone = null;
+        _cidade = null;
+        _descricao = null;
+
+        await _fetchOngs();
       } else {
-        _showSnackBar('Erro ao cadastrar: ${response.statusCode}');
+        _showSnackBar(
+          'Erro ao cadastrar ONG.',
+          isError: true,
+        );
       }
     } catch (e) {
-      _showSnackBar('Erro de conexão: $e');
+      _showSnackBar(
+        'Erro de conexão.',
+        isError: true,
+      );
     }
+
+    setState(() => _isLoading = false);
   }
 
-  // ✅ DELETE
+  // ==========================
+  // EXCLUIR ONG
+  // ==========================
   Future<void> _deleteOng(int id) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirmar exclusão'),
+        content: const Text(
+          'Deseja realmente excluir esta ONG?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true) return;
+
     try {
-      final response = await http.delete(Uri.parse('$_baseUrl/$id'));
+      final response =
+          await http.delete(Uri.parse('$_baseUrl/$id'));
 
       if (response.statusCode == 204) {
         setState(() {
           _ongs.removeWhere((ong) => ong.id == id);
         });
-        _showSnackBar('ONG excluída!');
+
+        _showSnackBar('ONG excluída.');
       } else {
-        _showSnackBar('Erro ao excluir: ${response.statusCode}');
+        _showSnackBar(
+          'Erro ao excluir ONG.',
+          isError: true,
+        );
       }
     } catch (e) {
-      _showSnackBar('Erro de conexão: $e');
+      _showSnackBar(
+        'Erro de conexão.',
+        isError: true,
+      );
     }
   }
 
-  // ✅ EDIT
+  // ==========================
+  // EDITAR ONG
+  // ==========================
   void _startEditOng(Ong ong) async {
     final updatedOng = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (ctx) => EditarOngScreen(ong: ong, baseUrl: _baseUrl),
+        builder: (_) => EditarOngScreen(
+          ong: ong,
+          baseUrl: _baseUrl,
+        ),
       ),
     );
 
     if (updatedOng != null && updatedOng is Ong) {
       setState(() {
-        final index = _ongs.indexWhere((o) => o.id == updatedOng.id);
+        final index =
+            _ongs.indexWhere((o) => o.id == updatedOng.id);
+
         if (index >= 0) {
           _ongs[index] = updatedOng;
         }
       });
-      _showSnackBar('Atualizada!');
+
+      _showSnackBar('ONG atualizada.');
     }
   }
 
-  void _showSnackBar(String message) {
+  // ==========================
+  // ALERTAS
+  // ==========================
+  void _showSnackBar(
+    String message, {
+    bool isError = false,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor:
+            isError ? Colors.red : const Color(0xFF0A8449),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
     );
   }
 
-  InputDecoration _inputDecoration(String label) {
+  // ==========================
+  // INPUT PADRÃO
+  // ==========================
+  InputDecoration _inputDecoration(
+    String label,
+    IconData icon,
+  ) {
     return InputDecoration(
       labelText: label,
-      border: const OutlineInputBorder(),
+      prefixIcon: Icon(icon),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
     );
   }
 
+  // ==========================
+  // BUILD
+  // ==========================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cadastrar ONG')),
+      appBar: AppBar(
+        title: const Text('Cadastrar ONG'),
+        centerTitle: true,
+        backgroundColor: const Color(0xFF0A8449),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -154,55 +254,176 @@ static const String _baseUrl = 'http://localhost:8080/ongs';
             Expanded(
               child: ListView(
                 children: [
+                  // FORM
                   Form(
                     key: _formKey,
                     child: Column(
                       children: [
                         TextFormField(
-                          decoration: _inputDecoration('Nome'),
+                          decoration:
+                              _inputDecoration(
+                                'Nome',
+                                Icons.business,
+                              ),
                           onSaved: (val) => _nome = val,
-                          validator: (val) => val == null || val.isEmpty ? 'Informe o nome' : null,
+                          validator: (val) =>
+                              val == null || val.trim().isEmpty
+                                  ? 'Informe o nome'
+                                  : null,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
+
                         TextFormField(
-                          decoration: _inputDecoration('Email'),
+                          keyboardType:
+                              TextInputType.emailAddress,
+                          decoration:
+                              _inputDecoration(
+                                'Email',
+                                Icons.email,
+                              ),
                           onSaved: (val) => _email = val,
-                          validator: (val) => val == null || !val.contains('@') ? 'Email inválido' : null,
+                          validator: (val) =>
+                              val == null ||
+                                      !val.contains('@')
+                                  ? 'Email inválido'
+                                  : null,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
+
                         TextFormField(
-                          decoration: _inputDecoration('Telefone'),
+                          keyboardType:
+                              TextInputType.phone,
+                          decoration:
+                              _inputDecoration(
+                                'Telefone',
+                                Icons.phone,
+                              ),
                           onSaved: (val) => _telefone = val,
-                          validator: (val) => val == null || val.isEmpty ? 'Informe o telefone' : null,
+                          validator: (val) {
+                            if (val == null ||
+                                val.trim().isEmpty) {
+                              return 'Informe o telefone';
+                            }
+
+                            final numeros = val.replaceAll(
+                              RegExp(r'[^0-9]'),
+                              '',
+                            );
+
+                            if (numeros.length < 10) {
+                              return 'Telefone inválido';
+                            }
+
+                            return null;
+                          },
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
+
                         TextFormField(
-                          decoration: _inputDecoration('Cidade'),
+                          decoration:
+                              _inputDecoration(
+                                'Cidade',
+                                Icons.location_city,
+                              ),
                           onSaved: (val) => _cidade = val,
-                          validator: (val) => val == null || val.isEmpty ? 'Informe a cidade' : null,
+                          validator: (val) =>
+                              val == null || val.trim().isEmpty
+                                  ? 'Informe a cidade'
+                                  : null,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
+
                         TextFormField(
-                          decoration: _inputDecoration('Descrição'),
                           maxLines: 3,
-                          onSaved: (val) => _descricao = val,
-                          validator: (val) => val == null || val.isEmpty ? 'Informe a descrição' : null,
+                          decoration:
+                              _inputDecoration(
+                                'Descrição',
+                                Icons.description,
+                              ),
+                          onSaved: (val) =>
+                              _descricao = val,
+                          validator: (val) =>
+                              val == null || val.trim().isEmpty
+                                  ? 'Informe a descrição'
+                                  : null,
                         ),
                         const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: _saveOng,
-                          child: const Text('Salvar ONG'),
+
+                        // BOTÃO
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child:
+                                        CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.save,
+                                    color: Colors.white,
+                                  ),
+                            label: Text(
+                              _isLoading
+                                  ? 'Salvando...'
+                                  : 'Salvar ONG',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight:
+                                    FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style:
+                                ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color(
+                                      0xFF0A8449),
+                              shape:
+                                  RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(
+                                        14),
+                              ),
+                            ),
+                            onPressed: _isLoading
+                                ? null
+                                : _saveOng,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  if (_ongs.isNotEmpty)
-                    ..._ongs.map((ong) => OngCard(
-                          ong: ong,
-                          onEdit: _startEditOng,
-                          onDelete: _deleteOng,
-                        )),
+
+                  const SizedBox(height: 25),
+
+                  // LISTA
+                  if (_ongs.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Text(
+                          'Nenhuma ONG cadastrada.',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  ..._ongs.map(
+                    (ong) => OngCard(
+                      ong: ong,
+                      onEdit: _startEditOng,
+                      onDelete: _deleteOng,
+                    ),
+                  ),
                 ],
               ),
             ),
