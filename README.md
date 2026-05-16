@@ -1,40 +1,47 @@
-# 📱 Connect ONG
+# 📱 Connect ONG - Mobile
 
-O **Connect ONG** é uma plataforma desenvolvida em **Flutter**, com o objetivo de aproximar **ONGs** de pessoas dispostas a ajudar. A plataforma conecta causas sociais a **voluntários**, **doadores** e **simpatizantes**, tudo de forma **intuitiva**, **rápida** e **segura**.
+O **Connect ONG** é um aplicativo mobile desenvolvido em **Flutter** que serve como ponte entre organizações sem fins lucrativos (ONGs) e pessoas que desejam realizar doações ou voluntariado.
 
----
+## 🚀 Funcionalidades Atuais
 
-## 🚀 Funcionalidades
+- **Autenticação:** Cadastro e login de usuários (Doadores ou Receptores).
+- **Gerenciamento de ONGs:** Criação, edição, listagem e exclusão de ONGs (CRUD completo).
+- **Sistema de Doações:** Registro de intenções de doação e acompanhamento.
+- **Busca Avançada:** Filtros para encontrar instituições por cidade ou causa.
 
-- 🧾 Cadastro e login de **usuários** e **ONGs**
-- 🔍 Filtros e sistema de **busca**
-- 🤝 Facilita o **engajamento voluntário** e doações
+## 🛠️ Tecnologias e Dependências
 
----
+- **Framework:** [Flutter SDK ^3.7.0](https://flutter.dev)
+- **Linguagem:** Dart
+- **Comunicação API:** [http](https://pub.dev/packages/http)
+- **Persistência Local:** [shared_preferences](https://pub.dev/packages/shared_preferences) para gestão de sessão.
+- **UI:** Material Design 3 com ícones customizados.
 
-## 🛠️ Tecnologias Utilizadas
+## 📁 Estrutura de Pastas
 
-- 🧩 **Flutter** — Framework principal para o desenvolvimento mobile
-- 💻 **Dart** — Linguagem de programação
+```text
+lib/
+├── doador/      # Telas e widgets específicos para o perfil doador
+├── receptor/    # Telas e widgets específicos para o perfil receptor (ONGs)
+├── models/      # Classes de modelo de dados (UsuarioLogado, etc)
+├── services/    # Lógica de integração com API (Auth, Session)
+├── widgets/     # Componentes reutilizáveis de interface
+└── main.dart    # Ponto de entrada e decisor de splash/sessão
+```
 
----
+## ⚙️ Configuração e Execução
 
-## 📦 Como Rodar o Projeto
+1. Certifique-se de ter o Flutter instalado (`flutter doctor`).
+2. Clone o repositório.
+3. Instale as dependências:
+   ```bash
+   flutter pub get
+   ```
+4. Configure a URL da API no arquivo `lib/services/auth_service.dart` (padrão: `10.0.2.2` para emulador Android).
+5. Execute o projeto:
+   ```bash
+   flutter run
+   ```
 
-> Requisitos:
-> - Flutter SDK instalado
-> - Android Studio ou VS Code com Flutter Plugin
-> - Emulador configurado ou dispositivo físico
-
-```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/connectOng-mobile.git
-
-# Acesse o diretório
-cd mobile-tcc
-
-# Instale as dependências
-flutter pub get
-
-# Rode o app
-flutter run
+## 📝 Notas de Desenvolvimento
+O aplicativo utiliza `setState` para gerenciamento de estado local e integra-se via JSON com a API REST Connect ONG.
