@@ -1,49 +1,63 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 class AuthService {
 
-  static const String baseUrl = 'http://10.0.2.2:8080';
+  // CHROME / WINDOWS
+  static const String baseUrl =
+      'http://localhost:8080';
+
+  // ANDROID EMULATOR
+  // static const String baseUrl =
+  //     'http://10.0.2.2:8080';
 
   Future<Map<String, dynamic>> login({
+
     required String email,
+
     required String senha,
+
   }) async {
+
+    final url = Uri.parse(
+      '$baseUrl/usuarios/login',
+    );
 
     final response = await http.post(
 
-      Uri.parse('$baseUrl/usuarios/login'),
+      url,
 
       headers: {
         'Content-Type': 'application/json',
       },
 
       body: jsonEncode({
+
         'email': email,
+
         'senha': senha,
       }),
     );
 
+    print('STATUS: ${response.statusCode}');
+    print('BODY: ${response.body}');
+
     if (response.statusCode == 200) {
 
-      return jsonDecode(response.body);
-
-    } else {
-
-      try {
-
-        final body = jsonDecode(response.body);
-
-        throw Exception(
-          body['erro'] ?? 'Erro ao realizar login',
-        );
-
-      } catch (e) {
-
-        throw Exception(
-          'Erro ao conectar na API: $e',
-        );
-      }
+      return jsonDecode(
+        response.body,
+      );
     }
+
+    final body = jsonDecode(
+      response.body,
+    );
+
+    throw Exception(
+
+      body['erro'] ??
+          'Erro ao realizar login',
+    );
   }
 }
