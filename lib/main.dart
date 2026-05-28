@@ -4,7 +4,7 @@ import 'login_page.dart';
 
 import 'doador/home_doador_screen.dart';
 import 'receptor/home_receptor_screen.dart';
-
+import 'theme/app_theme.dart';
 import 'services/session_service.dart';
 
 void main() {
@@ -29,10 +29,7 @@ class MyApp extends StatelessWidget {
 
       title: 'Connect Ong',
 
-      theme: ThemeData(
-
-        primarySwatch: Colors.green,
-      ),
+      theme: AppTheme.lightTheme,
 
       home: const SplashDecider(),
     );

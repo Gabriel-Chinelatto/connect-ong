@@ -1,6 +1,7 @@
 // lib/login_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'doador/home_doador_screen.dart';
 import 'receptor/home_receptor_screen.dart';
@@ -10,7 +11,7 @@ import 'services/session_service.dart';
 
 import 'models/usuario_logado.dart';
 
-import 'widgets/descricao_screen.dart';
+import 'screens/about/descricao_screen.dart';
 
 class LoginPage extends StatefulWidget {
 
@@ -20,6 +21,8 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() =>
       _LoginPageState();
 }
+
+const baseColor = Color(0xFF0A8449);
 
 class _LoginPageState
     extends State<LoginPage> {
@@ -57,6 +60,7 @@ class _LoginPageState
     if (email.isEmpty || senha.isEmpty) {
 
       setState(() {
+
         erroLogin =
             "Preencha todos os campos.";
       });
@@ -78,7 +82,9 @@ class _LoginPageState
 
       final response =
           await authService.login(
+
         email: email,
+
         senha: senha,
       );
 
@@ -101,6 +107,7 @@ class _LoginPageState
           tipoUsuario != 'DOADOR') {
 
         setState(() {
+
           erroLogin =
               "Usuário não cadastrado como Doador.";
         });
@@ -112,6 +119,7 @@ class _LoginPageState
           tipoUsuario != 'ONG') {
 
         setState(() {
+
           erroLogin =
               "Usuário não cadastrado como ONG.";
         });
@@ -126,6 +134,7 @@ class _LoginPageState
         MaterialPageRoute(
 
           builder: (_) =>
+
               tipoUsuarioSelecionado == 0
 
                   ? const HomeDoadorScreen()
@@ -149,6 +158,7 @@ class _LoginPageState
     } finally {
 
       setState(() {
+
         carregando = false;
       });
     }
@@ -158,217 +168,308 @@ class _LoginPageState
   Widget build(BuildContext context) {
 
     const baseColor =
-        Color(0xFF0a8449);
+        Color(0xFF0A8449);
 
     return Scaffold(
 
       backgroundColor:
-          const Color(0xFFF5F5F5),
+          const Color(0xFFF3F7F5),
 
-      body: Center(
+      body: SafeArea(
 
-        child: SingleChildScrollView(
+        child: Center(
 
-          padding:
-              const EdgeInsets.symmetric(
-            horizontal: 28,
-          ),
+          child: SingleChildScrollView(
 
-          child: Column(
+            padding:
+                const EdgeInsets.symmetric(
+              horizontal: 28,
+            ),
 
-            mainAxisAlignment:
-                MainAxisAlignment.center,
+            child: Column(
 
-            children: [
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
 
-              Hero(
+              children: [
 
-                tag: 'logo_app',
+                Hero(
 
-                child: ClipRRect(
+                  tag: 'logo_app',
 
-                  borderRadius:
-                      BorderRadius.circular(100),
+                  child: Container(
 
-                  child: Image.asset(
+                    decoration: BoxDecoration(
 
-                    'assets/images/integrador.jpg',
+                      borderRadius:
+                          BorderRadius.circular(35),
 
-                    height: 150,
+                      boxShadow: [
 
-                    width: 150,
+                        BoxShadow(
 
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+                          color: Colors.black
+                              .withOpacity(0.08),
 
-              const SizedBox(height: 20),
+                          blurRadius: 20,
 
-              const Text(
-
-                'Connect Ong',
-
-                style: TextStyle(
-
-                  fontSize: 32,
-
-                  fontWeight:
-                      FontWeight.bold,
-
-                  color: baseColor,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              Container(
-
-                padding:
-                    const EdgeInsets.all(24),
-
-                decoration: BoxDecoration(
-
-                  color: Colors.white,
-
-                  borderRadius:
-                      BorderRadius.circular(28),
-                ),
-
-                child: Column(
-
-                  children: [
-
-                    _buildToggleSelector(
-                      baseColor,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    _buildTextField(
-
-                      controller:
-                          emailController,
-
-                      label: 'E-mail',
-
-                      icon:
-                          Icons.alternate_email,
-
-                      baseColor:
-                          baseColor,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    _buildTextField(
-
-                      controller:
-                          senhaController,
-
-                      label: 'Senha',
-
-                      icon:
-                          Icons.lock_outline,
-
-                      baseColor:
-                          baseColor,
-
-                      isPassword: true,
-                    ),
-
-                    if (erroLogin != null)
-                      _buildErrorBadge(),
-
-                    const SizedBox(height: 24),
-
-                    SizedBox(
-
-                      width: double.infinity,
-
-                      height: 55,
-
-                      child: ElevatedButton(
-
-                        style:
-                            ElevatedButton.styleFrom(
-
-                          backgroundColor:
-                              baseColor,
-
-                          foregroundColor:
-                              Colors.white,
+                          offset:
+                              const Offset(0, 10),
                         ),
+                      ],
+                    ),
 
-                        onPressed:
-                            carregando
-                                ? null
-                                : _fazerLogin,
+                    child: ClipRRect(
 
-                        child: carregando
+                      borderRadius:
+                          BorderRadius.circular(35),
 
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
+                      child: Image.asset(
 
-                            : const Text(
+                        'assets/images/integrador.jpg',
 
-                                'ENTRAR',
+                        height: 120,
 
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight:
-                                      FontWeight.bold,
-                                ),
-                              ),
+                        width: 120,
+
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              TextButton(
-
-                onPressed: () {},
-
-                child: Text(
-
-                  "Não tem conta? Cadastre-se",
-
-                  style: TextStyle(
-                    color:
-                        Colors.grey.shade700,
                   ),
                 ),
-              ),
 
-              TextButton.icon(
+                const SizedBox(height: 24),
 
-                onPressed: () {
+                Text(
 
-                  Navigator.push(
+                  'Connect Ong',
 
-                    context,
+                  style:
+                      GoogleFonts.poppins(
 
-                    MaterialPageRoute(
+                    fontSize: 34,
 
-                      builder: (_) =>
-                          const DescricaoScreen(),
+                    fontWeight:
+                        FontWeight.w700,
+
+                    color: baseColor,
+
+                    letterSpacing: -1,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+
+                  'Conectando doadores e ONGs',
+
+                  style:
+                      GoogleFonts.poppins(
+
+                    fontSize: 15,
+
+                    color: Colors.black54,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                Container(
+
+                  padding:
+                      const EdgeInsets.all(28),
+
+                  decoration: BoxDecoration(
+
+                    color: Colors.white,
+
+                    borderRadius:
+                        BorderRadius.circular(32),
+
+                    boxShadow: [
+
+                      BoxShadow(
+
+                        color: Colors.black
+                            .withOpacity(0.05),
+
+                        blurRadius: 25,
+
+                        offset:
+                            const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+
+                  child: Column(
+
+                    children: [
+
+                      _buildToggleSelector(
+                        baseColor,
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      _buildTextField(
+
+                        controller:
+                            emailController,
+
+                        label: 'E-mail',
+
+                        icon:
+                            Icons.alternate_email,
+
+                        baseColor:
+                            baseColor,
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      _buildTextField(
+
+                        controller:
+                            senhaController,
+
+                        label: 'Senha',
+
+                        icon:
+                            Icons.lock_outline,
+
+                        baseColor:
+                            baseColor,
+
+                        isPassword: true,
+                      ),
+
+                      if (erroLogin != null)
+                        _buildErrorBadge(),
+
+                      const SizedBox(height: 28),
+
+                      SizedBox(
+
+                        width: double.infinity,
+
+                        height: 58,
+
+                        child: ElevatedButton(
+
+                          style:
+                              ElevatedButton.styleFrom(
+
+                            backgroundColor:
+                                baseColor,
+
+                            foregroundColor:
+                                Colors.white,
+
+                            elevation: 0,
+
+                            shape:
+                                RoundedRectangleBorder(
+
+                              borderRadius:
+                                  BorderRadius.circular(18),
+                            ),
+                          ),
+
+                          onPressed:
+                              carregando
+                                  ? null
+                                  : _fazerLogin,
+
+                          child: carregando
+
+                              ? const SizedBox(
+
+                                  height: 24,
+
+                                  width: 24,
+
+                                  child:
+                                      CircularProgressIndicator(
+
+                                    color:
+                                        Colors.white,
+
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+
+                              : Text(
+
+                                  'ENTRAR',
+
+                                  style:
+                                      GoogleFonts.poppins(
+
+                                    fontSize: 16,
+
+                                    fontWeight:
+                                        FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                TextButton(
+
+                  onPressed: () {},
+
+                  child: Text(
+
+                    "Não tem conta? Cadastre-se",
+
+                    style:
+                        GoogleFonts.poppins(
+
+                      color:
+                          Colors.grey.shade700,
+
+                      fontWeight:
+                          FontWeight.w500,
                     ),
-                  );
-                },
-
-                icon: const Icon(
-                  Icons.info_outline,
+                  ),
                 ),
 
-                label: const Text(
-                  "Sobre o Projeto",
+                TextButton.icon(
+
+                  onPressed: () {
+
+                    Navigator.push(
+
+                      context,
+
+                      MaterialPageRoute(
+
+                        builder: (_) =>
+                            const DescricaoScreen(),
+                      ),
+                    );
+                  },
+
+                  icon: const Icon(
+                    Icons.info_outline,
+                  ),
+
+                  label: Text(
+
+                    "Sobre o Projeto",
+
+                    style:
+                        GoogleFonts.poppins(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -379,64 +480,131 @@ class _LoginPageState
     Color baseColor,
   ) {
 
-    return Row(
+    return Container(
 
-      children: [
+      padding: const EdgeInsets.all(5),
 
-        Expanded(
+      decoration: BoxDecoration(
 
-          child: ElevatedButton(
+        color: const Color(0xFFF2F2F2),
 
-            style:
-                ElevatedButton.styleFrom(
+        borderRadius:
+            BorderRadius.circular(18),
+      ),
 
-              backgroundColor:
-                  tipoUsuarioSelecionado == 0
-                      ? baseColor
-                      : Colors.grey.shade300,
-            ),
+      child: Row(
 
-            onPressed: () {
+        children: [
 
-              setState(() {
-                tipoUsuarioSelecionado = 0;
-              });
-            },
+          Expanded(
 
-            child: const Text(
-              "Doador",
+            child: ElevatedButton(
+
+              style:
+                  ElevatedButton.styleFrom(
+
+                elevation: 0,
+
+                backgroundColor:
+                    tipoUsuarioSelecionado == 0
+
+                        ? baseColor
+
+                        : Colors.transparent,
+
+                foregroundColor:
+                    tipoUsuarioSelecionado == 0
+
+                        ? Colors.white
+
+                        : Colors.black87,
+
+                shape:
+                    RoundedRectangleBorder(
+
+                  borderRadius:
+                      BorderRadius.circular(14),
+                ),
+              ),
+
+              onPressed: () {
+
+                setState(() {
+
+                  tipoUsuarioSelecionado = 0;
+                });
+              },
+
+              child: Text(
+
+                "Doador",
+
+                style:
+                    GoogleFonts.poppins(
+
+                  fontWeight:
+                      FontWeight.w600,
+                ),
+              ),
             ),
           ),
-        ),
 
-        const SizedBox(width: 8),
+          const SizedBox(width: 8),
 
-        Expanded(
+          Expanded(
 
-          child: ElevatedButton(
+            child: ElevatedButton(
 
-            style:
-                ElevatedButton.styleFrom(
+              style:
+                  ElevatedButton.styleFrom(
 
-              backgroundColor:
-                  tipoUsuarioSelecionado == 1
-                      ? baseColor
-                      : Colors.grey.shade300,
-            ),
+                elevation: 0,
 
-            onPressed: () {
+                backgroundColor:
+                    tipoUsuarioSelecionado == 1
 
-              setState(() {
-                tipoUsuarioSelecionado = 1;
-              });
-            },
+                        ? baseColor
 
-            child: const Text(
-              "ONG",
+                        : Colors.transparent,
+
+                foregroundColor:
+                    tipoUsuarioSelecionado == 1
+
+                        ? Colors.white
+
+                        : Colors.black87,
+
+                shape:
+                    RoundedRectangleBorder(
+
+                  borderRadius:
+                      BorderRadius.circular(14),
+                ),
+              ),
+
+              onPressed: () {
+
+                setState(() {
+
+                  tipoUsuarioSelecionado = 1;
+                });
+              },
+
+              child: Text(
+
+                "ONG",
+
+                style:
+                    GoogleFonts.poppins(
+
+                  fontWeight:
+                      FontWeight.w600,
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -460,18 +628,54 @@ class _LoginPageState
 
       obscureText: isPassword,
 
+      style: GoogleFonts.poppins(),
+
       decoration: InputDecoration(
 
         labelText: label,
 
+        labelStyle:
+            GoogleFonts.poppins(),
+
+        filled: true,
+
+        fillColor:
+            const Color(0xFFF7F7F7),
+
         prefixIcon: Icon(
+
           icon,
+
           color: baseColor,
         ),
 
         border: OutlineInputBorder(
+
           borderRadius:
-              BorderRadius.circular(14),
+              BorderRadius.circular(18),
+
+          borderSide: BorderSide.none,
+        ),
+
+        enabledBorder: OutlineInputBorder(
+
+          borderRadius:
+              BorderRadius.circular(18),
+
+          borderSide: BorderSide.none,
+        ),
+
+        focusedBorder: OutlineInputBorder(
+
+          borderRadius:
+              BorderRadius.circular(18),
+
+          borderSide: const BorderSide(
+
+            color: Color(0xFF0A8449),
+
+            width: 1.5,
+          ),
         ),
       ),
     );
@@ -482,17 +686,17 @@ class _LoginPageState
     return Container(
 
       margin:
-          const EdgeInsets.only(top: 16),
+          const EdgeInsets.only(top: 18),
 
       padding:
-          const EdgeInsets.all(12),
+          const EdgeInsets.all(14),
 
       decoration: BoxDecoration(
 
         color: Colors.red.shade50,
 
         borderRadius:
-            BorderRadius.circular(12),
+            BorderRadius.circular(16),
       ),
 
       child: Row(
@@ -500,11 +704,13 @@ class _LoginPageState
         children: [
 
           const Icon(
+
             Icons.error_outline,
+
             color: Colors.red,
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
 
           Expanded(
 
@@ -512,8 +718,12 @@ class _LoginPageState
 
               erroLogin!,
 
-              style: const TextStyle(
-                color: Colors.red,
+              style:
+                  GoogleFonts.poppins(
+
+                color: Colors.red.shade700,
+
+                fontSize: 14,
               ),
             ),
           ),
