@@ -1,91 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../pages/login_page.dart';
 
+import '../screens/about/descricao_screen.dart';
+
 import '../services/session_service.dart';
 
-import 'cadastrar_doacao_screen.dart';
-import 'buscar_receptor_screen.dart';
-
-import '../screens/about/integrantes_projeto_screen.dart';
-import '../screens/about/descricao_screen.dart';
 import '../widgets/home_card.dart';
-
 
 class HomeDoadorScreen extends StatelessWidget {
 
   const HomeDoadorScreen({
     super.key,
   });
-  
 
-  Future<void> logout(
+  Future<void> _logout(
     BuildContext context,
   ) async {
-
-    final confirm = await showDialog<bool>(
-
-      context: context,
-
-      builder: (context) => AlertDialog(
-
-        title: const Text(
-          'Confirmação',
-        ),
-
-        content: const Text(
-          'Deseja realmente sair?',
-        ),
-
-        actions: [
-
-          TextButton(
-
-            onPressed: () {
-
-              Navigator.of(context).pop(false);
-            },
-
-            child: const Text(
-              'Cancelar',
-            ),
-          ),
-
-          TextButton(
-
-            onPressed: () {
-
-              Navigator.of(context).pop(true);
-            },
-
-            child: const Text(
-              'OK',
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
 
     final sessionService =
         SessionService();
 
     await sessionService.logout();
 
-    Navigator.of(context).pushAndRemoveUntil(
+    if (!context.mounted) return;
+
+    Navigator.pushReplacement(
+
+      context,
 
       MaterialPageRoute(
-        builder: (_) => const LoginPage(),
-      ),
 
-      (route) => false,
+        builder: (_) =>
+            const LoginPage(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final larguraTela =
+        MediaQuery.of(context).size.width;
+
+    final bool web =
+        larguraTela > 900;
 
     return Scaffold(
 
@@ -95,298 +54,558 @@ class HomeDoadorScreen extends StatelessWidget {
 
           gradient: LinearGradient(
 
+            begin: Alignment.topCenter,
+
+            end: Alignment.bottomCenter,
+
             colors: [
+
               Color(0xFFA8DBC1),
+
               Color(0xFF0A8449),
             ],
-
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
           ),
         ),
 
         child: SafeArea(
 
-          child: Padding(
+          child: Center(
 
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 20,
-            ),
+            child: ConstrainedBox(
 
-            child: SingleChildScrollView(
+              constraints:
+                  const BoxConstraints(
+                maxWidth: 1200,
+              ),
 
-              child: IntrinsicHeight(
+              child: SingleChildScrollView(
+
+                padding:
+                    const EdgeInsets.symmetric(
+
+                  horizontal: 24,
+
+                  vertical: 32,
+                ),
 
                 child: Column(
 
                   crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
+                      CrossAxisAlignment.start,
 
                   children: [
 
-                    Center(
+                    // =========================
+                    // HERO HEADER
+                    // =========================
 
-                      child: Container(
+                    Container(
 
-                        decoration: BoxDecoration(
+                      width: double.infinity,
 
-                          borderRadius:
-                              BorderRadius.circular(20),
+                      padding:
+                          const EdgeInsets.all(32),
 
-                          boxShadow: [
+                      decoration: BoxDecoration(
 
-                            BoxShadow(
+                        color: Colors.white
+                            .withOpacity(0.15),
 
-                              color: Colors.black
-                                  .withOpacity(0.15),
+                        borderRadius:
+                            BorderRadius.circular(
+                          32,
+                        ),
 
-                              blurRadius: 10,
+                        border: Border.all(
 
-                              offset: const Offset(0, 5),
+                          color: Colors.white
+                              .withOpacity(0.15),
+                        ),
+                      ),
+
+                      child: web
+
+                          // =========================
+                          // WEB LAYOUT
+                          // =========================
+
+                          ? Row(
+
+                              children: [
+
+                                // TEXTO
+                                Expanded(
+
+                                  flex: 2,
+
+                                  child: Column(
+
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+
+                                    children: [
+
+                                      Container(
+
+                                        padding:
+                                            const EdgeInsets.symmetric(
+
+                                          horizontal: 14,
+
+                                          vertical: 8,
+                                        ),
+
+                                        decoration: BoxDecoration(
+
+                                          color: Colors.white
+                                              .withOpacity(0.18),
+
+                                          borderRadius:
+                                              BorderRadius.circular(
+                                            30,
+                                          ),
+                                        ),
+
+                                        child: const Row(
+
+                                          mainAxisSize:
+                                              MainAxisSize.min,
+
+                                          children: [
+
+                                            Icon(
+
+                                              Icons.favorite,
+
+                                              color: Colors.white,
+
+                                              size: 18,
+                                            ),
+
+                                            SizedBox(
+                                              width: 8,
+                                            ),
+
+                                            Text(
+
+                                              'Painel do Doador',
+
+                                              style: TextStyle(
+
+                                                color: Colors.white,
+
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 24,
+                                      ),
+
+                                      const Text(
+
+                                        'Conectando pessoas através da solidariedade.',
+
+                                        style: TextStyle(
+
+                                          color: Colors.white,
+
+                                          fontSize: 38,
+
+                                          fontWeight:
+                                              FontWeight.bold,
+
+                                          height: 1.2,
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 16,
+                                      ),
+
+                                      Text(
+
+                                        'Acompanhe projetos sociais, encontre ONGs e participe de iniciativas que geram impacto real na sociedade.',
+
+                                        style: TextStyle(
+
+                                          color: Colors.white
+                                              .withOpacity(0.9),
+
+                                          fontSize: 17,
+
+                                          height: 1.6,
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 28,
+                                      ),
+
+                                      Container(
+
+                                        padding:
+                                            const EdgeInsets.symmetric(
+
+                                          horizontal: 18,
+
+                                          vertical: 14,
+                                        ),
+
+                                        decoration: BoxDecoration(
+
+                                          color: Colors.white
+                                              .withOpacity(0.14),
+
+                                          borderRadius:
+                                              BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+
+                                        child: const Row(
+
+                                          mainAxisSize:
+                                              MainAxisSize.min,
+
+                                          children: [
+
+                                            Icon(
+
+                                              Icons.verified,
+
+                                              color: Colors.white,
+                                            ),
+
+                                            SizedBox(
+                                              width: 12,
+                                            ),
+
+                                            Text(
+
+                                              'Plataforma acadêmica focada em transparência e impacto social.',
+
+                                              style: TextStyle(
+
+                                                color: Colors.white,
+
+                                                fontWeight:
+                                                    FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  width: 40,
+                                ),
+
+                                // LOGO
+                                Expanded(
+
+                                  child: Center(
+
+                                    child: Container(
+
+                                      padding:
+                                          const EdgeInsets.all(24),
+
+                                      decoration: BoxDecoration(
+
+                                        color: Colors.white,
+
+                                        borderRadius:
+                                            BorderRadius.circular(
+                                          32,
+                                        ),
+
+                                        boxShadow: [
+
+                                          BoxShadow(
+
+                                            color: Colors.black
+                                                .withOpacity(0.12),
+
+                                            blurRadius: 24,
+
+                                            offset:
+                                                const Offset(0, 10),
+                                          ),
+                                        ],
+                                      ),
+
+                                      child: Image.asset(
+
+                                        'assets/images/logo.png',
+
+                                        height: 160,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+
+                          // =========================
+                          // MOBILE LAYOUT
+                          // =========================
+
+                          : Column(
+
+                              children: [
+
+                                Container(
+
+                                  padding:
+                                      const EdgeInsets.all(18),
+
+                                  decoration: BoxDecoration(
+
+                                    color: Colors.white,
+
+                                    borderRadius:
+                                        BorderRadius.circular(
+                                      28,
+                                    ),
+                                  ),
+
+                                  child: Image.asset(
+
+                                    'assets/images/integrador.jpg',
+
+                                    height: 90,
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  height: 24,
+                                ),
+
+                                const Text(
+
+                                  'Painel do Doador',
+
+                                  textAlign: TextAlign.center,
+
+                                  style: TextStyle(
+
+                                    color: Colors.white,
+
+                                    fontSize: 32,
+
+                                    fontWeight:
+                                        FontWeight.bold,
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  height: 16,
+                                ),
+
+                                Text(
+
+                                  'Conectando doadores e ONGs através da solidariedade.',
+
+                                  textAlign: TextAlign.center,
+
+                                  style: TextStyle(
+
+                                    color: Colors.white
+                                        .withOpacity(0.9),
+
+                                    fontSize: 16,
+
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                    ),
 
-                        child: ClipRRect(
+                    const SizedBox(
+                      height: 48,
+                    ),
 
-                          borderRadius:
-                              BorderRadius.circular(30),
+                    // =========================
+                    // AÇÕES
+                    // =========================
 
-                          child: Image.asset(
+                    const Text(
 
-                            'assets/images/integrador.jpg',
+                      'Ações disponíveis',
 
-                            height: 95,
-                            width: 95,
+                      style: TextStyle(
 
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                        color: Colors.white,
+
+                        fontSize: 28,
+
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                     ),
 
-                    const SizedBox(height: 18),
-
-                    Row(
-
-  children: [
-
-    Container(
-
-      padding: const EdgeInsets.all(14),
-
-      decoration: BoxDecoration(
-
-        color: Colors.white.withOpacity(0.18),
-
-        borderRadius:
-            BorderRadius.circular(18),
-      ),
-
-      child: const Icon(
-
-        Icons.volunteer_activism,
-
-        size: 36,
-
-        color: Colors.white,
-      ),
-    ),
-
-    const SizedBox(width: 18),
-
-    Column(
-
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
-
-      children: [
-
-        Text(
-
-          'Olá 👋',
-
-          style: GoogleFonts.poppins(
-
-            fontSize: 15,
-
-            color: Colors.white70,
-          ),
-        ),
-
-        Text(
-
-          'Painel do Doador',
-
-          style: GoogleFonts.poppins(
-
-            fontSize: 25,
-
-            fontWeight: FontWeight.w700,
-
-            color: Colors.white,
-          ),
-        ),
-      ],
-    ),
-  ],
-),
-
-                    const SizedBox(height: 28),
-
-                    HomeCard(
-
-                      icon: Icons.add,
-
-                      label: 'Cadastrar Doação',
-
-                      onTap: () {
-
-                        Navigator.push(
-
-                          context,
-
-                          MaterialPageRoute(
-
-                            builder: (_) =>
-                                const CadastrarDoacaoScreen(),
-                          ),
-                        );
-                      },
+                    const SizedBox(
+                      height: 12,
                     ),
 
-                    HomeCard(
+                    Text(
 
-                      icon: Icons.search,
+                      'Escolha uma funcionalidade para continuar navegando pela plataforma.',
 
-                      label: 'Buscar Receptor',
+                      style: TextStyle(
 
-                      onTap: () {
+                        color: Colors.white
+                            .withOpacity(0.9),
 
-                        Navigator.push(
-
-                          context,
-
-                          MaterialPageRoute(
-
-                            builder: (_) =>
-                                const BuscarReceptorScreen(),
-                          ),
-                        );
-                      },
+                        fontSize: 16,
+                      ),
                     ),
 
-                    HomeCard(
-
-                      icon: Icons.group,
-
-                      label: 'Integrantes do Projeto',
-
-                      onTap: () {
-
-                        Navigator.push(
-
-                          context,
-
-                          MaterialPageRoute(
-
-                            builder: (_) =>
-                                const IntegrantesProjetoScreen(),
-                          ),
-                        );
-                      },
+                    const SizedBox(
+                      height: 40,
                     ),
 
-                    HomeCard(
+                    GridView.count(
 
-                      icon: Icons.info_outline,
+                      shrinkWrap: true,
 
-                      label: 'Sobre o Projeto',
+                      physics:
+                          const NeverScrollableScrollPhysics(),
 
-                      onTap: () {
+                      crossAxisCount:
+                          web ? 2 : 1,
 
-                        Navigator.push(
+                      crossAxisSpacing: 24,
 
-                          context,
+                      mainAxisSpacing: 28,
 
-                          MaterialPageRoute(
+                      childAspectRatio:
+                          web ? 2.4 : 2.0,
 
-                            builder: (_) =>
-                                const DescricaoScreen(),
-                          ),
-                        );
-                      },
+                      children: [
+
+                        HomeCard(
+
+                          icon:
+                              Icons.add_circle_outline,
+
+                          label:
+                              'Cadastrar Doação',
+
+                          onTap: () {},
+                        ),
+
+                        HomeCard(
+
+                          icon:
+                              Icons.search,
+
+                          label:
+                              'Buscar Receptor',
+
+                          onTap: () {},
+                        ),
+
+                        HomeCard(
+
+                          icon:
+                              Icons.groups_rounded,
+
+                          label:
+                              'Integrantes do Projeto',
+
+                          onTap: () {},
+                        ),
+
+                        HomeCard(
+
+                          icon:
+                              Icons.info_outline_rounded,
+
+                          label:
+                              'Sobre o Projeto',
+
+                          onTap: () {
+
+                            Navigator.push(
+
+                              context,
+
+                              MaterialPageRoute(
+
+                                builder: (_) =>
+                                    const DescricaoScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(
+                      height: 48,
+                    ),
 
-                    Padding(
+                    // =========================
+                    // LOGOUT
+                    // =========================
 
-                      padding:
-                          const EdgeInsets.only(bottom: 16),
+                    Center(
 
-                      child: Center(
+                      child: OutlinedButton.icon(
 
-                        child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _logout(context),
 
-                          style:
-                              OutlinedButton.styleFrom(
+                        icon: const Icon(
+                          Icons.logout,
+                        ),
 
-                            foregroundColor:
-                                Colors.white,
+                        label: const Text(
+                          'Sair',
+                        ),
 
-                            side: const BorderSide(
-                              color: Colors.white70,
-                            ),
+                        style:
+                            OutlinedButton.styleFrom(
 
-                            padding:
-                                const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
+                          foregroundColor:
+                              Colors.white,
 
-                            shape:
-                                RoundedRectangleBorder(
-
-                              borderRadius:
-                                  BorderRadius.circular(24),
-                            ),
-
-                            backgroundColor:
-                                Colors.transparent,
-                          ),
-
-                          icon: const Icon(
-
-                            Icons.logout,
-
-                            size: 20,
+                          side: const BorderSide(
 
                             color: Colors.white,
                           ),
 
-                          label: const Text(
+                          padding:
+                              const EdgeInsets.symmetric(
 
-                            'Sair',
+                            horizontal: 28,
 
-                            style: TextStyle(
-
-                              color: Colors.white,
-
-                              fontWeight:
-                                  FontWeight.w600,
-
-                              fontSize: 15,
-                            ),
+                            vertical: 16,
                           ),
 
-                          onPressed: () {
+                          shape: RoundedRectangleBorder(
 
-                            logout(context);
-                          },
+                            borderRadius:
+                                BorderRadius.circular(
+                              30,
+                            ),
+                          ),
                         ),
                       ),
+                    ),
+
+                    const SizedBox(
+                      height: 24,
                     ),
                   ],
                 ),

@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
 
       title: 'Connect Ong',
 
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.theme,
 
       home: const SplashDecider(),
     );

@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../pages/login_page.dart';
 
+import '../screens/about/descricao_screen.dart';
+
 import '../services/session_service.dart';
 
-import 'buscar_ong_screen.dart';
-import 'cadastrar_ong_screen.dart';
-
-import '../screens/about/integrantes_projeto_screen.dart';
-import '../screens/about/descricao_screen.dart';
 import '../widgets/home_card.dart';
 
 class HomeReceptorScreen extends StatelessWidget {
@@ -17,72 +14,37 @@ class HomeReceptorScreen extends StatelessWidget {
     super.key,
   });
 
-  Future<void> logout(
+  Future<void> _logout(
     BuildContext context,
   ) async {
-
-    final confirm = await showDialog<bool>(
-
-      context: context,
-
-      builder: (context) => AlertDialog(
-
-        title: const Text(
-          'Confirmação',
-        ),
-
-        content: const Text(
-          'Deseja realmente sair?',
-        ),
-
-        actions: [
-
-          TextButton(
-
-            onPressed: () {
-
-              Navigator.of(context).pop(false);
-            },
-
-            child: const Text(
-              'Cancelar',
-            ),
-          ),
-
-          TextButton(
-
-            onPressed: () {
-
-              Navigator.of(context).pop(true);
-            },
-
-            child: const Text(
-              'OK',
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
 
     final sessionService =
         SessionService();
 
     await sessionService.logout();
 
-    Navigator.of(context).pushAndRemoveUntil(
+    if (!context.mounted) return;
+
+    Navigator.pushReplacement(
+
+      context,
 
       MaterialPageRoute(
-        builder: (_) => const LoginPage(),
-      ),
 
-      (route) => false,
+        builder: (_) =>
+            const LoginPage(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final larguraTela =
+        MediaQuery.of(context).size.width;
+
+    final bool web =
+        larguraTela > 900;
 
     return Scaffold(
 
@@ -92,305 +54,560 @@ class HomeReceptorScreen extends StatelessWidget {
 
           gradient: LinearGradient(
 
+            begin: Alignment.topCenter,
+
+            end: Alignment.bottomCenter,
+
             colors: [
+
               Color(0xFFA8DBC1),
+
               Color(0xFF0A8449),
             ],
-
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
           ),
         ),
 
         child: SafeArea(
 
-          child: Padding(
+          child: Center(
 
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 20,
-            ),
+            child: ConstrainedBox(
 
-            child: SingleChildScrollView(
+              constraints:
+                  const BoxConstraints(
+                maxWidth: 1200,
+              ),
 
-              child: IntrinsicHeight(
+              child: SingleChildScrollView(
+
+                padding:
+                    const EdgeInsets.symmetric(
+
+                  horizontal: 24,
+
+                  vertical: 32,
+                ),
 
                 child: Column(
 
                   crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
+                      CrossAxisAlignment.start,
 
                   children: [
 
-                    Center(
+                    // =========================
+                    // HERO HEADER
+                    // =========================
 
-                      child: Container(
+                    Container(
 
-                        decoration: BoxDecoration(
+                      width: double.infinity,
 
-                          borderRadius:
-                              BorderRadius.circular(20),
+                      padding:
+                          const EdgeInsets.all(32),
 
-                          boxShadow: [
+                      decoration: BoxDecoration(
 
-                            BoxShadow(
+                        color: Colors.white
+                            .withOpacity(0.15),
 
-                              color: Colors.black
-                                  .withOpacity(0.15),
-
-                              blurRadius: 10,
-
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
+                        borderRadius:
+                            BorderRadius.circular(
+                          32,
                         ),
 
-                        child: ClipRRect(
+                        border: Border.all(
 
-                          borderRadius:
-                              BorderRadius.circular(20),
-
-                          child: Image.asset(
-
-                            'assets/images/integrador.jpg',
-
-                            height: 120,
-                            width: 120,
-
-                            fit: BoxFit.cover,
-                          ),
+                          color: Colors.white
+                              .withOpacity(0.15),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 18),
+                      child: web
 
-                    Row(
+                          // =========================
+                          // WEB
+                          // =========================
 
-                      children: [
+                          ? Row(
 
-                        CircleAvatar(
+                              children: [
 
-                          radius: 32,
+                                Expanded(
 
-                          backgroundColor:
-                              Colors.white.withOpacity(0.3),
+                                  flex: 2,
 
-                          child: const Icon(
+                                  child: Column(
 
-                            Icons.home_work_outlined,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
 
-                            size: 40,
+                                    children: [
 
-                            color: Colors.white,
-                          ),
-                        ),
+                                      Container(
 
-                        const SizedBox(width: 16),
+                                        padding:
+                                            const EdgeInsets.symmetric(
 
-                        Expanded(
+                                          horizontal: 14,
 
-                          child: Text(
+                                          vertical: 8,
+                                        ),
 
-                            'Bem-vindo, Usuário(a)!',
+                                        decoration: BoxDecoration(
 
-                            style: TextStyle(
+                                          color: Colors.white
+                                              .withOpacity(0.18),
 
-                              fontSize: 28,
+                                          borderRadius:
+                                              BorderRadius.circular(
+                                            30,
+                                          ),
+                                        ),
 
-                              fontWeight:
-                                  FontWeight.bold,
+                                        child: const Row(
 
-                              color: Colors.white
-                                  .withOpacity(0.95),
+                                          mainAxisSize:
+                                              MainAxisSize.min,
 
-                              shadows: const [
+                                          children: [
 
-                                Shadow(
+                                            Icon(
 
-                                  color: Colors.black45,
+                                              Icons.volunteer_activism,
 
-                                  blurRadius: 6,
+                                              color: Colors.white,
 
-                                  offset: Offset(2, 2),
+                                              size: 18,
+                                            ),
+
+                                            SizedBox(
+                                              width: 8,
+                                            ),
+
+                                            Text(
+
+                                              'Painel da ONG',
+
+                                              style: TextStyle(
+
+                                                color: Colors.white,
+
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 24,
+                                      ),
+
+                                      const Text(
+
+                                        'Gerencie sua ONG de forma simples e transparente.',
+
+                                        style: TextStyle(
+
+                                          color: Colors.white,
+
+                                          fontSize: 38,
+
+                                          fontWeight:
+                                              FontWeight.bold,
+
+                                          height: 1.2,
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 16,
+                                      ),
+
+                                      Text(
+
+                                        'Cadastre necessidades, acompanhe doações e fortaleça o impacto social da sua instituição.',
+
+                                        style: TextStyle(
+
+                                          color: Colors.white
+                                              .withOpacity(0.9),
+
+                                          fontSize: 17,
+
+                                          height: 1.6,
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 28,
+                                      ),
+
+                                      Container(
+
+                                        padding:
+                                            const EdgeInsets.symmetric(
+
+                                          horizontal: 18,
+
+                                          vertical: 14,
+                                        ),
+
+                                        decoration: BoxDecoration(
+
+                                          color: Colors.white
+                                              .withOpacity(0.14),
+
+                                          borderRadius:
+                                              BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+
+                                        child: const Row(
+
+                                          mainAxisSize:
+                                              MainAxisSize.min,
+
+                                          children: [
+
+                                            Icon(
+
+                                              Icons.verified,
+
+                                              color: Colors.white,
+                                            ),
+
+                                            SizedBox(
+                                              width: 12,
+                                            ),
+
+                                            Text(
+
+                                              'Sistema acadêmico focado em organização e transparência.',
+
+                                              style: TextStyle(
+
+                                                color: Colors.white,
+
+                                                fontWeight:
+                                                    FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  width: 40,
+                                ),
+
+                                Expanded(
+
+                                  child: Center(
+
+                                    child: Container(
+
+                                      padding:
+                                          const EdgeInsets.all(24),
+
+                                      decoration: BoxDecoration(
+
+                                        color: Colors.white,
+
+                                        borderRadius:
+                                            BorderRadius.circular(
+                                          32,
+                                        ),
+
+                                        boxShadow: [
+
+                                          BoxShadow(
+
+                                            color: Colors.black
+                                                .withOpacity(0.12),
+
+                                            blurRadius: 24,
+
+                                            offset:
+                                                const Offset(0, 10),
+                                          ),
+                                        ],
+                                      ),
+
+                                      child: Image.asset(
+
+                                        'assets/images/integrador.jpg',
+
+                                        height: 160,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+
+                          // =========================
+                          // MOBILE
+                          // =========================
+
+                          : Column(
+
+                              children: [
+
+                                Container(
+
+                                  padding:
+                                      const EdgeInsets.all(18),
+
+                                  decoration: BoxDecoration(
+
+                                    color: Colors.white,
+
+                                    borderRadius:
+                                        BorderRadius.circular(
+                                      28,
+                                    ),
+                                  ),
+
+                                  child: Image.asset(
+
+                                    'assets/images/logo.png',
+
+                                    height: 90,
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  height: 24,
+                                ),
+
+                                const Text(
+
+                                  'Painel da ONG',
+
+                                  textAlign: TextAlign.center,
+
+                                  style: TextStyle(
+
+                                    color: Colors.white,
+
+                                    fontSize: 32,
+
+                                    fontWeight:
+                                        FontWeight.bold,
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  height: 16,
+                                ),
+
+                                Text(
+
+                                  'Conectando instituições e doadores através da solidariedade.',
+
+                                  textAlign: TextAlign.center,
+
+                                  style: TextStyle(
+
+                                    color: Colors.white
+                                        .withOpacity(0.9),
+
+                                    fontSize: 16,
+
+                                    height: 1.5,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
+                    ),
+
+                    const SizedBox(
+                      height: 48,
+                    ),
+
+                    // =========================
+                    // TÍTULO
+                    // =========================
+
+                    const Text(
+
+                      'Ações disponíveis',
+
+                      style: TextStyle(
+
+                        color: Colors.white,
+
+                        fontSize: 28,
+
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 12,
+                    ),
+
+                    Text(
+
+                      'Escolha uma funcionalidade para continuar utilizando a plataforma.',
+
+                      style: TextStyle(
+
+                        color: Colors.white
+                            .withOpacity(0.9),
+
+                        fontSize: 16,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 40,
+                    ),
+
+                    // =========================
+                    // CARDS
+                    // =========================
+
+                    GridView.count(
+
+                      shrinkWrap: true,
+
+                      physics:
+                          const NeverScrollableScrollPhysics(),
+
+                      crossAxisCount:
+                          web ? 2 : 1,
+
+                      crossAxisSpacing: 24,
+
+                      mainAxisSpacing: 28,
+
+                      childAspectRatio:
+                          web ? 2.4 : 2.0,
+
+                      children: [
+
+                        HomeCard(
+
+                          icon:
+                              Icons.add_business_outlined,
+
+                          label:
+                              'Cadastrar ONG',
+
+                          onTap: () {},
+                        ),
+
+                        HomeCard(
+
+                          icon:
+                              Icons.edit_outlined,
+
+                          label:
+                              'Editar Perfil da ONG',
+
+                          onTap: () {},
+                        ),
+
+                        HomeCard(
+
+                          icon:
+                              Icons.volunteer_activism,
+
+                          label:
+                              'Gerenciar Pedidos',
+
+                          onTap: () {},
+                        ),
+
+                        HomeCard(
+
+                          icon:
+                              Icons.info_outline_rounded,
+
+                          label:
+                              'Sobre o Projeto',
+
+                          onTap: () {
+
+                            Navigator.push(
+
+                              context,
+
+                              MaterialPageRoute(
+
+                                builder: (_) =>
+                                    const DescricaoScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 30),
-
-                    const Text(
-
-                      'Aqui você pode:',
-
-                      style: TextStyle(
-
-                        fontSize: 22,
-
-                        fontWeight: FontWeight.bold,
-
-                        color: Colors.white70,
-                      ),
+                    const SizedBox(
+                      height: 48,
                     ),
 
-                    const SizedBox(height: 20),
+                    // =========================
+                    // LOGOUT
+                    // =========================
 
-                    HomeCard(
+                    Center(
 
-                      icon: Icons.add,
+                      child: OutlinedButton.icon(
 
-                      label: 'Cadastrar ONG',
+                        onPressed: () =>
+                            _logout(context),
 
-                      onTap: () {
+                        icon: const Icon(
+                          Icons.logout,
+                        ),
 
-                        Navigator.push(
+                        label: const Text(
+                          'Sair',
+                        ),
 
-                          context,
+                        style:
+                            OutlinedButton.styleFrom(
 
-                          MaterialPageRoute(
+                          foregroundColor:
+                              Colors.white,
 
-                            builder: (_) =>
-                                const CadastrarOngScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    HomeCard(
-
-                      icon: Icons.search,
-
-                      label: 'Buscar ONG',
-
-                      onTap: () {
-
-                        Navigator.push(
-
-                          context,
-
-                          MaterialPageRoute(
-
-                            builder: (_) =>
-                                const BuscarOngScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    HomeCard(
-
-                      icon: Icons.group,
-
-                      label: 'Integrantes do Projeto',
-
-                      onTap: () {
-
-                        Navigator.push(
-
-                          context,
-
-                          MaterialPageRoute(
-
-                            builder: (_) =>
-                                const IntegrantesProjetoScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    HomeCard(
-
-                      icon: Icons.info_outline,
-
-                      label: 'Sobre o Projeto',
-
-                      onTap: () {
-
-                        Navigator.push(
-
-                          context,
-
-                          MaterialPageRoute(
-
-                            builder: (_) =>
-                                const DescricaoScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    Padding(
-
-                      padding:
-                          const EdgeInsets.only(bottom: 16),
-
-                      child: Center(
-
-                        child: OutlinedButton.icon(
-
-                          style:
-                              OutlinedButton.styleFrom(
-
-                            foregroundColor:
-                                Colors.white,
-
-                            side: const BorderSide(
-                              color: Colors.white,
-                            ),
-
-                            padding:
-                                const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-
-                            shape:
-                                RoundedRectangleBorder(
-
-                              borderRadius:
-                                  BorderRadius.circular(24),
-                            ),
-
-                            backgroundColor:
-                                Colors.transparent,
-                          ),
-
-                          icon: const Icon(
-
-                            Icons.logout,
-
-                            size: 20,
+                          side: const BorderSide(
 
                             color: Colors.white,
                           ),
 
-                          label: const Text(
+                          padding:
+                              const EdgeInsets.symmetric(
 
-                            'Sair',
+                            horizontal: 28,
 
-                            style: TextStyle(
-
-                              color: Colors.white,
-
-                              fontWeight:
-                                  FontWeight.w600,
-
-                              fontSize: 15,
-                            ),
+                            vertical: 16,
                           ),
 
-                          onPressed: () {
+                          shape: RoundedRectangleBorder(
 
-                            logout(context);
-                          },
+                            borderRadius:
+                                BorderRadius.circular(
+                              30,
+                            ),
+                          ),
                         ),
                       ),
+                    ),
+
+                    const SizedBox(
+                      height: 24,
                     ),
                   ],
                 ),

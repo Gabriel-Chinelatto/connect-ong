@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-class HomeCard extends StatelessWidget {
+class HomeCard extends StatefulWidget {
 
   final IconData icon;
+
   final String label;
+
   final VoidCallback onTap;
 
   const HomeCard({
@@ -19,126 +20,216 @@ class HomeCard extends StatelessWidget {
   });
 
   @override
+  State<HomeCard> createState() =>
+      _HomeCardState();
+}
+
+class _HomeCardState
+    extends State<HomeCard> {
+
+  bool hovering = false;
+
+  @override
   Widget build(BuildContext context) {
 
-    return Padding(
+    return MouseRegion(
 
-      padding: const EdgeInsets.only(bottom: 18),
+      onEnter: (_) {
 
-      child: Material(
+        setState(() {
+          hovering = true;
+        });
+      },
 
-        color: Colors.transparent,
+      onExit: (_) {
 
-        child: InkWell(
+        setState(() {
+          hovering = false;
+        });
+      },
+
+      child: AnimatedContainer(
+
+        duration:
+            const Duration(
+          milliseconds: 200,
+        ),
+
+        curve: Curves.easeInOut,
+
+        transform: Matrix4.identity()
+          ..scale(
+            hovering ? 1.02 : 1.0,
+          ),
+
+        decoration: BoxDecoration(
 
           borderRadius:
               BorderRadius.circular(24),
 
-          onTap: onTap,
+          boxShadow: [
 
-          child: Ink(
+            BoxShadow(
 
-            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(
+                hovering ? 0.12 : 0.06,
+              ),
 
-              color: Colors.white,
+              blurRadius:
+                  hovering ? 20 : 10,
 
-              borderRadius:
-                  BorderRadius.circular(24),
-
-              boxShadow: [
-
-                BoxShadow(
-
-                  color: Colors.black
-                      .withOpacity(0.05),
-
-                  blurRadius: 18,
-
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              offset: const Offset(0, 6),
             ),
+          ],
+        ),
+
+        child: Material(
+
+          color: Colors.white,
+
+          borderRadius:
+              BorderRadius.circular(24),
+
+          child: InkWell(
+
+            borderRadius:
+                BorderRadius.circular(24),
+
+            onTap: widget.onTap,
 
             child: Padding(
 
-              padding: const EdgeInsets.symmetric(
-
-                horizontal: 22,
-                vertical: 22,
-              ),
+              padding:
+                  const EdgeInsets.all(24),
 
               child: Row(
 
                 children: [
 
+                  // =========================
+                  // ÍCONE
+                  // =========================
+
                   Container(
 
-                    padding:
-                        const EdgeInsets.all(14),
+                    width: 64,
+
+                    height: 64,
 
                     decoration: BoxDecoration(
 
-                      color: const Color(
-                        0xFF0A8449,
-                      ).withOpacity(0.12),
+                      gradient:
+                          const LinearGradient(
+
+                        colors: [
+
+                          Color(0xFF0A8449),
+
+                          Color(0xFF34A853),
+                        ],
+
+                        begin:
+                            Alignment.topLeft,
+
+                        end:
+                            Alignment.bottomRight,
+                      ),
 
                       borderRadius:
-                          BorderRadius.circular(18),
+                          BorderRadius.circular(
+                        18,
+                      ),
                     ),
 
                     child: Icon(
 
-                      icon,
+                      widget.icon,
 
-                      size: 30,
+                      color: Colors.white,
 
-                      color:
-                          const Color(0xFF0A8449),
+                      size: 32,
                     ),
                   ),
 
-                  const SizedBox(width: 18),
+                  const SizedBox(
+                    width: 20,
+                  ),
+
+                  // =========================
+                  // TEXTO
+                  // =========================
 
                   Expanded(
 
-                    child: Text(
+                    child: Column(
 
-                      label,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
 
-                      style:
-                          GoogleFonts.poppins(
+                      mainAxisAlignment:
+                          MainAxisAlignment.center,
 
-                        fontSize: 17,
+                      children: [
 
-                        fontWeight:
-                            FontWeight.w600,
+                        Text(
 
-                        color:
-                            const Color(0xFF222222),
-                      ),
+                          widget.label,
+
+                          style: const TextStyle(
+
+                            fontSize: 20,
+
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 8,
+                        ),
+
+                        Text(
+
+                          'Acesse esta funcionalidade da plataforma.',
+
+                          style: TextStyle(
+
+                            color:
+                                Colors.grey[600],
+
+                            fontSize: 14,
+
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
-                  Container(
+                  // =========================
+                  // SETA
+                  // =========================
 
-                    padding:
-                        const EdgeInsets.all(10),
+                  AnimatedContainer(
 
-                    decoration: BoxDecoration(
-
-                      color: Colors.grey
-                          .withOpacity(0.08),
-
-                      shape: BoxShape.circle,
+                    duration:
+                        const Duration(
+                      milliseconds: 200,
                     ),
+
+                    transform:
+                        Matrix4.identity()
+                          ..translate(
+                            hovering ? 4.0 : 0.0,
+                          ),
 
                     child: const Icon(
 
                       Icons.arrow_forward_ios,
 
-                      size: 16,
+                      size: 20,
 
-                      color: Colors.black54,
+                      color: Color(0xFF0A8449),
                     ),
                   ),
                 ],
