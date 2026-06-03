@@ -1,0 +1,72 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pedido.dart';
+
+class PedidoCard extends StatelessWidget {
+  final PedidoDoacao pedido;
+  const PedidoCard({super.key, required this.pedido});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      elevation: 5,
+      color: Colors.white.withOpacity(0.95),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              pedido.nome,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0A8449)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              pedido.descricao,
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.category, size: 18, color: Color(0xFF0A8449)),
+                const SizedBox(width: 6),
+                Text('Categoria: ${pedido.categoria}', style: const TextStyle(fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.confirmation_number, size: 18, color: Color(0xFF0A8449)),
+                const SizedBox(width: 6),
+                Text('Quantidade: ${pedido.quantidade}', style: const TextStyle(fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.style, size: 18, color: Color(0xFF0A8449)),
+                const SizedBox(width: 6),
+                Text('Tipo: ${pedido.tipo}', style: const TextStyle(fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.people, size: 18, color: Color(0xFF0A8449)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Público: ${pedido.publicos.isEmpty ? "Nenhum" : pedido.publicos.join(", ")}',
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
