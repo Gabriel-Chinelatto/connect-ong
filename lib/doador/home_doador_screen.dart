@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../pages/login_page.dart';
 
@@ -7,15 +8,17 @@ import '../services/session_service.dart';
 import 'cadastrar_doacao_screen.dart';
 import 'buscar_receptor_screen.dart';
 
-import '../widgets/integrantes_projeto_screen.dart';
-import '../widgets/descricao_screen.dart';
+import '../screens/about/integrantes_projeto_screen.dart';
+import '../screens/about/descricao_screen.dart';
 import '../widgets/home_card.dart';
+
 
 class HomeDoadorScreen extends StatelessWidget {
 
   const HomeDoadorScreen({
     super.key,
   });
+  
 
   Future<void> logout(
     BuildContext context,
@@ -148,14 +151,14 @@ class HomeDoadorScreen extends StatelessWidget {
                         child: ClipRRect(
 
                           borderRadius:
-                              BorderRadius.circular(20),
+                              BorderRadius.circular(30),
 
                           child: Image.asset(
 
                             'assets/images/integrador.jpg',
 
-                            height: 120,
-                            width: 120,
+                            height: 95,
+                            width: 95,
 
                             fit: BoxFit.cover,
                           ),
@@ -167,44 +170,70 @@ class HomeDoadorScreen extends StatelessWidget {
 
                     Row(
 
-                      children: [
+  children: [
 
-                        CircleAvatar(
+    Container(
 
-                          radius: 32,
+      padding: const EdgeInsets.all(14),
 
-                          backgroundColor:
-                              Colors.white.withOpacity(0.3),
+      decoration: BoxDecoration(
 
-                          child: const Icon(
+        color: Colors.white.withOpacity(0.18),
 
-                            Icons.home_work_outlined,
+        borderRadius:
+            BorderRadius.circular(18),
+      ),
 
-                            size: 40,
+      child: const Icon(
 
-                            color: Colors.white,
-                          ),
-                        ),
+        Icons.volunteer_activism,
 
-                        const SizedBox(width: 20),
+        size: 36,
 
-                        const Text(
+        color: Colors.white,
+      ),
+    ),
 
-                          'Painel do Doador',
+    const SizedBox(width: 18),
 
-                          style: TextStyle(
+    Column(
 
-                            fontSize: 24,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
 
-                            color: Colors.white,
+      children: [
 
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+        Text(
 
-                    const SizedBox(height: 40),
+          'Olá 👋',
+
+          style: GoogleFonts.poppins(
+
+            fontSize: 15,
+
+            color: Colors.white70,
+          ),
+        ),
+
+        Text(
+
+          'Painel do Doador',
+
+          style: GoogleFonts.poppins(
+
+            fontSize: 25,
+
+            fontWeight: FontWeight.w700,
+
+            color: Colors.white,
+          ),
+        ),
+      ],
+    ),
+  ],
+),
+
+                    const SizedBox(height: 28),
 
                     HomeCard(
 

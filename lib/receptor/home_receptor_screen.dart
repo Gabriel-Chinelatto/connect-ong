@@ -7,8 +7,8 @@ import '../services/session_service.dart';
 import 'buscar_ong_screen.dart';
 import 'cadastrar_ong_screen.dart';
 
-import '../widgets/integrantes_projeto_screen.dart';
-import '../widgets/descricao_screen.dart';
+import '../screens/about/integrantes_projeto_screen.dart';
+import '../screens/about/descricao_screen.dart';
 import '../widgets/home_card.dart';
 
 class HomeReceptorScreen extends StatelessWidget {
