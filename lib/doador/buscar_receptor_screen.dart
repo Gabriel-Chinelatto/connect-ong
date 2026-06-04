@@ -7,25 +7,15 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-class BuscarReceptorScreen
-    extends StatefulWidget {
-
-  const BuscarReceptorScreen({
-    Key? key,
-  }) : super(key: key);
+class BuscarReceptorScreen extends StatefulWidget {
+  const BuscarReceptorScreen({Key? key}) : super(key: key);
 
   @override
-  State<BuscarReceptorScreen>
-      createState() =>
-          _BuscarReceptorScreenState();
+  State<BuscarReceptorScreen> createState() => _BuscarReceptorScreenState();
 }
 
-class _BuscarReceptorScreenState
-    extends State<BuscarReceptorScreen> {
-
-  final TextEditingController
-      _searchController =
-          TextEditingController();
+class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
+  final TextEditingController _searchController = TextEditingController();
 
   List<Ong> _ongs = [];
 
@@ -33,267 +23,229 @@ class _BuscarReceptorScreenState
 
   bool carregando = true;
 
-  static const String _baseUrl =
-      'http://localhost:8080/ongs';
+  static const String _baseUrl = 'http://localhost:8080/ongs';
 
   @override
   void initState() {
-
     super.initState();
 
     _carregarOngs();
   }
 
   Future<void> _carregarOngs() async {
-
     try {
-
-      final response =
-          await http.get(
-        Uri.parse(_baseUrl),
-      );
+      final response = await http.get(Uri.parse(_baseUrl));
 
       if (response.statusCode == 200) {
-
-        final List data =
-            jsonDecode(
-          utf8.decode(
-            response.bodyBytes,
-          ),
-        );
+        final List data = jsonDecode(utf8.decode(response.bodyBytes));
 
         setState(() {
-
-          _ongs = data
-              .map(
-                (e) =>
-                    Ong.fromJson(e),
-              )
-              .toList();
+          _ongs = data.map((e) => Ong.fromJson(e)).toList();
 
           _resultados = _ongs;
 
           carregando = false;
         });
-
       } else {
-
         setState(() {
           carregando = false;
         });
       }
-
     } catch (e) {
-
       setState(() {
         carregando = false;
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          behavior: SnackBarBehavior.floating,
 
-          behavior:
-              SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade400,
 
-          backgroundColor:
-              Colors.red.shade400,
-
-          content: Text(
-            "Erro ao conectar API",
-            style:
-                GoogleFonts.poppins(),
-          ),
+          content: Text("Erro ao conectar API", style: GoogleFonts.poppins()),
         ),
       );
     }
   }
 
   void _buscarOng() {
-
-    final query =
-        _searchController.text
-            .toLowerCase();
+    final query = _searchController.text.toLowerCase();
 
     setState(() {
-
       _resultados =
           _ongs.where((ong) {
-
-        return ong.nome
-                .toLowerCase()
-                .contains(query) ||
-
-            ong.cidade
-                .toLowerCase()
-                .contains(query);
-
-      }).toList();
+            return ong.nome.toLowerCase().contains(query) ||
+                ong.cidade.toLowerCase().contains(query);
+          }).toList();
     });
   }
 
-  Widget _buildOngCard(
-    Ong ong,
-  ) {
-
+  Widget _buildOngCard(Ong ong) {
     return Container(
-
-      margin:
-          const EdgeInsets.only(
-        bottom: 18,
-      ),
+      margin: const EdgeInsets.only(bottom: 18),
 
       decoration: BoxDecoration(
-
         color: Colors.white,
 
-        borderRadius:
-            BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(26),
 
         boxShadow: [
-
           BoxShadow(
-
-            color: Colors.black
-                .withOpacity(0.05),
+            color: Colors.black.withOpacity(0.05),
 
             blurRadius: 18,
 
-            offset:
-                const Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
 
       child: Padding(
-
-        padding:
-            const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(22),
 
         child: Column(
-
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-
             Row(
-
               children: [
-
                 Container(
+                  padding: const EdgeInsets.all(14),
 
-                  padding:
-                      const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A8449).withOpacity(0.12),
 
-                  decoration:
-                      BoxDecoration(
-
-                    color:
-                        const Color(
-                      0xFF0A8449,
-                    ).withOpacity(0.12),
-
-                    borderRadius:
-                        BorderRadius.circular(
-                      18,
-                    ),
+                    borderRadius: BorderRadius.circular(18),
                   ),
 
                   child: const Icon(
-
                     Icons.volunteer_activism,
 
-                    color:
-                        Color(0xFF0A8449),
+                    color: Color(0xFF0A8449),
 
                     size: 28,
                   ),
                 ),
 
-                const SizedBox(
-                  width: 16,
-                ),
+                const SizedBox(width: 16),
 
                 Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
-                  child: Text(
+                    children: [
+                      Text(
+                        ong.nome,
 
-                    ong.nome,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
 
-                    style:
-                        GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
 
-                      fontSize: 20,
-
-                      fontWeight:
-                          FontWeight.w700,
-
-                      color:
-                          const Color(
-                        0xFF222222,
+                          color: const Color(0xFF222222),
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(height: 6),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+
+                          vertical: 4,
+                        ),
+
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0A8449).withOpacity(0.1),
+
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+
+                        child: Text(
+                          "ONG Parceira",
+
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+
+                            color: const Color(0xFF0A8449),
+
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      _buildInfoTile(Icons.email_outlined, ong.email),
+
+                      _buildInfoTile(Icons.phone_outlined, ong.telefone),
+
+                      _buildInfoTile(Icons.location_city_outlined, ong.cidade),
+
+                      const SizedBox(height: 18),
+
+                      Text(
+                        'Descrição',
+
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+
+                          fontSize: 15,
+
+                          color: const Color(0xFF0A8449),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        ong.descricao,
+
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+
+                          height: 1.5,
+
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      SizedBox(
+                        width: double.infinity,
+
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0A8449),
+
+                            foregroundColor: Colors.white,
+
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Em breve você poderá doar para ${ong.nome}',
+                                ),
+                              ),
+                            );
+                          },
+
+                          icon: const Icon(Icons.favorite_border),
+
+                          label: const Text("Quero Doar"),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-
-            const SizedBox(height: 20),
-
-            _buildInfoTile(
-              Icons.email_outlined,
-              ong.email,
-            ),
-
-            _buildInfoTile(
-              Icons.phone_outlined,
-              ong.telefone,
-            ),
-
-            _buildInfoTile(
-              Icons.location_city_outlined,
-              ong.cidade,
-            ),
-
-            const SizedBox(height: 18),
-
-            Text(
-
-              'Descrição',
-
-              style:
-                  GoogleFonts.poppins(
-
-                fontWeight:
-                    FontWeight.w600,
-
-                fontSize: 15,
-
-                color:
-                    const Color(
-                  0xFF0A8449,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-
-              ong.descricao,
-
-              style:
-                  GoogleFonts.poppins(
-
-                fontSize: 14,
-
-                height: 1.5,
-
-                color:
-                    Colors.black87,
-              ),
             ),
           ],
         ),
@@ -301,49 +253,17 @@ class _BuscarReceptorScreenState
     );
   }
 
-  Widget _buildInfoTile(
-    IconData icon,
-    String text,
-  ) {
-
+  Widget _buildInfoTile(IconData icon, String text) {
     return Padding(
-
-      padding:
-          const EdgeInsets.only(
-        bottom: 10,
-      ),
+      padding: const EdgeInsets.only(bottom: 10),
 
       child: Row(
-
         children: [
-
-          Icon(
-
-            icon,
-
-            size: 20,
-
-            color:
-                const Color(
-              0xFF0A8449,
-            ),
-          ),
+          Icon(icon, size: 20, color: const Color(0xFF0A8449)),
 
           const SizedBox(width: 10),
 
-          Expanded(
-
-            child: Text(
-
-              text,
-
-              style:
-                  GoogleFonts.poppins(
-
-                fontSize: 14,
-              ),
-            ),
-          ),
+          Expanded(child: Text(text, style: GoogleFonts.poppins(fontSize: 14))),
         ],
       ),
     );
@@ -351,223 +271,169 @@ class _BuscarReceptorScreenState
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
-      backgroundColor:
-          const Color(0xFFF3F7F5),
+      extendBodyBehindAppBar: true,
 
       appBar: AppBar(
-
         elevation: 0,
 
-        backgroundColor:
-            Colors.transparent,
+        backgroundColor: Colors.transparent,
 
-        foregroundColor:
-            Colors.black87,
+        foregroundColor: Colors.white,
 
         centerTitle: true,
 
         title: Text(
-
           "Buscar Receptor",
 
-          style:
-              GoogleFonts.poppins(
+          style: GoogleFonts.poppins(
+            color: Colors.white,
 
-            fontWeight:
-                FontWeight.w600,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
 
-      body: Padding(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0A8449), Color(0xFF066537)],
 
-        padding:
-            const EdgeInsets.all(20),
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
 
-        child: Column(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
 
-          children: [
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
 
-            Container(
-
-              padding:
-                  const EdgeInsets.all(6),
-
-              decoration: BoxDecoration(
-
-                color: Colors.white,
-
-                borderRadius:
-                    BorderRadius.circular(
-                  22,
+                Text(
+                  "Encontre uma ONG",
+                  style: GoogleFonts.poppins(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
 
-                boxShadow: [
+                const SizedBox(height: 6),
 
-                  BoxShadow(
-
-                    color: Colors.black
-                        .withOpacity(
-                      0.04,
-                    ),
-
-                    blurRadius: 16,
-
-                    offset:
-                        const Offset(
-                      0,
-                      8,
-                    ),
+                Text(
+                  "Busque instituições para realizar doações",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.white70,
                   ),
-                ],
-              ),
+                ),
 
-              child: TextField(
+                const SizedBox(height: 24),
 
-                controller:
-                    _searchController,
-
-                style:
-                    GoogleFonts.poppins(),
-
-                decoration:
-                    InputDecoration(
-
-                  hintText:
-                      "Buscar ONG por nome ou cidade",
-
-                  hintStyle:
-                      GoogleFonts.poppins(
-
-                    color:
-                        Colors.grey,
-                  ),
-
-                  border:
-                      InputBorder.none,
-
-                  prefixIcon:
-                      const Icon(
-
-                    Icons.search,
-
-                    color:
-                        Color(
-                      0xFF0A8449,
-                    ),
-                  ),
-
-                  suffixIcon: IconButton(
-
-                    onPressed:
-                        _buscarOng,
-
-                    icon:
-                        const Icon(
-
-                      Icons.arrow_forward,
-
-                      color:
-                          Color(
-                        0xFF0A8449,
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-
-                onChanged: (_) =>
-                    _buscarOng(),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            Expanded(
-
-              child: carregando
-
-                  ? const Center(
-
-                      child:
-                          CircularProgressIndicator(
-                        color:
-                            Color(
-                          0xFF0A8449,
+                  child: TextField(
+                    controller: _searchController,
+                    style: GoogleFonts.poppins(),
+                    decoration: InputDecoration(
+                      hintText: "Buscar ONG por nome ou cidade",
+                      hintStyle: GoogleFonts.poppins(color: Colors.grey),
+                      border: InputBorder.none,
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Color(0xFF0A8449),
+                      ),
+                      suffixIcon: IconButton(
+                        onPressed: _buscarOng,
+                        icon: const Icon(
+                          Icons.arrow_forward,
+                          color: Color(0xFF0A8449),
                         ),
                       ),
-                    )
+                    ),
+                    onChanged: (_) => _buscarOng(),
+                  ),
+                ),
 
-                  : _resultados.isEmpty
+                const SizedBox(height: 18),
 
-                      ? Center(
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      "${_resultados.length} ONGs encontradas",
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
 
-                          child: Column(
+                const SizedBox(height: 20),
 
-                            mainAxisAlignment:
-                                MainAxisAlignment
-                                    .center,
-
-                            children: [
-
-                              Icon(
-
-                                Icons.search_off,
-
-                                size: 70,
-
-                                color: Colors
-                                    .grey
-                                    .shade400,
-                              ),
-
-                              const SizedBox(
-                                height: 16,
-                              ),
-
-                              Text(
-
-                                'Nenhuma ONG encontrada',
-
-                                style:
-                                    GoogleFonts.poppins(
-
-                                  fontSize:
-                                      16,
-
-                                  color:
-                                      Colors
-                                          .grey,
+                Expanded(
+                  child:
+                      carregando
+                          ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          )
+                          : _resultados.isEmpty
+                          ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.search_off,
+                                  size: 80,
+                                  color: Colors.white.withOpacity(0.7),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 16),
+                                Text(
+                                  "Nenhuma ONG encontrada",
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : ListView.builder(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: _resultados.length,
+                            itemBuilder: (context, index) {
+                              return _buildOngCard(_resultados[index]);
+                            },
                           ),
-                        )
-
-                      : ListView.builder(
-
-                          physics:
-                              const BouncingScrollPhysics(),
-
-                          itemCount:
-                              _resultados
-                                  .length,
-
-                          itemBuilder:
-                              (context,
-                                  index) {
-
-                            return _buildOngCard(
-
-                              _resultados[
-                                  index],
-                            );
-                          },
-                        ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
