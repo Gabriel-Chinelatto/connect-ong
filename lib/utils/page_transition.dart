@@ -8,18 +8,61 @@ class PageTransition {
 
     return PageRouteBuilder(
 
+      transitionDuration:
+          const Duration(
+        milliseconds: 300,
+      ),
+
+      reverseTransitionDuration:
+          const Duration(
+        milliseconds: 250,
+      ),
+
       pageBuilder:
-          (_, animation, __) => page,
+          (
+            context,
+            animation,
+            secondaryAnimation,
+          ) {
+
+        return page;
+      },
 
       transitionsBuilder:
+          (
+            context,
+            animation,
+            secondaryAnimation,
+            child,
+          ) {
 
-          (_, animation, __, child) {
+        final curvedAnimation =
+            CurvedAnimation(
+
+          parent: animation,
+
+          curve: Curves.easeInOut,
+        );
 
         return FadeTransition(
 
-          opacity: animation,
+          opacity: curvedAnimation,
 
-          child: child,
+          child: SlideTransition(
+
+            position:
+                Tween<Offset>(
+
+              begin: const Offset(
+                0.03,
+                0,
+              ),
+
+              end: Offset.zero,
+            ).animate(curvedAnimation),
+
+            child: child,
+          ),
         );
       },
     );

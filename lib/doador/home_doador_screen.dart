@@ -3,10 +3,16 @@ import 'package:flutter/material.dart';
 import '../pages/login_page.dart';
 
 import '../screens/about/descricao_screen.dart';
+import '../screens/about/integrantes_projeto_screen.dart';
 
 import '../services/session_service.dart';
 
+import '../utils/page_transition.dart';
+
 import '../widgets/home_card.dart';
+
+import 'cadastrar_doacao_screen.dart';
+import 'buscar_receptor_screen.dart';
 
 class HomeDoadorScreen extends StatelessWidget {
 
@@ -29,10 +35,9 @@ class HomeDoadorScreen extends StatelessWidget {
 
       context,
 
-      MaterialPageRoute(
+      PageTransition.fade(
 
-        builder: (_) =>
-            const LoginPage(),
+        const LoginPage(),
       ),
     );
   }
@@ -95,9 +100,7 @@ class HomeDoadorScreen extends StatelessWidget {
 
                   children: [
 
-                    // =========================
-                    // HERO HEADER
-                    // =========================
+                    // HEADER
 
                     Container(
 
@@ -125,15 +128,10 @@ class HomeDoadorScreen extends StatelessWidget {
 
                       child: web
 
-                          // =========================
-                          // WEB LAYOUT
-                          // =========================
-
                           ? Row(
 
                               children: [
 
-                                // TEXTO
                                 Expanded(
 
                                   flex: 2,
@@ -308,7 +306,6 @@ class HomeDoadorScreen extends StatelessWidget {
                                   width: 40,
                                 ),
 
-                                // LOGO
                                 Expanded(
 
                                   child: Center(
@@ -344,7 +341,7 @@ class HomeDoadorScreen extends StatelessWidget {
 
                                       child: Image.asset(
 
-                                        'assets/images/logo.png',
+                                        'assets/images/integrador.jpg',
 
                                         height: 160,
                                       ),
@@ -353,10 +350,6 @@ class HomeDoadorScreen extends StatelessWidget {
                                 ),
                               ],
                             )
-
-                          // =========================
-                          // MOBILE LAYOUT
-                          // =========================
 
                           : Column(
 
@@ -434,10 +427,6 @@ class HomeDoadorScreen extends StatelessWidget {
                       height: 48,
                     ),
 
-                    // =========================
-                    // AÇÕES
-                    // =========================
-
                     const Text(
 
                       'Ações disponíveis',
@@ -501,7 +490,18 @@ class HomeDoadorScreen extends StatelessWidget {
                           label:
                               'Cadastrar Doação',
 
-                          onTap: () {},
+                          onTap: () {
+
+                            Navigator.push(
+
+                              context,
+
+                              PageTransition.fade(
+
+                                const CadastrarDoacaoScreen(),
+                              ),
+                            );
+                          },
                         ),
 
                         HomeCard(
@@ -512,7 +512,18 @@ class HomeDoadorScreen extends StatelessWidget {
                           label:
                               'Buscar Receptor',
 
-                          onTap: () {},
+                          onTap: () {
+
+                            Navigator.push(
+
+                              context,
+
+                              PageTransition.fade(
+
+                                const BuscarReceptorScreen(),
+                              ),
+                            );
+                          },
                         ),
 
                         HomeCard(
@@ -523,7 +534,18 @@ class HomeDoadorScreen extends StatelessWidget {
                           label:
                               'Integrantes do Projeto',
 
-                          onTap: () {},
+                          onTap: () {
+
+                            Navigator.push(
+
+                              context,
+
+                              PageTransition.fade(
+
+                                const IntegrantesProjetoScreen(),
+                              ),
+                            );
+                          },
                         ),
 
                         HomeCard(
@@ -540,10 +562,9 @@ class HomeDoadorScreen extends StatelessWidget {
 
                               context,
 
-                              MaterialPageRoute(
+                              PageTransition.fade(
 
-                                builder: (_) =>
-                                    const DescricaoScreen(),
+                                const DescricaoScreen(),
                               ),
                             );
                           },
@@ -554,10 +575,6 @@ class HomeDoadorScreen extends StatelessWidget {
                     const SizedBox(
                       height: 48,
                     ),
-
-                    // =========================
-                    // LOGOUT
-                    // =========================
 
                     Center(
 
