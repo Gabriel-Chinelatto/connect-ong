@@ -6,7 +6,7 @@ import '../screens/about/descricao_screen.dart';
 
 import '../services/session_service.dart';
 
-import '../widgets/home_card.dart';
+import '../widgets/cards/home_card.dart';
 
 class HomeReceptorScreen extends StatelessWidget {
 

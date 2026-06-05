@@ -19,7 +19,7 @@ class IntegrantesProjetoScreen
           'Gabriel Chinelatto',
 
       'descricao':
-          'Desenvolvedor Back-end e Designer',
+          'Aluno do 4°DSN, Desenvolvedor Back-end e Designer',
 
       'foto':
           'assets/images/gabriel.jpg',
@@ -31,7 +31,7 @@ class IntegrantesProjetoScreen
           'Arthur Souza',
 
       'descricao':
-          'Aluno do 3°DSN, Designer e Tester',
+          'Aluno do 4°DSN, Designer e Tester',
 
       'foto':
           'assets/images/arthur.jpg',
@@ -43,7 +43,7 @@ class IntegrantesProjetoScreen
           'Luan Felipe',
 
       'descricao':
-          'Aluno do 3°DSN, Desenvolvedor Back-end e Designer',
+          'Aluno do 4°DSN, Desenvolvedor Back-end e Designer',
 
       'foto':
           'assets/images/luan.png',
@@ -55,7 +55,7 @@ class IntegrantesProjetoScreen
           'Abner Viola',
 
       'descricao':
-          'Aluno do 3°DSN e Desenvolvedor Front-end',
+          'Aluno do 4°DSN e Desenvolvedor Front-end',
 
       'foto':
           'assets/images/abner.jpg',

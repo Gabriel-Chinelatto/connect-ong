@@ -1,34 +1,131 @@
-// lib/login_page.dart
-
 import 'package:flutter/material.dart';
 
 import '../doador/home_doador_screen.dart';
 import '../receptor/home_receptor_screen.dart';
 
+import '../models/usuario_logado.dart';
+
 import '../services/login_service.dart';
 
-import '../widgets/descricao_screen.dart';
+import '../widgets/buttons/app_button.dart';
+import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/inputs/app_text_field.dart';
+import '../widgets/layout/auth_container.dart';
+
+import '../utils/page_transition.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+
+  const LoginPage({
+    super.key,
+  });
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LoginPage> createState() =>
+      _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final emailController = TextEditingController();
+class _LoginPageState
+    extends State<LoginPage> {
 
-  final senhaController = TextEditingController();
+  final emailController =
+      TextEditingController();
 
-  String? erroLogin;
+  final senhaController =
+      TextEditingController();
+
+  final LoginService _loginService =
+      LoginService();
 
   bool carregando = false;
 
   int tipoUsuarioSelecionado = 0;
 
+  Future<void> fazerLogin() async {
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+
+      carregando = true;
+    });
+
+    try {
+
+      final UsuarioLogado usuario =
+          await _loginService.fazerLogin(
+
+        email:
+            emailController.text.trim(),
+
+        senha:
+            senhaController.text.trim(),
+
+        tipoSelecionado:
+            tipoUsuarioSelecionado,
+      );
+
+      if (!mounted) return;
+
+      AppSnackbar.sucesso(
+
+        context,
+
+        'Login realizado com sucesso!',
+      );
+
+      if (usuario.tipo == 'DOADOR') {
+
+        Navigator.pushReplacement(
+
+          context,
+
+          PageTransition.fade(
+            const HomeDoadorScreen(),
+          ),
+        );
+
+      } else {
+
+        Navigator.pushReplacement(
+
+          context,
+
+          PageTransition.fade(
+            const HomeReceptorScreen(),
+          ),
+        );
+      }
+
+    } catch (e) {
+
+      if (!mounted) return;
+
+      AppSnackbar.erro(
+
+        context,
+
+        e.toString().replaceAll(
+          'Exception: ',
+          '',
+        ),
+      );
+
+    } finally {
+
+      if (mounted) {
+
+        setState(() {
+
+          carregando = false;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
+
     emailController.dispose();
 
     senhaController.dispose();
@@ -36,309 +133,273 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _fazerLogin() async {
-    final email = emailController.text.trim();
-
-    final senha = senhaController.text;
-
-    if (email.isEmpty || senha.isEmpty) {
-      setState(() {
-        erroLogin = 'Preencha todos os campos.';
-      });
-
-      return;
-    }
-
-    setState(() {
-      carregando = true;
-
-      erroLogin = null;
-    });
-
-    try {
-      final loginService = LoginService();
-
-      final usuario = await loginService.fazerLogin(
-        email: email,
-
-        senha: senha,
-
-        tipoSelecionado: tipoUsuarioSelecionado,
-      );
-
-      Navigator.pushReplacement(
-        context,
-
-        MaterialPageRoute(
-          builder:
-              (_) =>
-                  usuario.tipo == 'DOADOR'
-                      ? const HomeDoadorScreen()
-                      : const HomeReceptorScreen(),
-        ),
-      );
-    } catch (e) {
-      setState(() {
-        erroLogin = e.toString().replaceAll('Exception: ', '');
-      });
-    } finally {
-      setState(() {
-        carregando = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    const baseColor = Color(0xFF0a8449);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
 
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
+      body: Container(
+
+        width: double.infinity,
+
+        decoration: const BoxDecoration(
+
+          gradient: LinearGradient(
+
+            begin: Alignment.topCenter,
+
+            end: Alignment.bottomCenter,
+
+            colors: [
+
+              Color(0xFFB7DFC0),
+
+              Color(0xFF2F8F46),
+            ],
+          ),
+        ),
+
+        child: AuthContainer(
 
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+
+            mainAxisSize:
+                MainAxisSize.min,
 
             children: [
-              Hero(
-                tag: 'logo_app',
 
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
+              Image.asset(
 
-                  child: Image.asset(
-                    'assets/images/integrador.jpg',
+                'assets/images/integrador.jpg',
 
-                    height: 150,
-
-                    width: 150,
-
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                height: 120,
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 24,
+              ),
 
               const Text(
+
                 'Connect Ong',
 
                 style: TextStyle(
-                  fontSize: 32,
 
-                  fontWeight: FontWeight.bold,
+                  fontSize: 34,
 
-                  color: baseColor,
+                  fontWeight:
+                      FontWeight.bold,
+
+                  color:
+                      Color(0xFF2F8F46),
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(
+                height: 40,
+              ),
 
               Container(
-                padding: const EdgeInsets.all(24),
 
                 decoration: BoxDecoration(
-                  color: Colors.white,
 
-                  borderRadius: BorderRadius.circular(28),
+                  color:
+                      Colors.grey.shade200,
+
+                  borderRadius:
+                      BorderRadius.circular(
+                    16,
+                  ),
                 ),
 
-                child: Column(
+                child: Row(
+
                   children: [
-                    _buildToggleSelector(baseColor),
 
-                    const SizedBox(height: 24),
+                    Expanded(
 
-                    _buildTextField(
-                      controller: emailController,
+                      child: GestureDetector(
 
-                      label: 'E-mail',
+                        onTap: () {
 
-                      icon: Icons.alternate_email,
+                          setState(() {
 
-                      baseColor: baseColor,
-                    ),
+                            tipoUsuarioSelecionado = 0;
+                          });
+                        },
 
-                    const SizedBox(height: 16),
+                        child: Container(
 
-                    _buildTextField(
-                      controller: senhaController,
+                          padding:
+                              const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
 
-                      label: 'Senha',
+                          decoration: BoxDecoration(
 
-                      icon: Icons.lock_outline,
+                            color:
+                                tipoUsuarioSelecionado == 0
+                                    ? const Color(0xFF2F8F46)
+                                    : Colors.transparent,
 
-                      baseColor: baseColor,
+                            borderRadius:
+                                BorderRadius.circular(
+                              16,
+                            ),
+                          ),
 
-                      isPassword: true,
-                    ),
+                          child: Text(
 
-                    if (erroLogin != null) _buildErrorBadge(),
+                            'Doador',
 
-                    const SizedBox(height: 24),
+                            textAlign:
+                                TextAlign.center,
 
-                    SizedBox(
-                      width: double.infinity,
+                            style: TextStyle(
 
-                      height: 55,
+                              color:
+                                  tipoUsuarioSelecionado == 0
+                                      ? Colors.white
+                                      : Colors.black54,
 
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: baseColor,
-
-                          foregroundColor: Colors.white,
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
                         ),
+                      ),
+                    ),
 
-                        onPressed: carregando ? null : _fazerLogin,
+                    Expanded(
 
-                        child:
-                            carregando
-                                ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                                : const Text(
-                                  'ENTRAR',
+                      child: GestureDetector(
 
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                        onTap: () {
+
+                          setState(() {
+
+                            tipoUsuarioSelecionado = 1;
+                          });
+                        },
+
+                        child: Container(
+
+                          padding:
+                              const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+
+                          decoration: BoxDecoration(
+
+                            color:
+                                tipoUsuarioSelecionado == 1
+                                    ? const Color(0xFF2F8F46)
+                                    : Colors.transparent,
+
+                            borderRadius:
+                                BorderRadius.circular(
+                              16,
+                            ),
+                          ),
+
+                          child: Text(
+
+                            'ONG',
+
+                            textAlign:
+                                TextAlign.center,
+
+                            style: TextStyle(
+
+                              color:
+                                  tipoUsuarioSelecionado == 1
+                                      ? Colors.white
+                                      : Colors.black54,
+
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(
+                height: 32,
+              ),
+
+              AppTextField(
+
+                controller:
+                    emailController,
+
+                hint: 'E-mail',
+
+                icon: Icons.email_outlined,
+              ),
+
+              const SizedBox(
+                height: 20,
+              ),
+
+              AppTextField(
+
+                controller:
+                    senhaController,
+
+                hint: 'Senha',
+
+                icon: Icons.lock_outline,
+
+                obscureText: true,
+              ),
+
+              const SizedBox(
+                height: 32,
+              ),
+
+              AppButton(
+
+                texto: 'ENTRAR',
+
+                carregando:
+                    carregando,
+
+                onPressed: fazerLogin,
+              ),
+
+              const SizedBox(
+                height: 28,
+              ),
 
               TextButton(
+
                 onPressed: () {},
 
-                child: Text(
-                  "Não tem conta? Cadastre-se",
+                child: const Text(
 
-                  style: TextStyle(color: Colors.grey.shade700),
+                  'Não tem conta? Cadastre-se',
                 ),
               ),
 
               TextButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
 
-                    MaterialPageRoute(builder: (_) => const DescricaoScreen()),
-                  );
-                },
+                onPressed: () {},
 
-                icon: const Icon(Icons.info_outline),
+                icon: const Icon(
+                  Icons.info_outline,
+                ),
 
-                label: const Text("Sobre o Projeto"),
+                label: const Text(
+                  'Sobre o Projeto',
+                ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildToggleSelector(Color baseColor) {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  tipoUsuarioSelecionado == 0
-                      ? baseColor
-                      : Colors.grey.shade300,
-            ),
-
-            onPressed: () {
-              setState(() {
-                tipoUsuarioSelecionado = 0;
-              });
-            },
-
-            child: const Text("Doador"),
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  tipoUsuarioSelecionado == 1
-                      ? baseColor
-                      : Colors.grey.shade300,
-            ),
-
-            onPressed: () {
-              setState(() {
-                tipoUsuarioSelecionado = 1;
-              });
-            },
-
-            child: const Text("ONG"),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-
-    required String label,
-
-    required IconData icon,
-
-    required Color baseColor,
-
-    bool isPassword = false,
-  }) {
-    return TextField(
-      controller: controller,
-
-      obscureText: isPassword,
-
-      decoration: InputDecoration(
-        labelText: label,
-
-        prefixIcon: Icon(icon, color: baseColor),
-
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-    );
-  }
-
-  Widget _buildErrorBadge() {
-    return Container(
-      margin: const EdgeInsets.only(top: 16),
-
-      padding: const EdgeInsets.all(12),
-
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-
-        borderRadius: BorderRadius.circular(12),
-      ),
-
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red),
-
-          const SizedBox(width: 8),
-
-          Expanded(
-            child: Text(erroLogin!, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
       ),
     );
   }

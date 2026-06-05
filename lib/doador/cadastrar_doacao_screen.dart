@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'package:flutter_application_1/doacao.dart';
+import '../doacao.dart';
 
-import '../widgets/doacao_card.dart';
+import '../services/doacao_service.dart';
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import '../widgets/buttons/app_button.dart';
+import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/inputs/app_text_field.dart';
 
 class CadastrarDoacaoScreen
     extends StatefulWidget {
@@ -25,319 +24,170 @@ class CadastrarDoacaoScreen
 class _CadastrarDoacaoScreenState
     extends State<CadastrarDoacaoScreen> {
 
-  final _formKey =
-      GlobalKey<FormState>();
+  final nomeController =
+      TextEditingController();
 
-  String? _nomeDoacao;
+  final descricaoController =
+      TextEditingController();
 
-  String? _descricaoDoacao;
+  final quantidadeController =
+      TextEditingController();
 
-  int? _quantidade;
-
-  String? _tipoDoacao;
-
-  final List<String>
-      _categorias = [
-
-    'Alimento',
-
-    'Roupa',
-
-    'Brinquedo',
-
-    'Móvel',
-  ];
-
-  String? _categoriaSelecionada;
-
-  bool _isUrgente = false;
-
-  bool _isNovo = false;
+  final DoacaoService _service =
+      DoacaoService();
 
   bool carregando = false;
 
-  final List<Doacao> _doacoes = [];
+  bool urgente = false;
 
-  static const String _baseUrl =
-      'http://localhost:8080/doacoes';
+  bool produtoNovo = false;
 
-  Future<void>
-      _salvarDoacaoAPI() async {
+  String categoria =
+      'Alimento';
 
-    final body = {
+  String tipo =
+      'Produto';
 
-      "nome": _nomeDoacao,
+  Future<void> salvarDoacao() async {
 
-      "descricao":
-          _descricaoDoacao,
+    FocusScope.of(context).unfocus();
 
-      "quantidade":
-          _quantidade,
+    if (nomeController.text
+        .trim()
+        .isEmpty) {
 
-      "categoria":
-          _categoriaSelecionada,
+      AppSnackbar.erro(
 
-      "tipo": _tipoDoacao,
+        context,
 
-      "urgente": _isUrgente,
-
-      "novo": _isNovo
-    };
-
-    try {
-
-      final response =
-          await http.post(
-
-        Uri.parse(_baseUrl),
-
-        headers: {
-
-          'Content-Type':
-              'application/json'
-        },
-
-        body: jsonEncode(body),
+        'Informe o nome da doação.',
       );
-
-      if (response.statusCode ==
-              200 ||
-          response.statusCode ==
-              201) {
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-
-          SnackBar(
-
-            behavior:
-                SnackBarBehavior
-                    .floating,
-
-            backgroundColor:
-                const Color(
-              0xFF0A8449,
-            ),
-
-            shape:
-                RoundedRectangleBorder(
-
-              borderRadius:
-                  BorderRadius
-                      .circular(
-                16,
-              ),
-            ),
-
-            content: Text(
-
-              "Doação cadastrada com sucesso",
-
-              style:
-                  GoogleFonts
-                      .poppins(),
-            ),
-          ),
-        );
-
-      } else {
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-
-          SnackBar(
-
-            behavior:
-                SnackBarBehavior
-                    .floating,
-
-            backgroundColor:
-                Colors.red,
-
-            content: Text(
-
-              "Erro ${response.statusCode}",
-
-              style:
-                  GoogleFonts
-                      .poppins(),
-            ),
-          ),
-        );
-      }
-
-    } catch (e) {
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-
-        SnackBar(
-
-          behavior:
-              SnackBarBehavior
-                  .floating,
-
-          backgroundColor:
-              Colors.red,
-
-          content: Text(
-
-            "Erro de conexão",
-
-            style:
-                GoogleFonts
-                    .poppins(),
-          ),
-        ),
-      );
-    }
-  }
-
-  void _salvarDoacao() async {
-
-    final isValid =
-        _formKey.currentState
-            ?.validate() ??
-        false;
-
-    final tipoValido =
-        _tipoDoacao != null;
-
-    if (!isValid ||
-        !tipoValido) {
-
-      setState(() {});
 
       return;
     }
 
-    _formKey.currentState?.save();
+    if (quantidadeController.text
+        .trim()
+        .isEmpty) {
+
+      AppSnackbar.erro(
+
+        context,
+
+        'Informe a quantidade.',
+      );
+
+      return;
+    }
+
+    final quantidade =
+        int.tryParse(
+      quantidadeController.text,
+    );
+
+    if (quantidade == null ||
+        quantidade <= 0) {
+
+      AppSnackbar.erro(
+
+        context,
+
+        'Quantidade inválida.',
+      );
+
+      return;
+    }
 
     setState(() {
+
       carregando = true;
     });
 
-    await _salvarDoacaoAPI();
+    try {
 
-    setState(() {
+      final doacao = Doacao(
 
-      _doacoes.insert(
+        nome:
+            nomeController.text.trim(),
 
-        0,
+        descricao:
+            descricaoController.text
+                .trim(),
 
-        Doacao(
+        quantidade: quantidade,
 
-          nome: _nomeDoacao!,
+        categoria: categoria,
 
-          descricao:
-              _descricaoDoacao!,
+        tipo: tipo,
 
-          quantidade:
-              _quantidade!,
+        urgente: urgente,
 
-          categoria:
-              _categoriaSelecionada!,
-
-          tipo: _tipoDoacao!,
-
-          urgente:
-              _isUrgente,
-
-          novo: _isNovo,
-        ),
+        novo: produtoNovo,
       );
 
-      carregando = false;
+      await _service.cadastrarDoacao(
+        doacao,
+      );
 
-      _formKey.currentState
-          ?.reset();
+      if (!mounted) return;
 
-      _tipoDoacao = null;
+      AppSnackbar.sucesso(
 
-      _categoriaSelecionada =
-          null;
+        context,
 
-      _isUrgente = false;
+        'Doação cadastrada com sucesso!',
+      );
 
-      _isNovo = false;
-    });
+      nomeController.clear();
+
+      descricaoController.clear();
+
+      quantidadeController.clear();
+
+      setState(() {
+
+        urgente = false;
+
+        produtoNovo = false;
+
+        categoria = 'Alimento';
+
+        tipo = 'Produto';
+      });
+
+    } catch (e) {
+
+      if (!mounted) return;
+
+      AppSnackbar.erro(
+
+        context,
+
+        'Erro ao cadastrar doação.',
+      );
+
+    } finally {
+
+      if (mounted) {
+
+        setState(() {
+
+          carregando = false;
+        });
+      }
+    }
   }
 
-  InputDecoration _inputStyle(
-    String label,
-    IconData icon,
-  ) {
+  @override
+  void dispose() {
 
-    return InputDecoration(
+    nomeController.dispose();
 
-      labelText: label,
+    descricaoController.dispose();
 
-      labelStyle:
-          GoogleFonts.poppins(),
+    quantidadeController.dispose();
 
-      prefixIcon: Icon(
-
-        icon,
-
-        color:
-            const Color(
-          0xFF0A8449,
-        ),
-      ),
-
-      filled: true,
-
-      fillColor:
-          const Color(
-        0xFFF7F7F7,
-      ),
-
-      border:
-          OutlineInputBorder(
-
-        borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
-        borderSide:
-            BorderSide.none,
-      ),
-
-      enabledBorder:
-          OutlineInputBorder(
-
-        borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
-        borderSide:
-            BorderSide.none,
-      ),
-
-      focusedBorder:
-          OutlineInputBorder(
-
-        borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
-        borderSide:
-            const BorderSide(
-
-          color:
-              Color(
-            0xFF0A8449,
-          ),
-
-          width: 1.5,
-        ),
-      ),
-    );
+    super.dispose();
   }
 
   @override
@@ -345,632 +195,316 @@ class _CadastrarDoacaoScreenState
 
     return Scaffold(
 
-      backgroundColor:
-          const Color(
-        0xFFF3F7F5,
-      ),
-
       appBar: AppBar(
 
-        elevation: 0,
-
-        backgroundColor:
-            Colors.transparent,
-
-        foregroundColor:
-            Colors.black87,
-
-        centerTitle: true,
-
-        title: Text(
-
+        title: const Text(
           'Cadastrar Doação',
-
-          style:
-              GoogleFonts.poppins(
-
-            fontWeight:
-                FontWeight.w600,
-          ),
         ),
       ),
 
-      body: Padding(
+      body: SingleChildScrollView(
 
         padding:
-            const EdgeInsets.symmetric(
+            const EdgeInsets.all(24),
 
-          horizontal: 22,
+        child: Center(
 
-          vertical: 12,
-        ),
+          child: Container(
 
-        child: ListView(
+            constraints:
+                const BoxConstraints(
+              maxWidth: 700,
+            ),
 
-          physics:
-              const BouncingScrollPhysics(),
+            child: Card(
 
-          children: [
+              child: Padding(
 
-            Container(
-
-              padding:
-                  const EdgeInsets.all(
-                24,
-              ),
-
-              decoration: BoxDecoration(
-
-                color: Colors.white,
-
-                borderRadius:
-                    BorderRadius.circular(
-                  30,
-                ),
-
-                boxShadow: [
-
-                  BoxShadow(
-
-                    color: Colors.black
-                        .withOpacity(
-                      0.04,
-                    ),
-
-                    blurRadius: 18,
-
-                    offset:
-                        const Offset(
-                      0,
-                      8,
-                    ),
-                  ),
-                ],
-              ),
-
-              child: Form(
-
-                key: _formKey,
+                padding:
+                    const EdgeInsets.all(32),
 
                 child: Column(
 
                   crossAxisAlignment:
-                      CrossAxisAlignment
-                          .stretch,
+                      CrossAxisAlignment.start,
 
                   children: [
 
-                    Text(
+                    const Text(
 
-                      'Informações da Doação',
+                      'Nova Doação',
 
-                      style:
-                          GoogleFonts
-                              .poppins(
+                      style: TextStyle(
 
-                        fontSize: 20,
+                        fontSize: 30,
 
                         fontWeight:
-                            FontWeight
-                                .w700,
+                            FontWeight.bold,
                       ),
                     ),
 
                     const SizedBox(
-                      height: 24,
-                    ),
-
-                    TextFormField(
-
-                      decoration:
-                          _inputStyle(
-
-                        'Nome da Doação',
-
-                        Icons
-                            .favorite_border,
-                      ),
-
-                      onSaved: (val) =>
-                          _nomeDoacao =
-                              val,
-
-                      validator: (val) {
-
-                        if (val ==
-                                null ||
-                            val
-                                .trim()
-                                .isEmpty) {
-
-                          return 'Informe o nome da doação';
-                        }
-
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(
-                      height: 18,
-                    ),
-
-                    TextFormField(
-
-                      maxLines: 4,
-
-                      decoration:
-                          _inputStyle(
-
-                        'Descrição',
-
-                        Icons
-                            .description_outlined,
-                      ),
-
-                      onSaved: (val) =>
-                          _descricaoDoacao =
-                              val,
-
-                      validator: (val) {
-
-                        if (val ==
-                                null ||
-                            val
-                                .trim()
-                                .isEmpty) {
-
-                          return 'Informe uma descrição';
-                        }
-
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(
-                      height: 18,
-                    ),
-
-                    TextFormField(
-
-                      keyboardType:
-                          TextInputType
-                              .number,
-
-                      decoration:
-                          _inputStyle(
-
-                        'Quantidade',
-
-                        Icons
-                            .numbers_outlined,
-                      ),
-
-                      onSaved: (val) {
-
-                        _quantidade =
-                            int.tryParse(
-                          val ?? '',
-                        );
-                      },
-
-                      validator: (val) {
-
-                        if (val ==
-                                null ||
-                            val
-                                .trim()
-                                .isEmpty) {
-
-                          return 'Informe a quantidade';
-                        }
-
-                        final n =
-                            int.tryParse(
-                          val,
-                        );
-
-                        if (n ==
-                                null ||
-                            n <= 0) {
-
-                          return 'Quantidade inválida';
-                        }
-
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(
-                      height: 18,
-                    ),
-
-                    DropdownButtonFormField<
-                        String>(
-
-                      value:
-                          _categoriaSelecionada,
-
-                      decoration:
-                          _inputStyle(
-
-                        'Categoria',
-
-                        Icons
-                            .category_outlined,
-                      ),
-
-                      items:
-                          _categorias
-                              .map(
-
-                        (
-                          categoria,
-                        ) {
-
-                          return DropdownMenuItem<
-
-                              String>(
-
-                            value:
-                                categoria,
-
-                            child: Text(
-
-                              categoria,
-
-                              style:
-                                  GoogleFonts
-                                      .poppins(),
-                            ),
-                          );
-                        },
-                      ).toList(),
-
-                      onChanged: (val) {
-
-                        setState(() {
-
-                          _categoriaSelecionada =
-                              val;
-                        });
-                      },
-
-                      validator: (val) {
-
-                        if (val ==
-                            null) {
-
-                          return 'Selecione uma categoria';
-                        }
-
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(
-                      height: 24,
+                      height: 8,
                     ),
 
                     Text(
 
-                      'Tipo da Doação',
+                      'Preencha as informações da doação.',
 
-                      style:
-                          GoogleFonts
-                              .poppins(
+                      style: TextStyle(
 
-                        fontWeight:
-                            FontWeight
-                                .w600,
+                        color:
+                            Colors.grey.shade700,
 
                         fontSize: 16,
                       ),
                     ),
 
                     const SizedBox(
-                      height: 10,
+                      height: 32,
                     ),
 
-                    Container(
+                    AppTextField(
+
+                      controller:
+                          nomeController,
+
+                      hint:
+                          'Nome da doação',
+
+                      icon:
+                          Icons.favorite,
+                    ),
+
+                    const SizedBox(
+                      height: 20,
+                    ),
+
+                    TextField(
+
+                      controller:
+                          descricaoController,
+
+                      maxLines: 4,
 
                       decoration:
-                          BoxDecoration(
+                          const InputDecoration(
 
-                        color:
-                            const Color(
-                          0xFFF5F5F5,
-                        ),
+                        hintText:
+                            'Descrição',
 
-                        borderRadius:
-                            BorderRadius.circular(
-                          18,
-                        ),
-                      ),
+                        prefixIcon:
+                            Padding(
 
-                      child: Column(
-
-                        children: [
-
-                          RadioListTile<
-                              String>(
-
-                            title: Text(
-
-                              'Nova',
-
-                              style:
-                                  GoogleFonts
-                                      .poppins(),
-                            ),
-
-                            value:
-                                'Nova',
-
-                            groupValue:
-                                _tipoDoacao,
-
-                            activeColor:
-                                const Color(
-                              0xFF0A8449,
-                            ),
-
-                            onChanged:
-                                (val) {
-
-                              setState(() {
-
-                                _tipoDoacao =
-                                    val;
-                              });
-                            },
+                          padding:
+                              EdgeInsets.only(
+                            bottom: 80,
                           ),
 
-                          RadioListTile<
-                              String>(
-
-                            title: Text(
-
-                              'Usada',
-
-                              style:
-                                  GoogleFonts
-                                      .poppins(),
-                            ),
-
-                            value:
-                                'Usada',
-
-                            groupValue:
-                                _tipoDoacao,
-
-                            activeColor:
-                                const Color(
-                              0xFF0A8449,
-                            ),
-
-                            onChanged:
-                                (val) {
-
-                              setState(() {
-
-                                _tipoDoacao =
-                                    val;
-                              });
-                            },
+                          child: Icon(
+                            Icons.description,
                           ),
-                        ],
+                        ),
                       ),
                     ),
 
-                    if (_tipoDoacao ==
-                        null)
+                    const SizedBox(
+                      height: 20,
+                    ),
 
-                      Padding(
+                    AppTextField(
 
-                        padding:
-                            const EdgeInsets.only(
-                          top: 8,
-                          left: 8,
-                        ),
+                      controller:
+                          quantidadeController,
 
-                        child: Text(
+                      hint: 'Quantidade',
 
-                          'Selecione o tipo da doação',
-
-                          style:
-                              GoogleFonts
-                                  .poppins(
-
-                            color:
-                                Colors.red,
-
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
+                      icon:
+                          Icons.numbers,
+                    ),
 
                     const SizedBox(
-                      height: 18,
+                      height: 24,
+                    ),
+
+                    DropdownButtonFormField<String>(
+
+                      value: categoria,
+
+                      decoration:
+                          const InputDecoration(
+
+                        labelText:
+                            'Categoria',
+                      ),
+
+                      items: const [
+
+                        DropdownMenuItem(
+
+                          value:
+                              'Alimento',
+
+                          child: Text(
+                            'Alimento',
+                          ),
+                        ),
+
+                        DropdownMenuItem(
+
+                          value:
+                              'Roupa',
+
+                          child: Text(
+                            'Roupa',
+                          ),
+                        ),
+
+                        DropdownMenuItem(
+
+                          value:
+                              'Higiene',
+
+                          child: Text(
+                            'Higiene',
+                          ),
+                        ),
+
+                        DropdownMenuItem(
+
+                          value:
+                              'Brinquedo',
+
+                          child: Text(
+                            'Brinquedo',
+                          ),
+                        ),
+                      ],
+
+                      onChanged: (value) {
+
+                        setState(() {
+
+                          categoria =
+                              value!;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(
+                      height: 24,
+                    ),
+
+                    DropdownButtonFormField<String>(
+
+                      value: tipo,
+
+                      decoration:
+                          const InputDecoration(
+
+                        labelText: 'Tipo',
+                      ),
+
+                      items: const [
+
+                        DropdownMenuItem(
+
+                          value:
+                              'Produto',
+
+                          child: Text(
+                            'Produto',
+                          ),
+                        ),
+
+                        DropdownMenuItem(
+
+                          value:
+                              'Serviço',
+
+                          child: Text(
+                            'Serviço',
+                          ),
+                        ),
+                      ],
+
+                      onChanged: (value) {
+
+                        setState(() {
+
+                          tipo = value!;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(
+                      height: 24,
                     ),
 
                     SwitchListTile(
 
-                      activeColor:
-                          const Color(
-                        0xFF0A8449,
-                      ),
+                      value: urgente,
 
-                      title: Text(
-
+                      title: const Text(
                         'Doação urgente',
-
-                        style:
-                            GoogleFonts
-                                .poppins(),
                       ),
 
-                      value: _isUrgente,
+                      activeColor:
+                          const Color(
+                        0xFF2F8F46,
+                      ),
 
-                      onChanged: (
-                        val,
-                      ) {
+                      onChanged: (value) {
 
                         setState(() {
 
-                          _isUrgente =
-                              val;
+                          urgente = value;
                         });
                       },
                     ),
 
                     SwitchListTile(
 
+                      value: produtoNovo,
+
+                      title: const Text(
+                        'Produto novo',
+                      ),
+
                       activeColor:
                           const Color(
-                        0xFF0A8449,
+                        0xFF2F8F46,
                       ),
 
-                      title: Text(
-
-                        'Produto novo',
-
-                        style:
-                            GoogleFonts
-                                .poppins(),
-                      ),
-
-                      value: _isNovo,
-
-                      onChanged: (
-                        val,
-                      ) {
+                      onChanged: (value) {
 
                         setState(() {
 
-                          _isNovo =
-                              val;
+                          produtoNovo = value;
                         });
                       },
                     ),
 
                     const SizedBox(
-                      height: 28,
+                      height: 32,
                     ),
 
-                    SizedBox(
+                    AppButton(
 
-                      height: 58,
+                      texto:
+                          'SALVAR DOAÇÃO',
 
-                      child: ElevatedButton(
+                      carregando:
+                          carregando,
 
-                        style:
-                            ElevatedButton
-                                .styleFrom(
-
-                          elevation: 0,
-
-                          backgroundColor:
-                              const Color(
-                            0xFF0A8449,
-                          ),
-
-                          shape:
-                              RoundedRectangleBorder(
-
-                            borderRadius:
-                                BorderRadius.circular(
-                              18,
-                            ),
-                          ),
-                        ),
-
-                        onPressed:
-                            carregando
-
-                                ? null
-
-                                : _salvarDoacao,
-
-                        child:
-                            carregando
-
-                                ? const SizedBox(
-
-                                    width:
-                                        24,
-
-                                    height:
-                                        24,
-
-                                    child:
-                                        CircularProgressIndicator(
-
-                                      color:
-                                          Colors.white,
-
-                                      strokeWidth:
-                                          2.5,
-                                    ),
-                                  )
-
-                                : Text(
-
-                                    'Salvar Doação',
-
-                                    style:
-                                        GoogleFonts.poppins(
-
-                                      fontSize:
-                                          16,
-
-                                      fontWeight:
-                                          FontWeight.w600,
-
-                                      color:
-                                          Colors.white,
-                                    ),
-                                  ),
-                      ),
+                      onPressed:
+                          salvarDoacao,
                     ),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(
-              height: 30,
-            ),
-
-            if (_doacoes.isNotEmpty)
-
-              Text(
-
-                'Doações cadastradas',
-
-                style:
-                    GoogleFonts.poppins(
-
-                  fontSize: 20,
-
-                  fontWeight:
-                      FontWeight.w700,
-                ),
-              ),
-
-            const SizedBox(
-              height: 18,
-            ),
-
-            ..._doacoes.map(
-
-              (doacao) {
-
-                return DoacaoCard(
-                  doacao: doacao,
-                );
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );

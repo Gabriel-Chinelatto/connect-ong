@@ -9,7 +9,7 @@ import '../services/session_service.dart';
 
 import '../utils/page_transition.dart';
 
-import '../widgets/home_card.dart';
+import '../widgets/cards/home_card.dart';
 
 import 'cadastrar_doacao_screen.dart';
 import 'buscar_receptor_screen.dart';
