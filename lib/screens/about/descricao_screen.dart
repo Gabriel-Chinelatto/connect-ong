@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../widgets/common/app_footer.dart';
 
 class DescricaoScreen
     extends StatelessWidget {
@@ -102,7 +103,7 @@ class DescricaoScreen
 
                   child: Image.asset(
 
-                    'assets/images/integrador.jpg',
+                    'assets/images/logo.jpg',
 
                     width: 135,
 
@@ -228,6 +229,62 @@ class DescricaoScreen
                 ],
               ),
             ),
+
+            const SizedBox(
+  height: 22,
+),
+
+_buildModernCard(
+
+  title: 'Compromisso com Segurança e Transparência',
+
+  icon: Icons.verified_user_outlined,
+
+  child: Column(
+
+    crossAxisAlignment:
+        CrossAxisAlignment.start,
+
+    children: [
+
+      Text(
+
+        'O Connect Ong foi desenvolvido com foco em responsabilidade digital, transparência e impacto social.',
+
+        textAlign: TextAlign.justify,
+
+        style: GoogleFonts.poppins(
+
+          fontSize: 15,
+
+          height: 1.7,
+
+          color: Colors.black87,
+        ),
+      ),
+
+      const SizedBox(
+        height: 18,
+      ),
+
+      _buildFeatureItem(
+        'Adequação aos princípios da LGPD (Lei nº 13.709/2018), garantindo o tratamento responsável dos dados pessoais.',
+      ),
+
+      _buildFeatureItem(
+        'Alinhamento ao Marco Regulatório das Organizações da Sociedade Civil (Lei nº 13.019/2014), promovendo transparência e fortalecimento das parcerias sociais.',
+      ),
+
+      _buildFeatureItem(
+        'Contribuição para o ODS 10 da ONU, auxiliando na redução das desigualdades por meio da conexão entre doadores e instituições.',
+      ),
+
+      _buildFeatureItem(
+        'Contribuição para o ODS 17 da ONU, incentivando parcerias eficazes entre sociedade civil e tecnologia.',
+      ),
+    ],
+  ),
+),
 
             const SizedBox(
               height: 22,
@@ -395,6 +452,11 @@ class DescricaoScreen
             const SizedBox(
               height: 30,
             ),
+            const AppFooter(),
+
+const SizedBox(
+  height: 12,
+),
           ],
         ),
       ),

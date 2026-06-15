@@ -1,31 +1,28 @@
 import 'package:flutter/material.dart';
 
 import '../doacao.dart';
-
 import '../services/doacao_service.dart';
 
 import '../widgets/buttons/app_button.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/inputs/app_text_field.dart';
 
-class CadastrarDoacaoScreen
-    extends StatefulWidget {
+class CadastrarDoacaoScreen extends StatefulWidget {
+  final Doacao? doacao;
 
   const CadastrarDoacaoScreen({
     super.key,
+    this.doacao,
   });
 
   @override
-  State<CadastrarDoacaoScreen>
-      createState() =>
-          _CadastrarDoacaoScreenState();
+  State<CadastrarDoacaoScreen> createState() =>
+      _CadastrarDoacaoScreenState();
 }
 
 class _CadastrarDoacaoScreenState
     extends State<CadastrarDoacaoScreen> {
-
-  final nomeController =
-      TextEditingController();
+  final nomeController = TextEditingController();
 
   final descricaoController =
       TextEditingController();
@@ -42,24 +39,50 @@ class _CadastrarDoacaoScreenState
 
   bool produtoNovo = false;
 
-  String categoria =
-      'Alimento';
+  String categoria = 'Alimento';
 
-  String tipo =
-      'Produto';
+  String tipo = 'Nova';
+
+  bool get editando =>
+      widget.doacao != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    preencherCampos();
+  }
+
+  void preencherCampos() {
+    final doacao = widget.doacao;
+
+    if (doacao == null) return;
+
+    nomeController.text = doacao.nome;
+
+    descricaoController.text =
+        doacao.descricao;
+
+    quantidadeController.text =
+        doacao.quantidade.toString();
+
+    categoria = doacao.categoria;
+
+    tipo = doacao.tipo;
+
+    urgente = doacao.urgente;
+
+    produtoNovo = doacao.novo;
+  }
 
   Future<void> salvarDoacao() async {
-
     FocusScope.of(context).unfocus();
 
     if (nomeController.text
         .trim()
         .isEmpty) {
-
       AppSnackbar.erro(
-
         context,
-
         'Informe o nome da doação.',
       );
 
@@ -69,29 +92,22 @@ class _CadastrarDoacaoScreenState
     if (quantidadeController.text
         .trim()
         .isEmpty) {
-
       AppSnackbar.erro(
-
         context,
-
         'Informe a quantidade.',
       );
 
       return;
     }
 
-    final quantidade =
-        int.tryParse(
+    final quantidade = int.tryParse(
       quantidadeController.text,
     );
 
     if (quantidade == null ||
         quantidade <= 0) {
-
       AppSnackbar.erro(
-
         context,
-
         'Quantidade inválida.',
       );
 
@@ -99,79 +115,54 @@ class _CadastrarDoacaoScreenState
     }
 
     setState(() {
-
       carregando = true;
     });
 
     try {
-
       final doacao = Doacao(
-
-        nome:
-            nomeController.text.trim(),
-
+        id: widget.doacao?.id,
+        nome: nomeController.text.trim(),
         descricao:
-            descricaoController.text
-                .trim(),
-
+            descricaoController.text.trim(),
         quantidade: quantidade,
-
         categoria: categoria,
-
         tipo: tipo,
-
         urgente: urgente,
-
         novo: produtoNovo,
       );
 
-      await _service.cadastrarDoacao(
-        doacao,
-      );
+      if (editando) {
+        await _service.atualizarDoacao(
+          doacao,
+        );
+      } else {
+        await _service.cadastrarDoacao(
+          doacao,
+        );
+      }
 
       if (!mounted) return;
 
       AppSnackbar.sucesso(
-
         context,
-
-        'Doação cadastrada com sucesso!',
+        editando
+            ? 'Doação atualizada com sucesso!'
+            : 'Doação cadastrada com sucesso!',
       );
 
-      nomeController.clear();
-
-      descricaoController.clear();
-
-      quantidadeController.clear();
-
-      setState(() {
-
-        urgente = false;
-
-        produtoNovo = false;
-
-        categoria = 'Alimento';
-
-        tipo = 'Produto';
-      });
-
+      Navigator.pop(context, true);
     } catch (e) {
-
       if (!mounted) return;
 
       AppSnackbar.erro(
-
         context,
-
-        'Erro ao cadastrar doação.',
+        editando
+            ? 'Erro ao atualizar doação.'
+            : 'Erro ao cadastrar doação.',
       );
-
     } finally {
-
       if (mounted) {
-
         setState(() {
-
           carregando = false;
         });
       }
@@ -180,7 +171,6 @@ class _CadastrarDoacaoScreenState
 
   @override
   void dispose() {
-
     nomeController.dispose();
 
     descricaoController.dispose();
@@ -192,71 +182,113 @@ class _CadastrarDoacaoScreenState
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       appBar: AppBar(
-
-        title: const Text(
-          'Cadastrar Doação',
+        title: Text(
+          editando
+              ? 'Editar Doação'
+              : 'Cadastrar Doação',
         ),
       ),
-
       body: SingleChildScrollView(
-
-        padding:
-            const EdgeInsets.all(24),
-
+        padding: const EdgeInsets.all(24),
         child: Center(
-
           child: Container(
-
-            constraints:
-                const BoxConstraints(
-              maxWidth: 700,
+            constraints: const BoxConstraints(
+              maxWidth: 760,
             ),
-
             child: Card(
-
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(28),
+              ),
               child: Padding(
-
                 padding:
                     const EdgeInsets.all(32),
-
                 child: Column(
-
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
-
                   children: [
-
-                    const Text(
-
-                      'Nova Doação',
-
-                      style: TextStyle(
-
-                        fontSize: 30,
-
-                        fontWeight:
-                            FontWeight.bold,
+                    Container(
+                      padding:
+                          const EdgeInsets.all(
+                        24,
                       ),
-                    ),
+                      decoration: BoxDecoration(
+                        color: const Color(
+                          0xFFEAF6EE,
+                        ),
+                        borderRadius:
+                            BorderRadius.circular(
+                          24,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration:
+                                const BoxDecoration(
+                              color: Color(
+                                0xFF0A8449,
+                              ),
+                              shape:
+                                  BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons
+                                  .volunteer_activism,
+                              color:
+                                  Colors.white,
+                              size: 34,
+                            ),
+                          ),
 
-                    const SizedBox(
-                      height: 8,
-                    ),
+                          const SizedBox(
+                            width: 20,
+                          ),
 
-                    Text(
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment
+                                      .start,
+                              children: [
+                                Text(
+                                  editando
+                                      ? 'Editar Doação'
+                                      : 'Nova Doação',
+                                  style:
+                                      const TextStyle(
+                                    fontSize: 30,
+                                    fontWeight:
+                                        FontWeight
+                                            .bold,
+                                  ),
+                                ),
 
-                      'Preencha as informações da doação.',
+                                const SizedBox(
+                                  height: 8,
+                                ),
 
-                      style: TextStyle(
-
-                        color:
-                            Colors.grey.shade700,
-
-                        fontSize: 16,
+                                Text(
+                                  editando
+                                      ? 'Atualize as informações da sua doação.'
+                                      : 'Preencha os dados para disponibilizar uma nova doação.',
+                                  style:
+                                      TextStyle(
+                                    color: Colors
+                                        .grey
+                                        .shade700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
@@ -264,14 +296,24 @@ class _CadastrarDoacaoScreenState
                       height: 32,
                     ),
 
-                    AppTextField(
+                    const Text(
+                      'Informações básicas',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
 
+                    const SizedBox(
+                      height: 20,
+                    ),
+
+                    AppTextField(
                       controller:
                           nomeController,
-
                       hint:
                           'Nome da doação',
-
                       icon:
                           Icons.favorite,
                     ),
@@ -281,26 +323,19 @@ class _CadastrarDoacaoScreenState
                     ),
 
                     TextField(
-
                       controller:
                           descricaoController,
-
                       maxLines: 4,
-
+                      maxLength: 200,
                       decoration:
                           const InputDecoration(
-
                         hintText:
-                            'Descrição',
-
-                        prefixIcon:
-                            Padding(
-
+                            'Descrição da doação',
+                        prefixIcon: Padding(
                           padding:
                               EdgeInsets.only(
                             bottom: 80,
                           ),
-
                           child: Icon(
                             Icons.description,
                           ),
@@ -313,80 +348,79 @@ class _CadastrarDoacaoScreenState
                     ),
 
                     AppTextField(
-
                       controller:
                           quantidadeController,
-
                       hint: 'Quantidade',
-
                       icon:
                           Icons.numbers,
                     ),
 
                     const SizedBox(
+                      height: 32,
+                    ),
+
+                    const Divider(),
+
+                    const SizedBox(
                       height: 24,
                     ),
 
-                    DropdownButtonFormField<String>(
+                    const Text(
+                      'Classificação',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
 
+                    const SizedBox(
+                      height: 20,
+                    ),
+
+                    DropdownButtonFormField<
+                        String>(
                       value: categoria,
-
                       decoration:
                           const InputDecoration(
-
                         labelText:
                             'Categoria',
                       ),
-
                       items: const [
-
                         DropdownMenuItem(
-
-                          value:
-                              'Alimento',
-
+                          value: 'Alimento',
                           child: Text(
                             'Alimento',
                           ),
                         ),
-
                         DropdownMenuItem(
-
-                          value:
-                              'Roupa',
-
+                          value: 'Roupa',
                           child: Text(
                             'Roupa',
                           ),
                         ),
-
                         DropdownMenuItem(
-
-                          value:
-                              'Higiene',
-
+                          value: 'Higiene',
                           child: Text(
                             'Higiene',
                           ),
                         ),
-
                         DropdownMenuItem(
-
-                          value:
-                              'Brinquedo',
-
+                          value: 'Brinquedo',
                           child: Text(
                             'Brinquedo',
                           ),
                         ),
+                        DropdownMenuItem(
+                          value: 'Educação',
+                          child: Text(
+                            'Educação',
+                          ),
+                        ),
                       ],
-
                       onChanged: (value) {
-
                         setState(() {
-
-                          categoria =
-                              value!;
+                          categoria = value!;
                         });
                       },
                     ),
@@ -395,92 +429,94 @@ class _CadastrarDoacaoScreenState
                       height: 24,
                     ),
 
-                    DropdownButtonFormField<String>(
-
+                    DropdownButtonFormField<
+                        String>(
                       value: tipo,
-
                       decoration:
                           const InputDecoration(
-
                         labelText: 'Tipo',
                       ),
-
                       items: const [
-
                         DropdownMenuItem(
-
-                          value:
-                              'Produto',
-
-                          child: Text(
-                            'Produto',
-                          ),
+                          value: 'Nova',
+                          child:
+                              Text('Nova'),
                         ),
-
                         DropdownMenuItem(
-
-                          value:
-                              'Serviço',
-
-                          child: Text(
-                            'Serviço',
-                          ),
+                          value: 'Usado',
+                          child:
+                              Text('Usado'),
                         ),
                       ],
-
                       onChanged: (value) {
-
                         setState(() {
-
                           tipo = value!;
                         });
                       },
                     ),
 
                     const SizedBox(
+                      height: 32,
+                    ),
+
+                    const Divider(),
+
+                    const SizedBox(
                       height: 24,
                     ),
 
-                    SwitchListTile(
-
-                      value: urgente,
-
-                      title: const Text(
-                        'Doação urgente',
+                    const Text(
+                      'Preferências',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight:
+                            FontWeight.bold,
                       ),
+                    ),
 
+                    const SizedBox(
+                      height: 16,
+                    ),
+
+                    SwitchListTile(
+                      contentPadding:
+                          EdgeInsets.zero,
+                      value: urgente,
+                      title: const Text(
+                        'Prioridade alta',
+                      ),
+                      subtitle: const Text(
+                        'Destacar esta doação.',
+                      ),
                       activeColor:
                           const Color(
-                        0xFF2F8F46,
+                        0xFF0A8449,
                       ),
-
                       onChanged: (value) {
-
                         setState(() {
-
                           urgente = value;
                         });
                       },
                     ),
 
                     SwitchListTile(
-
+                      contentPadding:
+                          EdgeInsets.zero,
                       value: produtoNovo,
-
                       title: const Text(
-                        'Produto novo',
+                        'Item em bom estado',
                       ),
-
+                      subtitle: const Text(
+                        'Indica que o item está em excelentes condições.',
+                      ),
                       activeColor:
                           const Color(
-                        0xFF2F8F46,
+                        0xFF0A8449,
                       ),
-
                       onChanged: (value) {
-
                         setState(() {
-
-                          produtoNovo = value;
+                          produtoNovo =
+                              value;
                         });
                       },
                     ),
@@ -490,13 +526,11 @@ class _CadastrarDoacaoScreenState
                     ),
 
                     AppButton(
-
-                      texto:
-                          'SALVAR DOAÇÃO',
-
+                      texto: editando
+                          ? 'ATUALIZAR DOAÇÃO'
+                          : 'SALVAR DOAÇÃO',
                       carregando:
                           carregando,
-
                       onPressed:
                           salvarDoacao,
                     ),

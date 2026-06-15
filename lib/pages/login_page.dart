@@ -170,7 +170,7 @@ class _LoginPageState
 
               Image.asset(
 
-                'assets/images/integrador.jpg',
+                'assets/images/logo.jpg',
 
                 height: 120,
               ),

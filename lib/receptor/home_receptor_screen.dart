@@ -8,6 +8,8 @@ import '../services/session_service.dart';
 
 import '../widgets/cards/home_card.dart';
 
+import '../widgets/common/app_footer.dart';
+
 class HomeReceptorScreen extends StatelessWidget {
 
   const HomeReceptorScreen({
@@ -342,7 +344,7 @@ class HomeReceptorScreen extends StatelessWidget {
 
                                       child: Image.asset(
 
-                                        'assets/images/integrador.jpg',
+                                        'assets/images/logo.jpg',
 
                                         height: 160,
                                       ),
@@ -607,7 +609,13 @@ class HomeReceptorScreen extends StatelessWidget {
                     ),
 
                     const SizedBox(
-                      height: 24,
+                       height: 24,
+                        ),
+
+                        const AppFooter(),
+
+                          const SizedBox(
+                       height: 12,
                     ),
                   ],
                 ),

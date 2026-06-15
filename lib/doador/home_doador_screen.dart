@@ -11,8 +11,9 @@ import '../utils/page_transition.dart';
 
 import '../widgets/cards/home_card.dart';
 
-import 'cadastrar_doacao_screen.dart';
+import 'minhas_doacoes_screen.dart';
 import 'buscar_receptor_screen.dart';
+import '../widgets/common/app_footer.dart';
 
 class HomeDoadorScreen extends StatelessWidget {
 
@@ -341,7 +342,7 @@ class HomeDoadorScreen extends StatelessWidget {
 
                                       child: Image.asset(
 
-                                        'assets/images/integrador.jpg',
+                                        'assets/images/logo.jpg',
 
                                         height: 160,
                                       ),
@@ -372,7 +373,7 @@ class HomeDoadorScreen extends StatelessWidget {
 
                                   child: Image.asset(
 
-                                    'assets/images/integrador.jpg',
+                                    'assets/images/logo.jpg',
 
                                     height: 90,
                                   ),
@@ -484,21 +485,13 @@ class HomeDoadorScreen extends StatelessWidget {
 
                         HomeCard(
 
-                          icon:
-                              Icons.add_circle_outline,
-
-                          label:
-                              'Cadastrar Doação',
-
+                          icon: Icons.add_circle_outline,
+                          label: 'Minhas Doações',
                           onTap: () {
-
-                            Navigator.push(
-
-                              context,
-
-                              PageTransition.fade(
-
-                                const CadastrarDoacaoScreen(),
+                           Navigator.push(
+                            context,
+                   PageTransition.fade(
+                          const MinhasDoacoesScreen(),
                               ),
                             );
                           },
@@ -624,7 +617,17 @@ class HomeDoadorScreen extends StatelessWidget {
                     const SizedBox(
                       height: 24,
                     ),
+                    const SizedBox(
+                  height: 24,
+                      ),
+
+                    const AppFooter(),
+
+                      const SizedBox(
+                        height: 12,
+                ),
                   ],
+                  
                 ),
               ),
             ),
