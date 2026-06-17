@@ -379,7 +379,7 @@ class HomeReceptorScreen extends StatelessWidget {
 
                                   child: Image.asset(
 
-                                    'assets/images/logo.png',
+                                    'assets/images/logo.jpg',
 
                                     height: 90,
                                   ),
