@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/ong.dart';
 import 'package:flutter_application_1/ong_card.dart';
 import 'package:flutter_application_1/receptor/editar_ong_screen.dart';
+import 'package:flutter_application_1/services/api_service.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -25,7 +26,7 @@ class _CadastrarOngScreenState extends State<CadastrarOngScreen> {
 
   final List<Ong> _ongs = [];
 
-  static const String _baseUrl = 'http://localhost:8080/ongs';
+  static const String _baseUrl = '${ApiService.baseUrl}/ongs';
 
   @override
   void initState() {

@@ -3,15 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../doacao.dart';
+import 'api_service.dart';
 
 class DoacaoService {
-  // CHROME / WINDOWS
-  static const String baseUrl =
-      'http://localhost:8080';
 
-  // ANDROID EMULATOR
-  // static const String baseUrl =
-  //     'http://10.0.2.2:8080';
+  static const String baseUrl = ApiService.baseUrl;
 
   Future<List<Doacao>> listarDoacoes() async {
     final response = await http.get(

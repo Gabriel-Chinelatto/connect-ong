@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/ong.dart';
+import 'package:flutter_application_1/services/api_service.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -13,12 +14,18 @@ class BuscarOngScreen extends StatefulWidget {
 class _BuscarOngScreenState extends State<BuscarOngScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Ong> _filteredOngs = [];
-  bool _isLoading = false;
-  bool _hasSearched = false;
+  // Lista completa carregada uma vez; o filtro acontece em memória.
+  List<Ong> _ongs = [];
+  List<Ong> _filteredOngs = [];
+  bool _isLoading = true;
 
-  // 🔥 URL CORRIGIDA COM SEU IP
-  static const String _baseUrl = 'http://192.168.0.27:8080/ongs';
+  static const String _baseUrl = '${ApiService.baseUrl}/ongs';
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarOngs();
+  }
 
   @override
   void dispose() {
@@ -26,40 +33,41 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchOngs() async {
-    final query = _searchController.text.trim();
-
-    setState(() {
-      _isLoading = true;
-      _hasSearched = true;
-    });
+  // Carrega todas as ONGs uma única vez.
+  Future<void> _carregarOngs() async {
+    setState(() => _isLoading = true);
 
     try {
-      final url = query.isEmpty
-          ? Uri.parse(_baseUrl)
-          : Uri.parse('$_baseUrl?nome=$query');
-
-      final response = await http.get(url);
+      final response = await http.get(Uri.parse(_baseUrl));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
 
         setState(() {
-          _filteredOngs.clear();
-          _filteredOngs.addAll(data.map((json) => Ong.fromJson(json)).toList());
+          _ongs = data.map((json) => Ong.fromJson(json)).toList();
+          _filteredOngs = _ongs;
+          _isLoading = false;
         });
       } else {
         _showSnackBar('Falha ao buscar ONGs: ${response.statusCode}');
-        setState(() => _filteredOngs.clear());
+        setState(() => _isLoading = false);
       }
     } catch (e) {
       _showSnackBar('Erro de conexão: $e');
-      setState(() => _filteredOngs.clear());
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
+  }
+
+  // Filtra a lista já carregada por nome ou cidade, ao vivo.
+  void _filtrarOngs(String query) {
+    final q = query.toLowerCase().trim();
+
+    setState(() {
+      _filteredOngs = _ongs.where((ong) {
+        return ong.nome.toLowerCase().contains(q) ||
+            ong.cidade.toLowerCase().contains(q);
+      }).toList();
+    });
   }
 
   void _showSnackBar(String message) {
@@ -114,57 +122,28 @@ class _BuscarOngScreenState extends State<BuscarOngScreen> {
                 ),
                 prefixIcon: const Icon(Icons.search),
               ),
-              onSubmitted: (_) => _fetchOngs(),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _fetchOngs,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0A8449),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Pesquisar ONGs',
-                        style:
-                            TextStyle(fontSize: 16, color: Colors.white)),
-              ),
+              onChanged: _filtrarOngs,
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: !_hasSearched && !_isLoading
-                  ? const Center(
-                      child: Text(
-                          'Use a barra de busca acima para encontrar ONGs.'),
-                    )
-                  : _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _filteredOngs.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Nenhuma ONG encontrada para "${_searchController.text}"',
-                                style: const TextStyle(
-                                    fontSize: 18, color: Colors.grey),
-                                textAlign: TextAlign.center,
-                              ),
-                            )
-                          : ListView.separated(
-                              itemCount: _filteredOngs.length,
-                              separatorBuilder: (_, __) =>
-                                  const Divider(),
-                              itemBuilder: (context, index) {
-                                return _buildOngTile(
-                                    _filteredOngs[index]);
-                              },
-                            ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredOngs.isEmpty
+                      ? Center(
+                          child: Text(
+                            'Nenhuma ONG encontrada para "${_searchController.text}"',
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: _filteredOngs.length,
+                          separatorBuilder: (_, _) => const Divider(),
+                          itemBuilder: (context, index) {
+                            return _buildOngTile(_filteredOngs[index]);
+                          },
+                        ),
             ),
           ],
         ),

@@ -2,15 +2,11 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'api_service.dart';
+
 class AuthService {
 
-  // CHROME / WINDOWS
-  static const String baseUrl =
-      'http://localhost:8080';
-
-  // ANDROID EMULATOR
-  // static const String baseUrl =
-  //     'http://10.0.2.2:8080';
+  static const String baseUrl = ApiService.baseUrl;
 
   Future<Map<String, dynamic>> login({
 
