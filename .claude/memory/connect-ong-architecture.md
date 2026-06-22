@@ -13,6 +13,8 @@ Connect ONG is a donation platform (academic TCC) with three separate repos unde
 - **Desktop** (early stage): `C:\Users\01gabriel.MAQCHINELATTO\connect_ong - Desktop` — Flutter + provider, repo `connect-ong-desktop`, branch `main`. Models around Empresa/ONG; `empresa_service.dart` empty. Diverged from mobile.
 - **Backend**: `C:\Users\01gabriel.MAQCHINELATTO\IdeaProjects\connect-ong-api` (actual Maven root is deeply nested: `API - Chinelatto - att2/API - Chinelatto/API - Chinelatto`). Spring Boot 3.5.6 / Java 17, repo `connect-ong-api`, branch `master`.
 
+**Platform requirement (from advisor site):** the project MUST have THREE distinct frontends — **Web, Desktop, and Mobile** — all consuming the central RESTful API. So we CANNOT merge them into one. **Decision (pending final user confirm):** differentiate by persona instead of cloning — **Mobile = doador-facing app**; **Desktop = ONG administrative panel** (manage needs/campaigns, accept matches, prestação de contas, chat, ONG dashboard); **Web = Flutter-web build of the doador app** (responsive, reuses the mobile codebase so "web" is largely free) OR a public institutional portal. This gives each platform a real purpose = the "alive/professional" feel judges want. See [[connect-ong-delivery-rules]].
+
 Both Flutter apps hit the backend REST API at `http://localhost:8080`. Endpoints: `/usuarios` (+`/login`), `/doacoes` (CRUD), `/ongs` (CRUD, `?nome=` search), `/projetos`. Login uses BCrypt. Entities: Usuario, Doacao, Ong, Projeto.
 
 **DB:** remote MySQL at `143.106.241.3:3306/cl203161` (already configured in application.properties; no local DB needed). Hibernate `ddl-auto=update`.
