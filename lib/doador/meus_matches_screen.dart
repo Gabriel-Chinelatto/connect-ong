@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/interesse.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
+import 'chat_screen.dart';
 
 class MeusMatchesScreen extends StatefulWidget {
   const MeusMatchesScreen({super.key});
@@ -61,50 +62,83 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
 
   Widget _card(Interesse i) {
     final (cor, rotulo, icone) = _estilo(i.status);
+    final aceito = i.status == 'ACEITO';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: cor.withValues(alpha: 0.12),
-              child: Icon(icone, color: cor),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    i.necessidadeTitulo ?? 'Necessidade',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: aceito
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                      interesseId: i.id,
+                      meuRemetente: 'DOADOR',
+                      titulo: i.ongNome ?? 'Conversa',
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    i.ongNome ?? 'ONG',
-                    style: const TextStyle(color: _verde),
-                  ),
-                ],
+                );
+              }
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: cor.withValues(alpha: 0.12),
+                child: Icon(icone, color: cor),
               ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: cor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      i.necessidadeTitulo ?? 'Necessidade',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      i.ongNome ?? 'ONG',
+                      style: const TextStyle(color: _verde),
+                    ),
+                    if (aceito) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.chat_bubble_outline,
+                              size: 14, color: _verde),
+                          const SizedBox(width: 4),
+                          Text('Toque para conversar',
+                              style: TextStyle(
+                                  color: _verde,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              child: Text(
-                rotulo,
-                style: TextStyle(color: cor, fontWeight: FontWeight.w600),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: cor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  rotulo,
+                  style: TextStyle(color: cor, fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
