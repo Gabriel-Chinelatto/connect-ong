@@ -13,6 +13,8 @@ import '../widgets/cards/home_card.dart';
 
 import 'minhas_doacoes_screen.dart';
 import 'buscar_receptor_screen.dart';
+import 'feed_necessidades_screen.dart';
+import 'meus_matches_screen.dart';
 import '../widgets/common/app_footer.dart';
 
 class HomeDoadorScreen extends StatelessWidget {
@@ -482,6 +484,32 @@ class HomeDoadorScreen extends StatelessWidget {
                           web ? 2.4 : 2.0,
 
                       children: [
+
+                        HomeCard(
+                          icon: Icons.favorite_outline,
+                          label: 'Necessidades',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageTransition.fade(
+                                const FeedNecessidadesScreen(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        HomeCard(
+                          icon: Icons.handshake_outlined,
+                          label: 'Meus Matches',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageTransition.fade(
+                                const MeusMatchesScreen(),
+                              ),
+                            );
+                          },
+                        ),
 
                         HomeCard(
 
