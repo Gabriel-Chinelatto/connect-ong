@@ -15,4 +15,6 @@ Reframing (user corrected me): the professors' "match + chat" tip was **advice t
 
 **MVP CHECKPOINT RULE (important, user-requested):** when I judge the "leaner-but-well-done" MVP is complete, I must **proactively alert the user**. If time remains before FECITEC, the user will tell me how much, and I then build a NEW realistic roadmap for the remaining time (drawing on the full vision but staying realistic). Do not silently keep adding scope — stop, signal completion, let the user decide the next slice.
 
+**MVP checkpoint reached 2026-06-23:** Blocos 0-3 done (Fundação + Match + Chat) — the core product is live across all frontends. User's calibration: **lots of time (~2+ months)**, wants to **front-load heavily in July** (shows up consistently, ~2x/week, but each session advances a LOT like the first one), leaving **final complements for August** (less availability once school resumes). User trusts me to build a **balanced** post-MVP plan (see [[connect-ong-roadmap]]).
+
 Strategy: front-load impressive, demo-able work before FECITEC. User's rule: **"Qualidade é mais importante que quantidade."** See [[connect-ong-banca-feedback]], [[connect-ong-delivery-rules]].

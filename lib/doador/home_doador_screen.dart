@@ -15,6 +15,7 @@ import 'minhas_doacoes_screen.dart';
 import 'buscar_receptor_screen.dart';
 import 'feed_necessidades_screen.dart';
 import 'meus_matches_screen.dart';
+import 'dashboard_impacto_screen.dart';
 import '../widgets/common/app_footer.dart';
 
 class HomeDoadorScreen extends StatelessWidget {
@@ -506,6 +507,19 @@ class HomeDoadorScreen extends StatelessWidget {
                               context,
                               PageTransition.fade(
                                 const MeusMatchesScreen(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        HomeCard(
+                          icon: Icons.insights_outlined,
+                          label: 'Meu Impacto',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageTransition.fade(
+                                const DashboardImpactoScreen(),
                               ),
                             );
                           },
