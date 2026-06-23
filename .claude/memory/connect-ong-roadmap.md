@@ -5,6 +5,8 @@ metadata:
   type: project
 ---
 
+**RECURRING RE-PLAN RULE (user-set 2026-06-23, standing):** every time we reach the **last or second-to-last block of the currently-planned set**, I must proactively **ask the user how much time remains** before FECITEC, then extend/guide the next blocks toward the **FULL professional vision** — all features the user requested at the start, made as professional as possible (it just needs time). Keep repeating this loop near the end of each planned set **until the user says we are close to the presentation**. Do not silently stop at the end of a planned set — always re-plan forward.
+
 Lean-but-professional MVP roadmap toward FECITEC (see [[connect-ong-milestones]]). Blocks in dependency order:
 
 - **Bloco 0 — Fundação:** ✅ DONE (backend). Security (DB creds externalized), Swagger + endpoint docs, global exception handling, output DTOs (already existed). Backend commits on `connect-ong-api` master: e8b8d68, 71ba214, 0b5d0e1. **Desktop repurposing + DOADOR/ONG standardization were MOVED to Bloco 2** (avoid building a throwaway skeleton).
