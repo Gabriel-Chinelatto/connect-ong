@@ -9,6 +9,8 @@ class Necessidade {
   final int? ongId;
   final String? ongNome;
   final bool ongVerificada;
+  final double ongNotaMedia;
+  final int ongTotalAvaliacoes;
 
   const Necessidade({
     required this.id,
@@ -20,6 +22,8 @@ class Necessidade {
     this.ongId,
     this.ongNome,
     this.ongVerificada = false,
+    this.ongNotaMedia = 0,
+    this.ongTotalAvaliacoes = 0,
   });
 
   factory Necessidade.fromJson(Map<String, dynamic> json) {
@@ -33,6 +37,8 @@ class Necessidade {
       ongId: json['ongId'],
       ongNome: json['ongNome'],
       ongVerificada: json['ongVerificada'] ?? false,
+      ongNotaMedia: (json['ongNotaMedia'] ?? 0).toDouble(),
+      ongTotalAvaliacoes: json['ongTotalAvaliacoes'] ?? 0,
     );
   }
 }

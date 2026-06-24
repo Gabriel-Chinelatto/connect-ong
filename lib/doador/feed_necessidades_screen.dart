@@ -141,6 +141,20 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                 ],
               ],
             ),
+            if (n.ongTotalAvaliacoes > 0) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.star, size: 14, color: Colors.amber),
+                  const SizedBox(width: 3),
+                  Text(
+                    '${n.ongNotaMedia} (${n.ongTotalAvaliacoes})',
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 10),
             Text(n.descricao,
                 style: TextStyle(color: Colors.grey.shade700, height: 1.4)),

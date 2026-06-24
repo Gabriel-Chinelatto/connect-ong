@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/interesse.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
+import '../services/avaliacao_service.dart';
 import 'chat_screen.dart';
 import 'prestacoes_screen.dart';
 
@@ -61,6 +62,126 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
     }
   }
 
+  Widget _acao(IconData icone, String texto, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icone, size: 14, color: _verde),
+          const SizedBox(width: 4),
+          Text(texto,
+              style: const TextStyle(
+                  color: _verde, fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  void _abrirChat(Interesse i) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          interesseId: i.id,
+          meuRemetente: 'DOADOR',
+          titulo: i.ongNome ?? 'Conversa',
+        ),
+      ),
+    );
+  }
+
+  void _abrirPrestacoes(Interesse i) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PrestacoesScreen(
+          interesseId: i.id,
+          ongNome: i.ongNome ?? 'ONG',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _abrirAvaliar(Interesse i) async {
+    if (i.ongId == null) return;
+    final u = await _sessionService.obterUsuario();
+    if (u == null || !mounted) return;
+
+    int nota = 5;
+    final comentarioC = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setStateDialog) => AlertDialog(
+          title: Text('Avaliar ${i.ongNome ?? "ONG"}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (idx) {
+                  return IconButton(
+                    icon: Icon(
+                      idx < nota ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 32,
+                    ),
+                    onPressed: () => setStateDialog(() => nota = idx + 1),
+                  );
+                }),
+              ),
+              TextField(
+                controller: comentarioC,
+                maxLines: 3,
+                decoration:
+                    const InputDecoration(labelText: 'Comentário (opcional)'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await AvaliacaoService().avaliar(
+                    ongId: i.ongId!,
+                    doadorId: u.id,
+                    nota: nota,
+                    comentario: comentarioC.text.trim(),
+                  );
+                  if (!dialogContext.mounted) return;
+                  Navigator.pop(dialogContext);
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Avaliação enviada! Obrigado 💚'),
+                      backgroundColor: _verde,
+                    ),
+                  );
+                } catch (e) {
+                  if (!dialogContext.mounted) return;
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text(e.toString().replaceFirst('Exception: ', '')),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Enviar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _card(Interesse i) {
     final (cor, rotulo, icone) = _estilo(i.status);
     final aceito = i.status == 'ACEITO';
@@ -110,43 +231,16 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
                     ),
                     if (aceito) ...[
                       const SizedBox(height: 8),
-                      Row(
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 6,
                         children: [
-                          Icon(Icons.chat_bubble_outline,
-                              size: 14, color: _verde),
-                          const SizedBox(width: 4),
-                          Text('Conversar',
-                              style: TextStyle(
-                                  color: _verde,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500)),
-                          const Spacer(),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PrestacoesScreen(
-                                    interesseId: i.id,
-                                    ongNome: i.ongNome ?? 'ONG',
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.receipt_long,
-                                    size: 14, color: _verde),
-                                const SizedBox(width: 4),
-                                Text('Prestação de contas',
-                                    style: TextStyle(
-                                        color: _verde,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                          ),
+                          _acao(Icons.chat_bubble_outline, 'Conversar',
+                              () => _abrirChat(i)),
+                          _acao(Icons.receipt_long, 'Prestação',
+                              () => _abrirPrestacoes(i)),
+                          _acao(Icons.star_outline, 'Avaliar ONG',
+                              () => _abrirAvaliar(i)),
                         ],
                       ),
                     ],
