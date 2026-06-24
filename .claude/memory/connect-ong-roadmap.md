@@ -31,7 +31,7 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 
 **PHASE D — Tempo real & Engajamento (July/Aug)**
 - 12 [PLUS] Notificações + (WebSocket?): **Notifications ✅ DONE** — Notificacao entity, events fire on interesse/aceite/mensagem/prestação, **respects Bloco 8 prefs** (notifMatch etc. gate creation), bell+badge+screen on both apps, mark-read. api commit e2015b2; mobile 3025430; desktop 9625846. **WebSocket upgrade: SKIPPED by user decision (2026-06-24)** — keep the reliable 2s-polling chat; not worth the risk for FECITEC. Bloco 12 considered DONE. (Could revisit at the very end only if lots of time remains.)
-- 13 [PLUS] Feed melhorado: search/filter by categoria/urgência/cidade; optional simple geolocation.
+- 13 [PLUS] Feed melhorado + **Feed Inteligente** (absorbs idea #9): search/filter by categoria/urgência/**cidade** (this city-search REPLACES the risky Maps integration — idea #15 dropped, ~90% of value, ~10% of risk); smart ordering (same-city + urgentes first; compatible needs). Architecture left ready for a future recommendation engine.
 
 **PHASE E — Pagamentos (Aug)**
 - 14 [STRETCH] Doação financeira: SIMULATED PIX (sandbox/fake), generated receipt. No real gateway/real money for a TCC.
@@ -45,8 +45,21 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 - 18 [STRETCH] Docker + CI/CD (GitHub Actions) + automated tests (backend unit + Flutter widget). NOTE: microservices = SKIP (over-engineering for this project, low demo value — recommend against).
 
 **PHASE H — Web & Entrega (Aug)**
-- 19 [CORE] Web build published (Flutter web doador + institutional portal: sobre, ODS, LGPD, transparência).
-- 20 [CORE] Dados de demonstração caprichados (realistic ONGs/necessidades) + demo script.
+- 19 [CORE] Web build published + **rich institutional portal** (absorbs idea #12, "startup-like"): sobre, ODS, LGPD, transparência + estatísticas públicas, missão, visão, impacto, equipe, FAQ.
+- 20 [CORE] Dados de demonstração caprichados + **Modo Feira** (absorbs idea #13): a one-click "Carregar dados demonstrativos" button that populates the system with realistic data for the FECITEC presentation. + demo script.
 - 21 [CORE] MASTER FINISH: **strong visual polish pass** (user explicitly flagged 2026-06-24 that the UI is currently "feinho"/plain despite rich functionality — wants it to look genuinely professional). MUST stay in Flutter (school requires the 3 frontends in Flutter; switching UI language is NOT allowed and would discard the apps) — Flutter is fully capable of beautiful UIs, the plainness is just deferred polish. Refine spacing/typography, custom components, micro-animations, empty states, imagery. Can be PULLED EARLIER as a dedicated design block if the user asks. Plus A0 poster review + rehearsal + final testing.
 
-Optional only if time remains after 21 (from original GPT roadmap): recommendation engine, gamification/ranking, chatbot/AI moderation. See [[connect-ong-vision]], [[connect-ong-tech-guidelines]], [[connect-ong-milestones]], [[connect-ong-delivery-rules]], [[connect-ong-banca-feedback]].
+**PHASE I — Complementos: Vida & Engajamento (added 2026-06-24 from user's 16-idea list; goal = the professors' "ter vida" feedback).** These run after the core line (or interleaved by priority); compress-at-deadline rule applies.
+- 22 [CORE] **Sistema de Campanhas** (idea #1, the strongest): **repurpose the existing UNUSED `Projeto` entity** (já tem titulo/descricao/metaValor) into Campanha — meta configurável, recebidos, barra de progresso %, data início/fim, encerrada, destaque na home. ONG cria; doador vê. (Cleans up dead code too.)
+- 23 [PLUS] **Timeline de Atividades** (idea #2; #11 personal-history merged in): global activity feed ("ONG publicou necessidade", "X demonstrou interesse", "prestação publicada", "campanha atingiu 80%") — **reuses the notification-event hooks already built**. Direct answer to "sensação de atividade constante".
+- 24 [PLUS] **Perfil Público da ONG** (idea #3): full public page — logo, história, missão, cidade, avaliações, campanhas, necessidades, prestações, selo de verificação + a simple **"Compartilhar"** button (my add).
+- 25 [PLUS] **Mural de Impacto** (idea #8): aggregate institutional stats (total doações, ONGs atendidas, pessoas impactadas) — easy, we have the data.
+- 26 [STRETCH] **Ranking de Transparência** (idea #4): score → selos bronze/prata/ouro (avaliações, prestações, respostas no chat, campanhas concluídas). (Partially overlaps the existing verification seal.)
+- 27 [STRETCH] **Conquistas / gamificação** (idea #5): doador (1ª/5/10 doações, recorrente) + ONG (1ª campanha, 1ª prestação, verificada).
+- 28 [STRETCH] **Favoritos** (idea #6): favoritar ONGs/campanhas + notificações.
+- 29 [STRETCH] **Denúncia** (idea #10): reportar ONG/usuário/conteúdo (credibilidade).
+- 30 [STRETCH] **Relatórios PDF** (idea #14): relatório da ONG, histórico de doações, campanhas.
+
+ABSORBED into existing blocks (not new blocks): #7 Central de Notificações = already DONE (Bloco 12); #9 Feed Inteligente → Bloco 13; #12 Página Institucional → Bloco 19; #13 Modo Feira → Bloco 20; #16 app-real prep → Bloco 15 (JWT) + image-upload when needed + tech-guidelines (not a standalone block). DROPPED: #15 Mapa de ONGs (Maps-on-Flutter-web risk/cost; replaced by city search in Bloco 13).
+
+Also-optional (from original GPT roadmap, only if huge time remains): recommendation engine, chatbot/AI moderation. See [[connect-ong-vision]], [[connect-ong-tech-guidelines]], [[connect-ong-milestones]], [[connect-ong-delivery-rules]], [[connect-ong-banca-feedback]].
