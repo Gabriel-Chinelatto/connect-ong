@@ -17,6 +17,7 @@ import 'feed_necessidades_screen.dart';
 import 'meus_matches_screen.dart';
 import 'dashboard_impacto_screen.dart';
 import 'configuracoes_screen.dart';
+import 'perfil_screen.dart';
 import '../config/config_controller.dart';
 import '../widgets/common/app_footer.dart';
 
@@ -524,6 +525,19 @@ class HomeDoadorScreen extends StatelessWidget {
                               context,
                               PageTransition.fade(
                                 const DashboardImpactoScreen(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        HomeCard(
+                          icon: Icons.person_outline,
+                          label: 'Meu Perfil',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageTransition.fade(
+                                const PerfilScreen(),
                               ),
                             );
                           },
