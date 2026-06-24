@@ -8,6 +8,7 @@ class Necessidade {
   final String status;
   final int? ongId;
   final String? ongNome;
+  final String? ongCidade;
   final bool ongVerificada;
   final double ongNotaMedia;
   final int ongTotalAvaliacoes;
@@ -21,6 +22,7 @@ class Necessidade {
     required this.status,
     this.ongId,
     this.ongNome,
+    this.ongCidade,
     this.ongVerificada = false,
     this.ongNotaMedia = 0,
     this.ongTotalAvaliacoes = 0,
@@ -36,6 +38,7 @@ class Necessidade {
       status: json['status'] ?? '',
       ongId: json['ongId'],
       ongNome: json['ongNome'],
+      ongCidade: json['ongCidade'],
       ongVerificada: json['ongVerificada'] ?? false,
       ongNotaMedia: (json['ongNotaMedia'] ?? 0).toDouble(),
       ongTotalAvaliacoes: json['ongTotalAvaliacoes'] ?? 0,

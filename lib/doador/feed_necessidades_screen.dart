@@ -4,6 +4,7 @@ import '../models/necessidade.dart';
 import '../services/necessidade_service.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
+import '../services/perfil_service.dart';
 
 class FeedNecessidadesScreen extends StatefulWidget {
   const FeedNecessidadesScreen({super.key});
@@ -24,6 +25,11 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   bool _carregando = true;
   int? _doadorId;
 
+  String _busca = '';
+  String? _categoria; // null = todas
+  bool _soUrgentes = false;
+  String _minhaCidade = '';
+
   @override
   void initState() {
     super.initState();
@@ -35,10 +41,18 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
     try {
       final usuario = await _sessionService.obterUsuario();
       final lista = await _necessidadeService.listarAbertas();
+      String cidade = '';
+      if (usuario != null) {
+        try {
+          final perfil = await PerfilService().obter(usuario.id);
+          cidade = (perfil['cidade'] ?? '').toString();
+        } catch (_) {}
+      }
       if (!mounted) return;
       setState(() {
         _doadorId = usuario?.id;
         _necessidades = lista;
+        _minhaCidade = cidade;
         _carregando = false;
       });
     } catch (e) {
@@ -76,6 +90,45 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  List<String> get _categorias {
+    final set = _necessidades
+        .map((n) => n.categoria)
+        .where((c) => c.isNotEmpty)
+        .toSet()
+        .toList();
+    set.sort();
+    return set;
+  }
+
+  List<Necessidade> get _filtradas {
+    final q = _busca.toLowerCase().trim();
+    final cidade = _minhaCidade.toLowerCase().trim();
+
+    final lista = _necessidades.where((n) {
+      final bateBusca = q.isEmpty ||
+          n.titulo.toLowerCase().contains(q) ||
+          (n.ongNome ?? '').toLowerCase().contains(q) ||
+          n.categoria.toLowerCase().contains(q);
+      final bateCategoria = _categoria == null || n.categoria == _categoria;
+      final bateUrgente = !_soUrgentes || n.urgente;
+      return bateBusca && bateCategoria && bateUrgente;
+    }).toList();
+
+    // Ordenacao inteligente: urgentes primeiro, depois ONGs da mesma cidade.
+    int score(Necessidade n) {
+      int s = 0;
+      if (n.urgente) s += 2;
+      if (cidade.isNotEmpty &&
+          (n.ongCidade ?? '').toLowerCase().trim() == cidade) {
+        s += 1;
+      }
+      return s;
+    }
+
+    lista.sort((a, b) => score(b).compareTo(score(a)));
+    return lista;
   }
 
   Widget _card(Necessidade n) {
@@ -194,35 +247,102 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
     );
   }
 
+  Widget _vazio(String msg) {
+    return ListView(
+      children: [
+        const SizedBox(height: 120),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(msg,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, color: Colors.grey)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _barraFiltros() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Column(
+        children: [
+          TextField(
+            onChanged: (v) => setState(() => _busca = v),
+            decoration: InputDecoration(
+              hintText: 'Buscar por título, ONG ou categoria...',
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 38,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                FilterChip(
+                  label: const Text('Urgentes'),
+                  selected: _soUrgentes,
+                  selectedColor: Colors.red.shade100,
+                  onSelected: (v) => setState(() => _soUrgentes = v),
+                ),
+                const SizedBox(width: 8),
+                ..._categorias.map((c) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(c),
+                      selected: _categoria == c,
+                      selectedColor: _verde.withValues(alpha: 0.2),
+                      onSelected: (v) =>
+                          setState(() => _categoria = v ? c : null),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filtradas = _filtradas;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Necessidades das ONGs'),
         backgroundColor: _verde,
         foregroundColor: Colors.white,
       ),
-      body: RefreshIndicator(
-        onRefresh: _carregar,
-        child: _carregando
-            ? const Center(child: CircularProgressIndicator())
-            : _necessidades.isEmpty
-                ? ListView(
-                    children: const [
-                      SizedBox(height: 120),
-                      Center(
-                        child: Text(
-                          'Nenhuma necessidade aberta no momento.',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _necessidades.length,
-                    itemBuilder: (context, i) => _card(_necessidades[i]),
-                  ),
+      body: Column(
+        children: [
+          if (!_carregando && _necessidades.isNotEmpty) _barraFiltros(),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _carregar,
+              child: _carregando
+                  ? const Center(child: CircularProgressIndicator())
+                  : _necessidades.isEmpty
+                      ? _vazio('Nenhuma necessidade aberta no momento.')
+                      : filtradas.isEmpty
+                          ? _vazio('Nenhuma necessidade com esse filtro.')
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: filtradas.length,
+                              itemBuilder: (context, i) => _card(filtradas[i]),
+                            ),
+            ),
+          ),
+        ],
       ),
     );
   }
