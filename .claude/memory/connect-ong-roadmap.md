@@ -26,7 +26,7 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 
 **PHASE C — Confiança & Transparência (July)**
 - 9 [PLUS] Verificação de ONG: ✅ DONE. Ong.verificada + cnpj; `PUT /ongs/{id}/verificar` (admin marks verified — no admin UI/auth yet, call via Swagger); OngResponseDTO + NecessidadeResponseDTO expose verified status. Mobile shows blue ✓ seal in the feed + "ONG Verificada" in ONG search; desktop registration collects CNPJ. Commits: api 6d0e083, mobile 4c9d95a, desktop 3da549b. (A proper admin approval screen could come later.)
-- 10 [PLUS] Prestação de contas: ONG posts photos/reports/results on a fulfilled donation; doador can see the outcome.
+- 10 [PLUS] Prestação de contas: ✅ DONE. Prestacao entity tied to an accepted Interesse (titulo, descricao, fotoUrl); `GET/POST /prestacoes?interesseId=`, rule "only on ACEITO match" (api commit d01e4a4). Desktop: "Prestar contas" button + dialog on accepted interests (mobile aabf5e7... wait that's mobile). Desktop commit d618f63. Mobile: doador sees "Prestação de contas" button on accepted matches → screen with relato + photo (commit aabf5e7). Tested end-to-end + pending-match guard.
 - 11 [PLUS] Avaliações: doador rates/comments an ONG after a donation.
 
 **PHASE D — Tempo real & Engajamento (July/Aug)**
