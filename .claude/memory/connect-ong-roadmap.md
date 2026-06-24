@@ -1,23 +1,50 @@
 ---
 name: connect-ong-roadmap
-description: The agreed MVP roadmap blocks for Connect ONG and which are done/in-progress
+description: Full MASTER roadmap for Connect ONG to a professional finish — done blocks + all planned blocks with priority tiers
 metadata:
   type: project
 ---
 
-**RECURRING RE-PLAN RULE (user-set 2026-06-23, standing):** every time we reach the **last or second-to-last block of the currently-planned set**, I must proactively **ask the user how much time remains** before FECITEC, then extend/guide the next blocks toward the **FULL professional vision** — all features the user requested at the start, made as professional as possible (it just needs time). Keep repeating this loop near the end of each planned set **until the user says we are close to the presentation**. Do not silently stop at the end of a planned set — always re-plan forward.
+**PLANNING MODEL (user-set 2026-06-23):** keep ONE full master roadmap from start to "master finish", covering ALL originally-requested features (PDF + the user's GPT roadmap) + improvements I judge worthwhile, reflecting route changes (**desktop = ONG admin only, mobile = doador only, web = public/doador portal**). Work block by block. **As the presentation nears:** when the user says time is short, I COMPRESS the remaining blocks into ~2-3 to finish mobile+desktop cleanly. If all blocks finish WITH time left, the user says how much and I propose improvements. Keep until the user says we're close to the presentation. (Supersedes the earlier rolling re-plan rule.)
 
-Lean-but-professional MVP roadmap toward FECITEC (see [[connect-ong-milestones]]). Blocks in dependency order:
+Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** = valuable depth; **[STRETCH]** = nice-to-have, first to be cut/merged when time is short.
 
-- **Bloco 0 — Fundação:** ✅ DONE (backend). Security (DB creds externalized), Swagger + endpoint docs, global exception handling, output DTOs (already existed). Backend commits on `connect-ong-api` master: e8b8d68, 71ba214, 0b5d0e1. **Desktop repurposing + DOADOR/ONG standardization were MOVED to Bloco 2** (avoid building a throwaway skeleton).
-- **Bloco 1 — Match (backend):** ✅ DONE. Domain: **Necessidade** (need published by an ONG) + **Interesse** (doador's interest; status PENDENTE/ACEITO/RECUSADO — ACEITO = a "match"). Full layers (model/repo/service/DTO/controller) per [[connect-ong-tech-guidelines]]. Endpoints: `POST/GET /necessidades` (filter ?ongId/?status), `POST/GET /interesses` (filter ?doadorId/?ongId), `PUT /interesses/{id}/aceitar|recusar`. Prevents duplicate interest. Tested end-to-end via curl (publish → interest → accept → visible to both sides). Commits on master: 5ad841e, d472646. Tables `necessidade`+`interesse` auto-created.
-- **Bloco 2 — Match (telas) + Desktop:** ✅ DONE. Mobile (doador): feed de necessidades + "tenho interesse" + meus matches (commit f42d77c on connect-ong main). Desktop repurposed as **ONG admin panel** — PainelOngScreen resolves the ONG by login email (selector fallback), tabs Necessidades + Interesses (aceitar/recusar), publish-necessidade form; login now routes to the ONG panel instead of empresa screens (commits b7dd8c0, b30695b on connect-ong-desktop main). Notes/TODO: (1) native Windows build needs **Developer Mode** enabled (symlinks) — runs on Chrome without it; (2) old `screens/empresa/*` files are now dead code (clean up later); (3) no real link between ONG login account and Ong profile — bridged by email-match for the demo, proper linking is future work; (4) visual polish of the Match screens deferred to Bloco 4.
-- **Bloco 3 — Chat:** ✅ DONE (via polling, per user choice — WebSocket is a later upgrade if time allows). Backend: `Mensagem` entity tied to an Interesse, `MensagemService`/Controller with `GET/POST /mensagens?interesseId=`, rule "chat only on ACEITO match" (commit 3859154 on api master). Frontends: ChatScreen (mobile, remetente DOADOR — opened from an accepted match in Meus Matches) and ChatOngScreen (desktop, remetente ONG — "Conversar" button on accepted interests). Both poll every 2s, bubble UI aligned by sender. Commits: mobile 3b46290, desktop 0596097. Tested end-to-end (both sides send/receive, history ordered, pending-match blocked).
-**POST-MVP calibrated plan (set 2026-06-23, balanced, front-loaded into July):**
-- **Bloco 4 — Dashboard de impacto:** 🔜 NEXT. Doador: nº de matches, ONGs apoiadas, interesses; ONG: necessidades publicadas, interessados, matches fechados. Tells the visual "story" for judges.
-- **Bloco 5 — Profissionalização & limpeza:** resolve the ~50 lints (withOpacity→withValues, remove debug prints, BuildContext-across-async-gaps), delete dead `screens/empresa/*`, finalize DOADOR/ONG standardization, and ONG self-registration that creates a linked login+profile (fixes the email-bridge gap).
-- **Bloco 6 — Tempo real + confiança:** upgrade chat to WebSocket (true real-time) + ONG verification seal (selo).
-- **Bloco 7 — Web + dados de demonstração:** Flutter web build published + seed realistic ONGs/necessidades for the demo.
-- **Bloco 8 (August — final touches):** final visual polish, A0 poster review, demo rehearsal/script, final testing.
+== DONE (Blocos 0-4, session 2026-06-22/23) ==
+- 0 Fundação: DB creds externalized, Swagger, global exception handler, output DTOs.
+- 1 Match backend: Necessidade + Interesse, full REST, accept/reject, no-duplicate rule.
+- 2 Match telas: mobile doador (feed / tenho interesse / meus matches) + desktop ONG panel (publish, see interested, accept/reject).
+- 3 Chat: Mensagem backend + polling chat UI both sides (remetente DOADOR/ONG), only on ACEITO match.
+- 4 Dashboard de impacto: doador "Meu Impacto" stats + ONG panel stats header.
 
-Plan is flexible; reprioritize as we go. Cadence ([[git-workflow-preferences]]): I self-verify each step technically; user usage-tests at end of each block; commit at block end + safe mid-block points; announce each block completion.
+== PLANNED (forward) ==
+**PHASE B — Profissionalização (July)**
+- 5 [CORE] Limpeza & padronização: fix ~50 lints (withOpacity→withValues, remove debug prints, BuildContext-async-gaps), delete dead screens/empresa/*, finalize DOADOR/ONG consistency.
+- 6 [CORE] ONG self-registration + account↔ONG link: ONG signs up → creates a LINKED login + Ong profile; removes the email-bridge/selector hack so the panel knows its ONG natively.
+- 7 [CORE] Design system & UX: shared theme/palette across mobile+desktop, reusable components, responsiveness, visual feedback states, basic accessibility.
+
+**PHASE C — Confiança & Transparência (July)**
+- 8 [PLUS] Verificação de ONG: selo de verificado, doc/CNPJ field, simple admin approval flow.
+- 9 [PLUS] Prestação de contas: ONG posts photos/reports/results on a fulfilled donation; doador can see the outcome.
+- 10 [PLUS] Avaliações: doador rates/comments an ONG after a donation.
+
+**PHASE D — Tempo real & Engajamento (July/Aug)**
+- 11 [PLUS] WebSocket upgrade of the chat (true real-time, replacing polling) + in-app notifications (e.g. "seu interesse foi aceito").
+- 12 [PLUS] Feed melhorado: search/filter by categoria/urgência/cidade; optional simple geolocation.
+
+**PHASE E — Pagamentos (Aug)**
+- 13 [STRETCH] Doação financeira: SIMULATED PIX (sandbox/fake), generated receipt. No real gateway/real money for a TCC.
+
+**PHASE F — Segurança & Conformidade (Aug)**
+- 14 [PLUS] JWT + refresh token auth (BCrypt already in place); LGPD (consent, privacy policy, terms).
+- 15 [STRETCH] Audit logs + hardened server-side validation.
+
+**PHASE G — Escalabilidade & DevOps (Aug)**
+- 16 [PLUS] DB migrations (Flyway), indexes, normalization review (move off ddl-auto=update).
+- 17 [STRETCH] Docker + CI/CD (GitHub Actions) + automated tests (backend unit + Flutter widget). NOTE: microservices = SKIP (over-engineering for this project, low demo value — recommend against).
+
+**PHASE H — Web & Entrega (Aug)**
+- 18 [CORE] Web build published (Flutter web doador + institutional portal: sobre, ODS, LGPD, transparência).
+- 19 [CORE] Dados de demonstração caprichados (realistic ONGs/necessidades) + demo script.
+- 20 [CORE] MASTER FINISH: final visual polish + A0 poster content review + rehearsal + final testing.
+
+Optional only if time remains after 20 (from original GPT roadmap): recommendation engine, gamification/ranking, chatbot/AI moderation. See [[connect-ong-vision]], [[connect-ong-tech-guidelines]], [[connect-ong-milestones]], [[connect-ong-delivery-rules]], [[connect-ong-banca-feedback]].
