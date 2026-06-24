@@ -4,6 +4,7 @@ import '../models/interesse.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
 import 'chat_screen.dart';
+import 'prestacoes_screen.dart';
 
 class MeusMatchesScreen extends StatefulWidget {
   const MeusMatchesScreen({super.key});
@@ -108,17 +109,44 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
                       style: const TextStyle(color: _verde),
                     ),
                     if (aceito) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Icon(Icons.chat_bubble_outline,
                               size: 14, color: _verde),
                           const SizedBox(width: 4),
-                          Text('Toque para conversar',
+                          Text('Conversar',
                               style: TextStyle(
                                   color: _verde,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500)),
+                          const Spacer(),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PrestacoesScreen(
+                                    interesseId: i.id,
+                                    ongNome: i.ongNome ?? 'ONG',
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.receipt_long,
+                                    size: 14, color: _verde),
+                                const SizedBox(width: 4),
+                                Text('Prestação de contas',
+                                    style: TextStyle(
+                                        color: _verde,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ],
