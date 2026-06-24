@@ -127,6 +127,8 @@ class _LoginPageState
         return;
       }
 
+      if (!mounted) return;
+
       Navigator.pushReplacement(
 
         context,
@@ -209,7 +211,7 @@ class _LoginPageState
                         BoxShadow(
 
                           color: Colors.black
-                              .withOpacity(0.08),
+                              .withValues(alpha: 0.08),
 
                           blurRadius: 20,
 
@@ -292,7 +294,7 @@ class _LoginPageState
                       BoxShadow(
 
                         color: Colors.black
-                            .withOpacity(0.05),
+                            .withValues(alpha: 0.05),
 
                         blurRadius: 25,
 

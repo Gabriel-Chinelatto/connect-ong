@@ -58,8 +58,11 @@ class _HomeCardState
         curve: Curves.easeInOut,
 
         transform: Matrix4.identity()
-          ..scale(
+          ..scaleByDouble(
             hovering ? 1.02 : 1.0,
+            hovering ? 1.02 : 1.0,
+            1.0,
+            1.0,
           ),
 
         decoration: BoxDecoration(
@@ -71,7 +74,7 @@ class _HomeCardState
 
             BoxShadow(
 
-              color: Colors.black.withOpacity(
+              color: Colors.black.withValues(alpha: 
                 hovering ? 0.12 : 0.06,
               ),
 
@@ -219,8 +222,11 @@ class _HomeCardState
 
                     transform:
                         Matrix4.identity()
-                          ..translate(
+                          ..translateByDouble(
                             hovering ? 4.0 : 0.0,
+                            0.0,
+                            0.0,
+                            1.0,
                           ),
 
                     child: const Icon(

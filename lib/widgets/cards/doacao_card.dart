@@ -82,7 +82,7 @@ class DoacaoCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor:
-                      cor.withOpacity(0.12),
+                      cor.withValues(alpha: 0.12),
                   child: Icon(
                     _iconeCategoria(),
                     color: cor,

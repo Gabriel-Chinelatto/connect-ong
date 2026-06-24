@@ -380,7 +380,7 @@ class _CadastrarDoacaoScreenState
 
                     DropdownButtonFormField<
                         String>(
-                      value: categoria,
+                      initialValue: categoria,
                       decoration:
                           const InputDecoration(
                         labelText:
@@ -431,7 +431,7 @@ class _CadastrarDoacaoScreenState
 
                     DropdownButtonFormField<
                         String>(
-                      value: tipo,
+                      initialValue: tipo,
                       decoration:
                           const InputDecoration(
                         labelText: 'Tipo',
@@ -488,7 +488,7 @@ class _CadastrarDoacaoScreenState
                       subtitle: const Text(
                         'Destacar esta doação.',
                       ),
-                      activeColor:
+                      activeThumbColor:
                           const Color(
                         0xFF0A8449,
                       ),
@@ -509,7 +509,7 @@ class _CadastrarDoacaoScreenState
                       subtitle: const Text(
                         'Indica que o item está em excelentes condições.',
                       ),
-                      activeColor:
+                      activeThumbColor:
                           const Color(
                         0xFF0A8449,
                       ),

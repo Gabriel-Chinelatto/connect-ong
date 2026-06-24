@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class BuscarReceptorScreen extends StatefulWidget {
-  const BuscarReceptorScreen({Key? key}) : super(key: key);
+  const BuscarReceptorScreen({super.key});
 
   @override
   State<BuscarReceptorScreen> createState() => _BuscarReceptorScreenState();
@@ -53,6 +53,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         carregando = false;
       });
@@ -92,7 +93,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
 
             blurRadius: 18,
 
@@ -114,7 +115,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                   padding: const EdgeInsets.all(14),
 
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0A8449).withOpacity(0.12),
+                    color: const Color(0xFF0A8449).withValues(alpha: 0.12),
 
                     borderRadius: BorderRadius.circular(18),
                   ),
@@ -157,7 +158,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                         ),
 
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0A8449).withOpacity(0.1),
+                          color: const Color(0xFF0A8449).withValues(alpha: 0.1),
 
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -341,7 +342,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                     borderRadius: BorderRadius.circular(22),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -380,7 +381,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
@@ -411,7 +412,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                                 Icon(
                                   Icons.search_off,
                                   size: 80,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(

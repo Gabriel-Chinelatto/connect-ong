@@ -69,6 +69,7 @@ class _EditarOngScreenState extends State<EditarOngScreen> {
         // Sucesso: Retorna a ONG atualizada para a tela anterior
         final returnedOng = Ong.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
         
+        if (!mounted) return;
         // Navigator.pop envia o objeto de volta para a tela de cadastro
         Navigator.of(context).pop(returnedOng);
       } else {

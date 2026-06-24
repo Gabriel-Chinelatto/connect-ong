@@ -111,7 +111,7 @@ class HomeReceptorScreen extends StatelessWidget {
                       decoration: BoxDecoration(
 
                         color: Colors.white
-                            .withOpacity(0.15),
+                            .withValues(alpha: 0.15),
 
                         borderRadius:
                             BorderRadius.circular(
@@ -121,7 +121,7 @@ class HomeReceptorScreen extends StatelessWidget {
                         border: Border.all(
 
                           color: Colors.white
-                              .withOpacity(0.15),
+                              .withValues(alpha: 0.15),
                         ),
                       ),
 
@@ -159,7 +159,7 @@ class HomeReceptorScreen extends StatelessWidget {
                                         decoration: BoxDecoration(
 
                                           color: Colors.white
-                                              .withOpacity(0.18),
+                                              .withValues(alpha: 0.18),
 
                                           borderRadius:
                                               BorderRadius.circular(
@@ -235,7 +235,7 @@ class HomeReceptorScreen extends StatelessWidget {
                                         style: TextStyle(
 
                                           color: Colors.white
-                                              .withOpacity(0.9),
+                                              .withValues(alpha: 0.9),
 
                                           fontSize: 17,
 
@@ -260,7 +260,7 @@ class HomeReceptorScreen extends StatelessWidget {
                                         decoration: BoxDecoration(
 
                                           color: Colors.white
-                                              .withOpacity(0.14),
+                                              .withValues(alpha: 0.14),
 
                                           borderRadius:
                                               BorderRadius.circular(
@@ -332,7 +332,7 @@ class HomeReceptorScreen extends StatelessWidget {
                                           BoxShadow(
 
                                             color: Colors.black
-                                                .withOpacity(0.12),
+                                                .withValues(alpha: 0.12),
 
                                             blurRadius: 24,
 
@@ -419,7 +419,7 @@ class HomeReceptorScreen extends StatelessWidget {
                                   style: TextStyle(
 
                                     color: Colors.white
-                                        .withOpacity(0.9),
+                                        .withValues(alpha: 0.9),
 
                                     fontSize: 16,
 
@@ -464,7 +464,7 @@ class HomeReceptorScreen extends StatelessWidget {
                       style: TextStyle(
 
                         color: Colors.white
-                            .withOpacity(0.9),
+                            .withValues(alpha: 0.9),
 
                         fontSize: 16,
                       ),

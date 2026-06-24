@@ -133,7 +133,7 @@ class IntegrantesProjetoScreen
                 BoxShadow(
 
                   color: Colors.black
-                      .withOpacity(
+                      .withValues(alpha: 
                     0.05,
                   ),
 
@@ -179,7 +179,7 @@ class IntegrantesProjetoScreen
 
                           color: Colors
                               .black
-                              .withOpacity(
+                              .withValues(alpha: 
                             0.10,
                           ),
 
@@ -307,7 +307,7 @@ class IntegrantesProjetoScreen
                             color:
                                 const Color(
                               0xFF0A8449,
-                            ).withOpacity(
+                            ).withValues(alpha: 
                               0.10,
                             ),
 

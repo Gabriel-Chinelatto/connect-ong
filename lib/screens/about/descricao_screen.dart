@@ -79,7 +79,7 @@ class DescricaoScreen
                     BoxShadow(
 
                       color: Colors.black
-                          .withOpacity(
+                          .withValues(alpha: 
                         0.10,
                       ),
 
@@ -350,7 +350,7 @@ _buildModernCard(
                   BoxShadow(
 
                     color: Colors.black
-                        .withOpacity(
+                        .withValues(alpha: 
                       0.04,
                     ),
 
@@ -495,7 +495,7 @@ const SizedBox(
           BoxShadow(
 
             color: Colors.black
-                .withOpacity(
+                .withValues(alpha: 
               0.05,
             ),
 
@@ -534,7 +534,7 @@ const SizedBox(
                   color:
                       const Color(
                     0xFF0A8449,
-                  ).withOpacity(
+                  ).withValues(alpha: 
                     0.10,
                   ),
 
@@ -709,7 +709,7 @@ const SizedBox(
               color:
                   const Color(
                 0xFF0A8449,
-              ).withOpacity(
+              ).withValues(alpha: 
                 0.12,
               ),
 

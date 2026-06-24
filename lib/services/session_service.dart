@@ -19,9 +19,6 @@ class SessionService {
     final usuarioJson =
         jsonEncode(usuario.toJson());
 
-    print('SALVANDO USUARIO:');
-    print(usuarioJson);
-
     await prefs.setString(
       usuarioKey,
       usuarioJson,
@@ -35,9 +32,6 @@ class SessionService {
 
     final usuarioString =
         prefs.getString(usuarioKey);
-
-    print('USUARIO SALVO:');
-    print(usuarioString);
 
     if (usuarioString == null) {
 
@@ -58,7 +52,5 @@ class SessionService {
         await SharedPreferences.getInstance();
 
     await prefs.remove(usuarioKey);
-
-    print('USUARIO DESLOGADO');
   }
 }
