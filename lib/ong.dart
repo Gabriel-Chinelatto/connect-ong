@@ -5,6 +5,7 @@ class Ong {
   final String telefone;
   final String cidade;
   final String descricao;
+  final bool verificada;
 
   Ong({
     this.id,
@@ -13,6 +14,7 @@ class Ong {
     required this.telefone,
     required this.cidade,
     required this.descricao,
+    this.verificada = false,
   });
 
   // Converte Ong para Map, ignorando ID nulo
@@ -36,6 +38,7 @@ class Ong {
       telefone: json['telefone'] ?? '',
       cidade: json['cidade'] ?? '',
       descricao: json['descricao'] ?? '',
+      verificada: json['verificada'] ?? false,
     );
   }
 }

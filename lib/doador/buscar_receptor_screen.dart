@@ -158,21 +158,35 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                         ),
 
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0A8449).withValues(alpha: 0.1),
+                          color: (ong.verificada
+                                  ? Colors.blue
+                                  : const Color(0xFF0A8449))
+                              .withValues(alpha: 0.1),
 
                           borderRadius: BorderRadius.circular(20),
                         ),
 
-                        child: Text(
-                          "ONG Parceira",
-
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-
-                            color: const Color(0xFF0A8449),
-
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (ong.verificada) ...[
+                              const Icon(Icons.verified,
+                                  size: 14, color: Colors.blue),
+                              const SizedBox(width: 4),
+                            ],
+                            Text(
+                              ong.verificada
+                                  ? "ONG Verificada"
+                                  : "ONG Parceira",
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: ong.verificada
+                                    ? Colors.blue
+                                    : const Color(0xFF0A8449),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 

@@ -8,6 +8,7 @@ class Necessidade {
   final String status;
   final int? ongId;
   final String? ongNome;
+  final bool ongVerificada;
 
   const Necessidade({
     required this.id,
@@ -18,6 +19,7 @@ class Necessidade {
     required this.status,
     this.ongId,
     this.ongNome,
+    this.ongVerificada = false,
   });
 
   factory Necessidade.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,7 @@ class Necessidade {
       status: json['status'] ?? '',
       ongId: json['ongId'],
       ongNome: json['ongNome'],
+      ongVerificada: json['ongVerificada'] ?? false,
     );
   }
 }

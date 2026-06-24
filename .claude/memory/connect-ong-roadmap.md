@@ -47,6 +47,6 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 **PHASE H — Web & Entrega (Aug)**
 - 19 [CORE] Web build published (Flutter web doador + institutional portal: sobre, ODS, LGPD, transparência).
 - 20 [CORE] Dados de demonstração caprichados (realistic ONGs/necessidades) + demo script.
-- 21 [CORE] MASTER FINISH: final visual polish + A0 poster content review + rehearsal + final testing.
+- 21 [CORE] MASTER FINISH: **strong visual polish pass** (user explicitly flagged 2026-06-24 that the UI is currently "feinho"/plain despite rich functionality — wants it to look genuinely professional). MUST stay in Flutter (school requires the 3 frontends in Flutter; switching UI language is NOT allowed and would discard the apps) — Flutter is fully capable of beautiful UIs, the plainness is just deferred polish. Refine spacing/typography, custom components, micro-animations, empty states, imagery. Can be PULLED EARLIER as a dedicated design block if the user asks. Plus A0 poster review + rehearsal + final testing.
 
 Optional only if time remains after 21 (from original GPT roadmap): recommendation engine, gamification/ranking, chatbot/AI moderation. See [[connect-ong-vision]], [[connect-ong-tech-guidelines]], [[connect-ong-milestones]], [[connect-ong-delivery-rules]], [[connect-ong-banca-feedback]].

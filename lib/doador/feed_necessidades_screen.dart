@@ -128,13 +128,17 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
               children: [
                 const Icon(Icons.handshake, size: 16, color: _verde),
                 const SizedBox(width: 6),
-                Expanded(
+                Flexible(
                   child: Text(
                     n.ongNome ?? 'ONG',
                     style: const TextStyle(
                         color: _verde, fontWeight: FontWeight.w600),
                   ),
                 ),
+                if (n.ongVerificada) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Icons.verified, size: 16, color: Colors.blue),
+                ],
               ],
             ),
             const SizedBox(height: 10),
