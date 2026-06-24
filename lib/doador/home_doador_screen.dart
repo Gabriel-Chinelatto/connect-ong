@@ -19,6 +19,7 @@ import 'dashboard_impacto_screen.dart';
 import 'configuracoes_screen.dart';
 import 'perfil_screen.dart';
 import '../config/config_controller.dart';
+import '../widgets/notificacao_bell.dart';
 import '../widgets/common/app_footer.dart';
 
 class HomeDoadorScreen extends StatelessWidget {
@@ -108,6 +109,13 @@ class HomeDoadorScreen extends StatelessWidget {
                       CrossAxisAlignment.start,
 
                   children: [
+
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: NotificacaoBell(),
+                    ),
+
+                    const SizedBox(height: 4),
 
                     // HEADER
 

@@ -17,6 +17,6 @@ Connect ONG is a donation platform (academic TCC) with three separate repos unde
 
 Both Flutter apps hit the backend REST API at `http://localhost:8080`. Endpoints: `/usuarios` (+`/login`), `/doacoes` (CRUD), `/ongs` (CRUD, `?nome=` search), `/projetos`. Login uses BCrypt. Entities: Usuario, Doacao, Ong, Projeto.
 
-**DB:** remote MySQL at `143.106.241.3:3306/cl203161` (already configured in application.properties; no local DB needed). Hibernate `ddl-auto=update`.
+**DB:** remote MySQL at `143.106.241.3:3306/cl203161` (already configured in application.properties; no local DB needed). Hibernate `ddl-auto=update`. ⚠️ **GOTCHA:** it's MySQL **5.6 with utf8 (3-byte) columns — emojis (4-byte) cause a 500 "Incorrect string value" on insert.** Never put emojis in strings that get SAVED to the DB (notification titles, etc.); accents (á, ç) are fine. Emojis are OK only in UI-only text (snackbars, labels). Proper fix later = migrate to utf8mb4.
 
 **Security note:** DB credentials are committed in plaintext in application.properties on a public repo — flagged to user, not yet fixed. See [[git-workflow-preferences]].
