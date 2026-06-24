@@ -30,7 +30,7 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 - 11 [PLUS] Avaliações: ✅ DONE. Avaliacao entity (nota 1-5 + comentario, one per doador/ONG = upsert); `GET/POST /avaliacoes?ongId=`; recomputes Ong.notaMedia + totalAvaliacoes (denormalized, exposed in OngResponseDTO + feed/NecessidadeResponseDTO). Mobile: star-rating dialog on accepted matches (Conversar/Prestação/Avaliar actions) + average stars shown on feed cards. api commit abb2ce3, mobile 84c46ad. NOTE: ONG seeing its own rating in the desktop panel left as a small future add (needs a GET /ongs/{id} or fetch). **PHASE C (Confiança & Transparência, blocos 9-11) COMPLETE.**
 
 **PHASE D — Tempo real & Engajamento (July/Aug)**
-- 12 [PLUS] WebSocket upgrade of the chat (true real-time, replacing polling) + in-app notifications (e.g. "seu interesse foi aceito").
+- 12 [PLUS] Notificações + (WebSocket?): **Notifications ✅ DONE** — Notificacao entity, events fire on interesse/aceite/mensagem/prestação, **respects Bloco 8 prefs** (notifMatch etc. gate creation), bell+badge+screen on both apps, mark-read. api commit e2015b2; mobile 3025430; desktop 9625846. **WebSocket upgrade: pending user decision** (raised honestly — polling chat already works reliably; WebSocket is a risky flex that replaces something working. Recommended SKIP unless user wants the technical flourish).
 - 13 [PLUS] Feed melhorado: search/filter by categoria/urgência/cidade; optional simple geolocation.
 
 **PHASE E — Pagamentos (Aug)**
