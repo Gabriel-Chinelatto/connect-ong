@@ -5,6 +5,7 @@ import 'pages/login_page.dart';
 import 'doador/home_doador_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/session_service.dart';
+import 'config/config_controller.dart';
 
 void main() {
 
@@ -22,15 +23,35 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    return MaterialApp(
+    final config = ConfigController.instance;
 
-      debugShowCheckedModeBanner: false,
-
-      title: 'Connect Ong',
-
-      theme: AppTheme.theme,
-
-      home: const SplashDecider(),
+    return ListenableBuilder(
+      listenable: config,
+      builder: (context, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Connect Ong',
+          theme: AppTheme.light(
+            dislexia: config.fonteDislexia,
+            altoContraste: config.altoContraste,
+          ),
+          darkTheme: AppTheme.dark(
+            dislexia: config.fonteDislexia,
+            altoContraste: config.altoContraste,
+          ),
+          themeMode: config.themeMode,
+          // Aplica o tamanho da fonte escolhido em todo o app.
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(config.textScale),
+              ),
+              child: child!,
+            );
+          },
+          home: const SplashDecider(),
+        );
+      },
     );
   }
 }
@@ -82,6 +103,10 @@ class _SplashDeciderState
 
       return;
     }
+
+    // Carrega as preferencias do usuario (tema, fonte, etc.).
+    await ConfigController.instance.carregar(usuario.id);
+    if (!mounted) return;
 
     // App mobile e exclusivo do doador.
     Navigator.pushReplacement(

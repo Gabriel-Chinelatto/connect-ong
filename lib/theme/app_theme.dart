@@ -8,24 +8,46 @@ class AppTheme {
   static const Color primaryGreen = AppColors.primary;
   static const Color lightGreen = AppColors.primaryLight;
 
-  static ThemeData get theme {
+  // Tema padrao (claro) — compatibilidade.
+  static ThemeData get theme => light();
+
+  static ThemeData light({bool dislexia = false, bool altoContraste = false}) =>
+      _build(Brightness.light, dislexia, altoContraste);
+
+  static ThemeData dark({bool dislexia = false, bool altoContraste = false}) =>
+      _build(Brightness.dark, dislexia, altoContraste);
+
+  static ThemeData _build(
+      Brightness brightness, bool dislexia, bool altoContraste) {
+    final bool escuro = brightness == Brightness.dark;
+
+    final Color bg = escuro ? const Color(0xFF121212) : AppColors.background;
+    final Color surface = escuro ? const Color(0xFF1E1E1E) : AppColors.surface;
+    final Color texto = altoContraste
+        ? (escuro ? Colors.white : Colors.black)
+        : (escuro ? Colors.white70 : AppColors.textPrimary);
+
+    // Fonte amigavel para dislexia (Lexend) ou a padrao (Poppins).
+    final TextTheme base =
+        dislexia ? GoogleFonts.lexendTextTheme() : GoogleFonts.poppinsTextTheme();
+    final TextTheme textTheme =
+        base.apply(bodyColor: texto, displayColor: texto);
+
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.background,
-      // Mesma fonte do app desktop (Poppins) para tipografia consistente.
-      textTheme: GoogleFonts.poppinsTextTheme().apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-      ),
+      brightness: brightness,
+      scaffoldBackgroundColor: bg,
+      textTheme: textTheme,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
+        brightness: brightness,
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        foregroundColor: Colors.black87,
+        foregroundColor: texto,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -39,21 +61,23 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 4,
-        color: AppColors.surface,
+        color: surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
+          borderSide: altoContraste
+              ? BorderSide(color: texto, width: 1.5)
+              : BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

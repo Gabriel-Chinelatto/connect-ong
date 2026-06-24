@@ -5,6 +5,7 @@ import '../doador/home_doador_screen.dart';
 import '../theme/app_colors.dart';
 
 import '../services/login_service.dart';
+import '../config/config_controller.dart';
 
 import '../widgets/buttons/app_button.dart';
 import '../widgets/feedback/app_snackbar.dart';
@@ -37,11 +38,14 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       // O app mobile e exclusivo do doador (tipoSelecionado 0 = DOADOR).
-      await _loginService.fazerLogin(
+      final usuario = await _loginService.fazerLogin(
         email: emailController.text.trim(),
         senha: senhaController.text.trim(),
         tipoSelecionado: 0,
       );
+
+      // Carrega as preferencias (tema, fonte, etc.) do usuario.
+      await ConfigController.instance.carregar(usuario.id);
 
       if (!mounted) return;
 
