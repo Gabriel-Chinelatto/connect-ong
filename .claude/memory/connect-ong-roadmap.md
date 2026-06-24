@@ -18,7 +18,7 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 
 == PLANNED (forward) ==
 **PHASE B — Profissionalização (July)**
-- 5 [CORE] Limpeza & padronização: fix ~50 lints (withOpacity→withValues, remove debug prints, BuildContext-async-gaps), delete dead screens/empresa/*, finalize DOADOR/ONG consistency.
+- 5 [CORE] Limpeza & padronização: ✅ DONE. Mobile 55→0 lints (withOpacity→withValues x12 files, removed debug prints, mounted-guards, initialValue/activeThumbColor/scaleByDouble/super.key); desktop 4→0, deleted dead screens/empresa/* + empresa_service + cadastro_tipo, removed the "Empresa" concept (registration → CadastroOngScreen). Commits: mobile 5dc7187, desktop 82e4b66.
 - 6 [CORE] ONG self-registration + account↔ONG link: ONG signs up → creates a LINKED login + Ong profile; removes the email-bridge/selector hack so the panel knows its ONG natively.
 - 7 [CORE] Design system & UX: shared theme/palette across mobile+desktop, reusable components, responsiveness, visual feedback states, basic accessibility.
 
