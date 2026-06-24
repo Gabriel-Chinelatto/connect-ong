@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../doador/home_doador_screen.dart';
 
+import '../theme/app_colors.dart';
+
 import '../services/login_service.dart';
 
 import '../widgets/buttons/app_button.dart';
@@ -87,8 +89,8 @@ class _LoginPageState extends State<LoginPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFB7DFC0),
-              Color(0xFF2F8F46),
+              AppColors.primaryLight,
+              AppColors.primary,
             ],
           ),
         ),
@@ -108,7 +110,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2F8F46),
+                  color: AppColors.primary,
                 ),
               ),
 
@@ -118,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                 'Acesso do doador',
                 style: TextStyle(
                   fontSize: 15,
-                  color: Color(0xFF2F8F46),
+                  color: AppColors.primary,
                 ),
               ),
 
