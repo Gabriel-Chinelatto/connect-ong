@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 
 import 'doador/home_doador_screen.dart';
-import 'receptor/home_receptor_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/session_service.dart';
 
@@ -84,32 +83,13 @@ class _SplashDeciderState
       return;
     }
 
-    if (usuario.tipo == 'DOADOR') {
-
-      Navigator.pushReplacement(
-
-        context,
-
-        MaterialPageRoute(
-
-          builder: (_) =>
-              const HomeDoadorScreen(),
-        ),
-      );
-
-    } else {
-
-      Navigator.pushReplacement(
-
-        context,
-
-        MaterialPageRoute(
-
-          builder: (_) =>
-              const HomeReceptorScreen(),
-        ),
-      );
-    }
+    // App mobile e exclusivo do doador.
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomeDoadorScreen(),
+      ),
+    );
   }
 
   @override
