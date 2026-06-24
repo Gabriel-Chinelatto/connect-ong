@@ -31,7 +31,7 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 
 **PHASE D — Tempo real & Engajamento (July/Aug)**
 - 12 [PLUS] Notificações + (WebSocket?): **Notifications ✅ DONE** — Notificacao entity, events fire on interesse/aceite/mensagem/prestação, **respects Bloco 8 prefs** (notifMatch etc. gate creation), bell+badge+screen on both apps, mark-read. api commit e2015b2; mobile 3025430; desktop 9625846. **WebSocket upgrade: SKIPPED by user decision (2026-06-24)** — keep the reliable 2s-polling chat; not worth the risk for FECITEC. Bloco 12 considered DONE. (Could revisit at the very end only if lots of time remains.)
-- 13 [PLUS] Feed melhorado + **Feed Inteligente** (absorbs idea #9): search/filter by categoria/urgência/**cidade** (this city-search REPLACES the risky Maps integration — idea #15 dropped, ~90% of value, ~10% of risk); smart ordering (same-city + urgentes first; compatible needs). Architecture left ready for a future recommendation engine.
+- 13 [PLUS] Feed melhorado + **Feed Inteligente**: ✅ DONE. Backend exposes ongCidade in NecessidadeResponseDTO (api d7db3b8). Mobile feed: search bar (titulo/ONG/categoria), filter chips (Urgentes + categorias derived from data), smart ordering (urgentes first, then ONGs in the doador's city — city from perfil). Mobile commit 983a5f4. (Maps idea #15 stays dropped; city-based ordering covers it.)
 
 **PHASE E — Pagamentos (Aug)**
 - 14 [STRETCH] Doação financeira: SIMULATED PIX (sandbox/fake), generated receipt. No real gateway/real money for a TCC.
