@@ -180,6 +180,9 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
         ),
       ),
     );
+
+    // Descarta o controller apos o dialogo fechar (evita vazamento).
+    comentarioC.dispose();
   }
 
   Widget _card(Interesse i) {

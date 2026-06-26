@@ -16,7 +16,7 @@ class DenunciaService {
   }) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/denuncias'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode({
         if (denuncianteId != null) 'denuncianteId': denuncianteId,
         'tipoAlvo': tipoAlvo,

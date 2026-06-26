@@ -10,6 +10,7 @@ class PreferenciaService {
   Future<Preferencia> obter(int usuarioId) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/preferencias'),
+      headers: ApiService.authHeaders(),
     );
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar preferências');
@@ -21,7 +22,7 @@ class PreferenciaService {
   Future<void> salvar(int usuarioId, Preferencia prefs) async {
     final response = await http.put(
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/preferencias'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode(prefs.toJson()),
     );
     if (response.statusCode != 200) {

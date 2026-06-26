@@ -12,6 +12,7 @@ class DoacaoService {
   Future<List<Doacao>> listarDoacoes() async {
     final response = await http.get(
       Uri.parse('$baseUrl/doacoes'),
+      headers: ApiService.authHeaders(),
     );
 
     if (response.statusCode != 200) {
@@ -21,7 +22,7 @@ class DoacaoService {
     }
 
     final List<dynamic> data =
-        jsonDecode(response.body);
+        jsonDecode(utf8.decode(response.bodyBytes));
 
     return data
         .map(
@@ -35,9 +36,7 @@ class DoacaoService {
   ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/doacoes'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode(
         doacao.toJson(),
       ),
@@ -58,9 +57,7 @@ class DoacaoService {
       Uri.parse(
         '$baseUrl/doacoes/${doacao.id}',
       ),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode(
         doacao.toJson(),
       ),
@@ -80,6 +77,7 @@ class DoacaoService {
       Uri.parse(
         '$baseUrl/doacoes/$id',
       ),
+      headers: ApiService.authHeaders(),
     );
 
     if (response.statusCode != 204) {

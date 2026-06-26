@@ -10,6 +10,7 @@ class NecessidadeService {
   Future<List<Necessidade>> listarAbertas() async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/necessidades?status=ABERTA'),
+      headers: ApiService.authHeaders(),
     );
 
     if (response.statusCode != 200) {

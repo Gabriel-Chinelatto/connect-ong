@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/usuario_logado.dart';
+import 'api_service.dart';
 
 class SessionService {
 
@@ -52,5 +53,8 @@ class SessionService {
         await SharedPreferences.getInstance();
 
     await prefs.remove(usuarioKey);
+
+    // Limpa o token JWT para que as requisições deixem de ser autenticadas.
+    await ApiService.setToken(null);
   }
 }

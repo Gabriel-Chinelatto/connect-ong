@@ -190,6 +190,9 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
         );
       },
     );
+
+    // Descarta o controller apos o dialogo fechar (evita vazamento).
+    descricaoController.dispose();
   }
 
   @override

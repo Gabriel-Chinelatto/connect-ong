@@ -13,7 +13,7 @@ class DoacaoFinanceiraService {
   }) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/doacoes-financeiras'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode({
         'ongId': ongId,
         'doadorId': doadorId,

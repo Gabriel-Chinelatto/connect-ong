@@ -9,8 +9,9 @@ class RankingService {
   /// Lista o ranking de transparencia das ONGs ordenado por score desc
   /// (GET /publico/ranking?limite=$limite).
   Future<List<RankingOng>> listar({int limite = 20}) async {
-    final response = await http
-        .get(Uri.parse('${ApiService.baseUrl}/publico/ranking?limite=$limite'));
+    final response = await http.get(
+        Uri.parse('${ApiService.baseUrl}/publico/ranking?limite=$limite'),
+        headers: ApiService.authHeaders());
     if (response.statusCode == 200) {
       final raw = jsonDecode(utf8.decode(response.bodyBytes));
       if (raw is List) {

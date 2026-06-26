@@ -13,7 +13,7 @@ class InteresseService {
   }) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/interesses'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode({
         'necessidadeId': necessidadeId,
         'doadorId': doadorId,
@@ -30,6 +30,7 @@ class InteresseService {
   Future<List<Interesse>> meusMatches(int doadorId) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/interesses?doadorId=$doadorId'),
+      headers: ApiService.authHeaders(),
     );
 
     if (response.statusCode != 200) {

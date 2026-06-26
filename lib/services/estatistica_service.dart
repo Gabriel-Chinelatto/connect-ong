@@ -51,7 +51,8 @@ class EstatisticaService {
   static final String _url = '${ApiService.baseUrl}/publico/estatisticas';
 
   Future<EstatisticasPublicas> carregar() async {
-    final response = await http.get(Uri.parse(_url));
+    final response =
+        await http.get(Uri.parse(_url), headers: ApiService.authHeaders());
     if (response.statusCode == 200) {
       return EstatisticasPublicas.fromJson(
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>,

@@ -6,10 +6,17 @@ import 'pages/login_page.dart';
 import 'doador/home_doador_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/session_service.dart';
+import 'services/api_service.dart';
 import 'config/config_controller.dart';
 import 'web/portal_institucional_screen.dart';
 
-void main() {
+void main() async {
+
+  // Garante a inicialização do binding antes de acessar plugins (SharedPreferences).
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Carrega o token JWT salvo para reenviá-lo nas requisições autenticadas.
+  await ApiService.carregarToken();
 
   runApp(
     const MyApp(),

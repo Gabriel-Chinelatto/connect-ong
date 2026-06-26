@@ -10,6 +10,7 @@ class PrestacaoService {
   Future<List<Prestacao>> listar(int interesseId) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/prestacoes?interesseId=$interesseId'),
+      headers: ApiService.authHeaders(),
     );
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar prestações de contas');

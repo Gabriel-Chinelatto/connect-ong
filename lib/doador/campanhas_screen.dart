@@ -130,6 +130,9 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
       ),
     );
 
+    // Descarta o controller apos o dialogo fechar (evita vazamento).
+    controller.dispose();
+
     if (valor == null || valor <= 0) return;
     try {
       final atualizada = await _service.contribuir(

@@ -12,7 +12,8 @@ class FavoritoService {
   /// Lista todos os favoritos do usuario.
   Future<List<Favorito>> listar(int usuarioId) async {
     final response =
-        await http.get(Uri.parse('$_base?usuarioId=$usuarioId'));
+        await http.get(Uri.parse('$_base?usuarioId=$usuarioId'),
+            headers: ApiService.authHeaders());
     if (response.statusCode == 200) {
       final List data = jsonDecode(utf8.decode(response.bodyBytes));
       return data.map((e) => Favorito.fromJson(e)).toList();
@@ -23,7 +24,8 @@ class FavoritoService {
   /// Retorna o conjunto de alvoIds favoritados de um determinado tipo.
   Future<Set<int>> ids(int usuarioId, String tipo) async {
     final response = await http
-        .get(Uri.parse('$_base/ids?usuarioId=$usuarioId&tipo=$tipo'));
+        .get(Uri.parse('$_base/ids?usuarioId=$usuarioId&tipo=$tipo'),
+            headers: ApiService.authHeaders());
     if (response.statusCode == 200) {
       final List data = jsonDecode(utf8.decode(response.bodyBytes));
       return data.map((e) => (e as num).toInt()).toSet();
@@ -35,7 +37,7 @@ class FavoritoService {
   Future<void> adicionar(int usuarioId, String tipo, int alvoId) async {
     final response = await http.post(
       Uri.parse(_base),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode({
         'usuarioId': usuarioId,
         'tipo': tipo,
@@ -52,6 +54,7 @@ class FavoritoService {
     final response = await http.delete(
       Uri.parse(
           '$_base?usuarioId=$usuarioId&tipo=$tipo&alvoId=$alvoId'),
+      headers: ApiService.authHeaders(),
     );
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Erro ao remover favorito');

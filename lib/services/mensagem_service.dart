@@ -10,6 +10,7 @@ class MensagemService {
   Future<List<Mensagem>> listar(int interesseId) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/mensagens?interesseId=$interesseId'),
+      headers: ApiService.authHeaders(),
     );
 
     if (response.statusCode != 200) {
@@ -28,7 +29,7 @@ class MensagemService {
   }) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/mensagens'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode({
         'interesseId': interesseId,
         'remetente': remetente,

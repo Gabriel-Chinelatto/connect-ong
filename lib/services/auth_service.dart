@@ -38,13 +38,18 @@ class AuthService {
 
     if (response.statusCode == 200) {
 
-      return jsonDecode(
-        response.body,
+      final resp = jsonDecode(
+        utf8.decode(response.bodyBytes),
       );
+
+      // Guarda o accessToken para ser enviado nas próximas requisições.
+      await ApiService.setToken(resp['accessToken']);
+
+      return resp;
     }
 
     final body = jsonDecode(
-      response.body,
+      utf8.decode(response.bodyBytes),
     );
 
     throw Exception(

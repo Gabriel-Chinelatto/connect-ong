@@ -15,7 +15,7 @@ class AvaliacaoService {
   }) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/avaliacoes'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode({
         'ongId': ongId,
         'doadorId': doadorId,
@@ -33,6 +33,7 @@ class AvaliacaoService {
   Future<List<Avaliacao>> listar(int ongId) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/avaliacoes?ongId=$ongId'),
+      headers: ApiService.authHeaders(),
     );
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar avaliações');

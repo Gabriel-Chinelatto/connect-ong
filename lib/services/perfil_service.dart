@@ -9,6 +9,7 @@ class PerfilService {
   Future<Map<String, dynamic>> obter(int usuarioId) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/perfil'),
+      headers: ApiService.authHeaders(),
     );
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar perfil');
@@ -23,7 +24,7 @@ class PerfilService {
   ) async {
     final response = await http.put(
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/perfil'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode(dados),
     );
     if (response.statusCode != 200) {
@@ -40,7 +41,7 @@ class PerfilService {
   ) async {
     final response = await http.put(
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/senha'),
-      headers: {'Content-Type': 'application/json'},
+      headers: ApiService.jsonHeaders(),
       body: jsonEncode({'senhaAtual': senhaAtual, 'novaSenha': novaSenha}),
     );
     if (response.statusCode != 200) {
