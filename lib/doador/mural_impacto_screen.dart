@@ -113,12 +113,25 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
       ),
       child: Column(
         children: [
-          SvgPicture.asset(
-            'assets/images/impacto_hero.svg',
-            height: 170,
-            semanticsLabel: 'Ilustracao de impacto',
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.10),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8)),
+              ],
+            ),
+            child: SvgPicture.asset(
+              'assets/images/impacto_hero.svg',
+              height: 150,
+              semanticsLabel: 'Ilustracao de impacto',
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Text(
             'Juntos transformamos vidas',
             textAlign: TextAlign.center,
