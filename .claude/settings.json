@@ -42,6 +42,12 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
+      "Bash",
+      "PowerShell",
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "NotebookEdit",
       "Read",
       "Glob",
       "Grep"
