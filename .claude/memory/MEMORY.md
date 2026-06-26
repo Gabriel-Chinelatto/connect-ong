@@ -1,7 +1,7 @@
 # Memory Index
 
 - [Connect ONG architecture](connect-ong-architecture.md) — 3 repos + 3-platform rule (mobile=doador, desktop=ONG admin, web), API, remote MySQL
-- [Connect ONG roadmap](connect-ong-roadmap.md) — MASTER roadmap (blocos 0-30 + priority tiers); **0-22 done** (Match→…→JWT/LGPD/Audit/Liquibase/Docker+CI/Portal web/Modo Feira/**Campanhas**); **next = Bloco 23 (Timeline)**; **Bloco 21 (polimento visual) movido para o FINAL** por decisão do usuário; Phase I complementos; compress-near-deadline rule
+- [Connect ONG roadmap](connect-ong-roadmap.md) — MASTER roadmap; **0-20 e 22-30 DONE** (todas as funções: Match→…→Mural/Ranking/Conquistas/Favoritos/Denúncia/PDF); **resta só o Bloco 21 (polimento visual MASTER FINISH)** por decisão do usuário + recapitular deferred; compress-near-deadline rule
 - [Connect ONG deferred](connect-ong-deferred.md) — BACKLOG de itens adiados nos blocos (JWT enforcement, utf8mb4, signup doador mobile, validar Docker, hospedar web…); recapitular após Bloco 30
 - [Connect ONG profile & settings](connect-ong-profile-settings.md) — spec for Bloco 8: profile + settings center (appearance/notif/privacy/security/accessibility)
 - [Connect ONG vision](connect-ong-vision.md) — product vision, "treat as real product", DOADOR/ONG roles
@@ -11,3 +11,5 @@
 - [Connect ONG tech guidelines](connect-ong-tech-guidelines.md) — mandatory backend/frontend/DB standards, fixed stack
 - [Git workflow preferences](git-workflow-preferences.md) — **auto-commit + auto-push** em cada checkpoint útil (restore point), sem pedir; no Claude co-authorship; mobile/desktop=main, backend=master
 - [Preferência de idioma](preferencia-idioma.md) — **TODAS as comunicações e artefatos do projeto em PORTUGUÊS** (respostas, commits, comentários, docs, UI)
+- [Permissões do projeto](permissoes-projeto.md) — usuário NÃO quer prompts de permissão neste projeto; settings.local.json com defaultMode=bypassPermissions
+- [Preferência de gráficos](preferencia-graficos.md) — usar SVG (flutter_svg) / imagens free para itens visuais; autorar SVGs originais nas cores da marca
