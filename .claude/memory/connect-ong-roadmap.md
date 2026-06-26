@@ -34,7 +34,7 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 - 13 [PLUS] Feed melhorado + **Feed Inteligente**: ✅ DONE. Backend exposes ongCidade in NecessidadeResponseDTO (api d7db3b8). Mobile feed: search bar (titulo/ONG/categoria), filter chips (Urgentes + categorias derived from data), smart ordering (urgentes first, then ONGs in the doador's city — city from perfil). Mobile commit 983a5f4. (Maps idea #15 stays dropped; city-based ordering covers it.)
 
 **PHASE E — Pagamentos (Aug)**
-- 14 [STRETCH] Doação financeira: SIMULATED PIX (sandbox/fake), generated receipt. No real gateway/real money for a TCC.
+- 14 [STRETCH] Doação financeira (PIX simulado): ✅ DONE. DoacaoFinanceira entity (ongId/doadorId/valor/codigoPix/status CONFIRMADO); `POST/GET /doacoes-financeiras`; generates a fake "copia e cola" PIX code; notifies the ONG. Mobile: DoarPixScreen (valor + atalhos → comprovante with copy button), wired to the "Doar via PIX" button in buscar_receptor. No real gateway (TCC). api commit a01b680, mobile d58f17e. NOTE: a "doações recebidas" list on the desktop ONG panel is a small future add (ONG already gets a notification).
 
 **PHASE F — Segurança & Conformidade (Aug)**
 - 15 [PLUS] JWT + refresh token auth (BCrypt already in place); LGPD (consent, privacy policy, terms). Completes "sessões ativas / logout global" from Bloco 8.
