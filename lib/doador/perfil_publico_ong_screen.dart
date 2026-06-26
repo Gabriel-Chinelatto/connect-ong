@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/perfil_publico_ong.dart';
+import '../services/denuncia_service.dart';
 import '../services/perfil_publico_service.dart';
+import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 
 /// Pagina publica de uma ONG: avatar, selo de verificacao, nota, sobre,
@@ -76,6 +78,120 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     );
   }
 
+  // Abre o dialog de denuncia da ONG.
+  Future<void> _abrirDenuncia() async {
+    const motivos = <String, String>{
+      'CONTEUDO_INADEQUADO': 'Conteudo inadequado',
+      'FRAUDE': 'Suspeita de fraude',
+      'SPAM': 'Spam',
+      'ABUSO': 'Abuso',
+      'OUTRO': 'Outro',
+    };
+    String motivoSelecionado = 'CONTEUDO_INADEQUADO';
+    final descricaoController = TextEditingController();
+    bool enviando = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            Future<void> enviar() async {
+              setStateDialog(() => enviando = true);
+              try {
+                final u = await SessionService().obterUsuario();
+                await DenunciaService().criar(
+                  denuncianteId: u?.id,
+                  tipoAlvo: 'ONG',
+                  alvoId: widget.ongId,
+                  motivo: motivoSelecionado,
+                  descricao: descricaoController.text.trim(),
+                );
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Denuncia enviada. Obrigado.',
+                        style: GoogleFonts.poppins()),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (_) {
+                if (!dialogContext.mounted) return;
+                setStateDialog(() => enviando = false);
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(
+                    content: Text('Nao foi possivel enviar a denuncia.',
+                        style: GoogleFonts.poppins()),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+
+            return AlertDialog(
+              title: Text('Denunciar ONG',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: motivoSelecionado,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Motivo'),
+                    items: [
+                      for (final e in motivos.entries)
+                        DropdownMenuItem(
+                          value: e.key,
+                          child: Text(e.value, style: GoogleFonts.poppins()),
+                        ),
+                    ],
+                    onChanged: enviando
+                        ? null
+                        : (v) {
+                            if (v != null) {
+                              setStateDialog(() => motivoSelecionado = v);
+                            }
+                          },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descricaoController,
+                    maxLines: 3,
+                    enabled: !enviando,
+                    decoration:
+                        const InputDecoration(labelText: 'Detalhes (opcional)'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      enviando ? null : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: enviando ? null : enviar,
+                  child: enviando
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Enviar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,6 +207,11 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               onPressed: _compartilhar,
               icon: const Icon(Icons.share_outlined),
             ),
+          IconButton(
+            tooltip: 'Denunciar',
+            onPressed: _abrirDenuncia,
+            icon: const Icon(Icons.flag_outlined),
+          ),
         ],
       ),
       body: _carregando
