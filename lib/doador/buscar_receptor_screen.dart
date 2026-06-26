@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter_application_1/ong.dart';
 import 'package:flutter_application_1/services/api_service.dart';
+import 'package:flutter_application_1/doador/doar_pix_screen.dart';
 
 import 'dart:convert';
 
@@ -244,18 +245,21 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                           ),
 
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Em breve você poderá doar para ${ong.nome}',
+                            if (ong.id == null) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DoarPixScreen(
+                                  ongId: ong.id!,
+                                  ongNome: ong.nome,
                                 ),
                               ),
                             );
                           },
 
-                          icon: const Icon(Icons.favorite_border),
+                          icon: const Icon(Icons.pix),
 
-                          label: const Text("Quero Doar"),
+                          label: const Text("Doar via PIX"),
                         ),
                       ),
                     ],
