@@ -13,3 +13,5 @@
 - [Preferência de idioma](preferencia-idioma.md) — **TODAS as comunicações e artefatos do projeto em PORTUGUÊS** (respostas, commits, comentários, docs, UI)
 - [Permissões do projeto](permissoes-projeto.md) — usuário NÃO quer prompts de permissão neste projeto; settings.local.json com defaultMode=bypassPermissions
 - [Preferência de gráficos](preferencia-graficos.md) — usar SVG (flutter_svg) / imagens free para itens visuais; autorar SVGs originais nas cores da marca
+- [Notebook FECITEC](connect-ong-notebook-fecitec.md) — **2ª máquina (user `gabri`) que vai p/ a FECITEC**: caminhos dos 3 repos, JDK Corretto 21, Maven fixo, Android SDK, scripts em INICIAR-FECITEC; **RISCO = depende do MySQL remoto da escola** (testar login no evento)
+- [Ambiente Java + Avast TLS](ambiente-java-avast-tls.md) — gotcha do notebook: **Avast intercepta HTTPS** → ferramentas Java (sdkmanager/Gradle/Maven novo) dão PKIX; fix = importar a CA "Avast Web/Mail Shield Root" no cacerts do Corretto 21

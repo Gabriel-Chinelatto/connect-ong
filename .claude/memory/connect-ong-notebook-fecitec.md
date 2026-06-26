@@ -1,0 +1,33 @@
+---
+name: connect-ong-notebook-fecitec
+description: "Setup do NOTEBOOK de apresentacao da FECITEC (usuario Windows 'gabri') — caminhos, toolchain e como subir os 3 frontends nesta maquina"
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 29811329-d22b-44a3-85f0-3e1c2637d9eb
+---
+
+Existe um SEGUNDO computador (alem da maquina da escola `01gabriel.MAQCHINELATTO` descrita em [[connect-ong-architecture]]): o **notebook pessoal do usuario `gabri`**, que sera **LEVADO PARA A FECITEC** para a apresentacao. Configurado em 2026-06-26. Caminhos nesta maquina:
+
+- **Mobile (doador)**: `C:\Users\gabri\Desktop\connect-ong` (branch main) — este e o repo que contem `.claude/memory/` (as memorias sincronizam via git aqui).
+- **Desktop (painel ONG)**: `C:\Users\gabri\Desktop\connect-ong-desktop` (branch main).
+- **Backend**: raiz Maven em `C:\Users\gabri\IdeaProjects\connect-ong-api\API - Chinelatto - att2\API - Chinelatto\API - Chinelatto` (branch master).
+
+**Toolchain instalado/configurado nesta maquina:**
+- **JDK = Amazon Corretto 21** em `C:\Users\gabri\.jdks\corretto-21.0.3` (o JDK 8 que estava no PATH NAO serve p/ Spring Boot 3.5/Java 17). `JAVA_HOME` (User) corrigido p/ apontar p/ o Corretto 21 (antes apontava p/ `jdk-22` inexistente).
+- **Maven 3.9.11** instalado de forma permanente em `C:\Users\gabri\tools\apache-maven-3.9.11` (+ no PATH/MAVEN_HOME). NAO usar o `./mvnw` do projeto: o wrapper baixa o Maven via curl e falha pela interceptacao TLS do Avast (ver [[ambiente-java-avast-tls]]).
+- **Android SDK** em `C:\Users\gabri\AppData\Local\Android\Sdk` (cmdline-tools + emulador, em preparacao). **Android Studio** instalado em `C:\Program Files\Android\Android Studio`.
+- **Flutter 3.44.1** em `C:\flutter`. Devices: Windows, Chrome, Edge.
+- **Visual Studio Community 2022 JA instalado**, mas FALTA o workload "Desktop development with C++" → por isso o build Windows nativo falha ("Unable to find suitable Visual Studio toolchain"). Decisao do usuario (2026-06-26): deixar o desktop NATIVO p/ depois; por enquanto rodar no Chrome.
+
+**Como subir os 3 frontends nesta maquina (forma testada 2026-06-26):**
+1. Backend: `JAVA_HOME=...corretto-21.0.3` + `mvn spring-boot:run` na raiz Maven → porta 8080 (conecta no MySQL 5.6 da escola; dados demo ja semeados no banco remoto compartilhado).
+2. Painel ONG: `cd connect-ong-desktop && flutter run -d chrome --web-port=5599` (baseUrl ja = localhost:8080).
+3. App doador: `cd connect-ong && flutter run -d chrome --web-port=5601` (no Chrome abre o PORTAL por `kIsWeb` → botao "Entrar" leva ao login).
+- **Scripts prontos** em `C:\Users\gabri\Desktop\INICIAR-FECITEC\` (1-backend.bat, 2/3 apps, LEIA-ME.txt). NAO versionados (caminhos sao especificos desta maquina, como o settings.local.json).
+
+**Mobile no EMULADOR:** trocar a `baseUrl` em `connect-ong/lib/services/api_service.dart` de `http://localhost:8080` p/ `http://10.0.2.2:8080` (linha ja existe comentada). No Chrome/desktop continua `localhost`.
+
+**RISCO #1 DA FECITEC (decisao do usuario = confiar no MySQL da escola, sem banco local):** o app depende do MySQL remoto `143.106.241.3:3306`. Testar o login LOGO ao chegar no evento; se a rede da FECITEC nao alcancar esse IP, nada funciona. Plano B (nao adotado) seria um MySQL local. **LEMBRAR o usuario disso perto da data.**
+
+Contas demo (senha `demo123`): ONG `demo.larviva@connectong.com` (id 14, ongId 33), doador `demo.joao@connectong.com` (id 18). Ver [[connect-ong-architecture]] e [[git-workflow-preferences]].
