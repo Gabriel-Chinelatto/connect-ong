@@ -204,6 +204,53 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
           ),
           const SizedBox(height: 10),
           _estrelas(p.notaMedia, p.totalAvaliacoes),
+          const SizedBox(height: 10),
+          _pillTransparencia(p.nivelTransparencia, p.transparenciaScore),
+        ],
+      ),
+    );
+  }
+
+  // Cor da medalha por nivel de transparencia.
+  Color _corNivel(String nivel) {
+    switch (nivel.toUpperCase()) {
+      case 'OURO':
+        return const Color(0xFFF59E0B);
+      case 'PRATA':
+        return const Color(0xFF9CA3AF);
+      case 'BRONZE':
+      default:
+        return const Color(0xFFCD7F32);
+    }
+  }
+
+  // Rotulo amigavel (primeira maiuscula) do nivel.
+  String _rotuloNivel(String nivel) {
+    final n = nivel.toLowerCase();
+    if (n.isEmpty) return 'Bronze';
+    return n[0].toUpperCase() + n.substring(1);
+  }
+
+  Widget _pillTransparencia(String nivel, int score) {
+    final cor = _corNivel(nivel);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.workspace_premium, color: cor, size: 18),
+          const SizedBox(width: 6),
+          Text(
+            'Transparencia: ${_rotuloNivel(nivel)} ($score)',
+            style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
