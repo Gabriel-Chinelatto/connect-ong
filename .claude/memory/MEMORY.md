@@ -10,3 +10,4 @@
 - [Connect ONG delivery rules](connect-ong-delivery-rules.md) — advisor-site rules: GitHub commits per member, RESTful, 3 frontends, A0 poster + MVP
 - [Connect ONG tech guidelines](connect-ong-tech-guidelines.md) — mandatory backend/frontend/DB standards, fixed stack
 - [Git workflow preferences](git-workflow-preferences.md) — **auto-commit + auto-push** em cada checkpoint útil (restore point), sem pedir; no Claude co-authorship; mobile/desktop=main, backend=master
+- [Preferência de idioma](preferencia-idioma.md) — **TODAS as comunicações e artefatos do projeto em PORTUGUÊS** (respostas, commits, comentários, docs, UI)
