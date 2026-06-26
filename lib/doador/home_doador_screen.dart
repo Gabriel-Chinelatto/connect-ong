@@ -16,6 +16,7 @@ import 'buscar_receptor_screen.dart';
 import 'campanhas_screen.dart';
 import 'timeline_atividades_screen.dart';
 import 'mural_impacto_screen.dart';
+import 'favoritos_screen.dart';
 import 'ranking_transparencia_screen.dart';
 import 'conquistas_screen.dart';
 import 'feed_necessidades_screen.dart';
@@ -577,6 +578,19 @@ class HomeDoadorScreen extends StatelessWidget {
                               context,
                               PageTransition.fade(
                                 const ConquistasScreen(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        HomeCard(
+                          icon: Icons.favorite_outline,
+                          label: 'Favoritos',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageTransition.fade(
+                                const FavoritosScreen(),
                               ),
                             );
                           },

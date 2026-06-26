@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/campanha.dart';
 import '../services/campanha_service.dart';
+import '../services/favorito_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 
@@ -15,15 +16,57 @@ class CampanhasScreen extends StatefulWidget {
 
 class _CampanhasScreenState extends State<CampanhasScreen> {
   final CampanhaService _service = CampanhaService();
+  final FavoritoService _favService = FavoritoService();
   List<Campanha> _campanhas = [];
   bool _carregando = true;
   String? _meuNome;
+  int? _usuarioId;
+  Set<int> _favCampanhas = {};
 
   @override
   void initState() {
     super.initState();
-    SessionService().obterUsuario().then((u) => _meuNome = u?.nome);
+    _carregarUsuario();
     _carregar();
+  }
+
+  Future<void> _carregarUsuario() async {
+    final u = await SessionService().obterUsuario();
+    if (!mounted) return;
+    _meuNome = u?.nome;
+    _usuarioId = u?.id;
+    if (_usuarioId == null) return;
+    try {
+      final favs = await _favService.ids(_usuarioId!, 'CAMPANHA');
+      if (!mounted) return;
+      setState(() => _favCampanhas = favs);
+    } catch (_) {
+      // segue sem coracao preenchido
+    }
+  }
+
+  Future<void> _toggleFavorito(Campanha c) async {
+    if (_usuarioId == null) return;
+    final jaFavorito = _favCampanhas.contains(c.id);
+    try {
+      if (jaFavorito) {
+        await _favService.remover(_usuarioId!, 'CAMPANHA', c.id);
+        if (!mounted) return;
+        setState(() => _favCampanhas.remove(c.id));
+      } else {
+        await _favService.adicionar(_usuarioId!, 'CAMPANHA', c.id);
+        if (!mounted) return;
+        setState(() => _favCampanhas.add(c.id));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade400,
+          content: Text('Erro ao atualizar favorito'),
+        ),
+      );
+    }
   }
 
   Future<void> _carregar() async {
@@ -203,6 +246,21 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
                       fontSize: 18, fontWeight: FontWeight.w700),
                 ),
               ),
+              if (_usuarioId != null)
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: _favCampanhas.contains(c.id)
+                      ? 'Remover dos favoritos'
+                      : 'Favoritar',
+                  onPressed: () => _toggleFavorito(c),
+                  icon: Icon(
+                    _favCampanhas.contains(c.id)
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: AppColors.error,
+                  ),
+                ),
             ],
           ),
           if (c.ongNome != null) ...[

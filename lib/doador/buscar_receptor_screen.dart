@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter_application_1/ong.dart';
 import 'package:flutter_application_1/services/api_service.dart';
+import 'package:flutter_application_1/services/favorito_service.dart';
+import 'package:flutter_application_1/services/session_service.dart';
+import 'package:flutter_application_1/theme/app_colors.dart';
 import 'package:flutter_application_1/doador/doar_pix_screen.dart';
 import 'package:flutter_application_1/doador/perfil_publico_ong_screen.dart';
 
@@ -26,6 +29,10 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
   bool carregando = true;
 
+  final FavoritoService _favService = FavoritoService();
+  int? _usuarioId;
+  Set<int> _favOngs = {};
+
   static const String _baseUrl = '${ApiService.baseUrl}/ongs';
 
   @override
@@ -33,6 +40,48 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
     super.initState();
 
     _carregarOngs();
+    _carregarFavoritos();
+  }
+
+  Future<void> _carregarFavoritos() async {
+    final u = await SessionService().obterUsuario();
+    if (!mounted) return;
+    _usuarioId = u?.id;
+    if (_usuarioId == null) return;
+    try {
+      final favs = await _favService.ids(_usuarioId!, 'ONG');
+      if (!mounted) return;
+      setState(() => _favOngs = favs);
+    } catch (_) {
+      // sem favoritos disponiveis; segue sem coracao preenchido
+    }
+  }
+
+  Future<void> _toggleFavorito(Ong ong) async {
+    if (_usuarioId == null || ong.id == null) return;
+    final id = ong.id!;
+    final jaFavorito = _favOngs.contains(id);
+    try {
+      if (jaFavorito) {
+        await _favService.remover(_usuarioId!, 'ONG', id);
+        if (!mounted) return;
+        setState(() => _favOngs.remove(id));
+      } else {
+        await _favService.adicionar(_usuarioId!, 'ONG', id);
+        if (!mounted) return;
+        setState(() => _favOngs.add(id));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade400,
+          content:
+              Text('Erro ao atualizar favorito', style: GoogleFonts.poppins()),
+        ),
+      );
+    }
   }
 
   Future<void> _carregarOngs() async {
@@ -138,16 +187,34 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
 
                     children: [
-                      Text(
-                        ong.nome,
-
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-
-                          fontWeight: FontWeight.w700,
-
-                          color: const Color(0xFF222222),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              ong.nome,
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF222222),
+                              ),
+                            ),
+                          ),
+                          if (_usuarioId != null && ong.id != null)
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: _favOngs.contains(ong.id)
+                                  ? 'Remover dos favoritos'
+                                  : 'Favoritar',
+                              onPressed: () => _toggleFavorito(ong),
+                              icon: Icon(
+                                _favOngs.contains(ong.id)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: AppColors.error,
+                              ),
+                            ),
+                        ],
                       ),
 
                       const SizedBox(height: 6),
