@@ -15,10 +15,11 @@ dependencies:
   http: ^1.5.0
   shared_preferences: ^2.2.3
   google_fonts: ^8.1.0
+  flutter_svg: ^2.0.10
 
   # Biblioteca para fazer requisições HTTP para sua API
-  
-  
+
+
 
 dev_dependencies:
   flutter_test:
@@ -35,3 +36,4 @@ flutter:
     - assets/images/luan.png
     - assets/images/abner.jpg
     - assets/images/gabriel.jpg
+    - assets/images/impacto_hero.svg
