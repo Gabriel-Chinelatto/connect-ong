@@ -5,6 +5,8 @@ import '../services/notificacao_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 
+/// Lista as notificacoes do doador (mensagens, prestacoes, matches, etc.) e
+/// permite marcar todas como lidas.
 class NotificacoesScreen extends StatefulWidget {
   const NotificacoesScreen({super.key});
 

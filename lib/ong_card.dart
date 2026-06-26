@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/ong.dart';
 
+/// Cartao que exibe os dados de uma [Ong] com acoes de editar e excluir.
+///
+/// A exclusao passa por um dialogo de confirmacao antes de chamar [onDelete].
 class OngCard extends StatelessWidget {
   final Ong ong;
   // Callback para a função de edição (recebe a ONG)

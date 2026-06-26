@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../models/ranking_ong.dart';
 import 'api_service.dart';
 
+/// Servico do ranking publico de transparencia das ONGs: consulta as ONGs
+/// melhor pontuadas (GET /publico/ranking?limite=), ja ordenadas por score
+/// decrescente, tolerando respostas fora do formato de lista (retorna vazio).
 class RankingService {
   /// Lista o ranking de transparencia das ONGs ordenado por score desc
   /// (GET /publico/ranking?limite=$limite).

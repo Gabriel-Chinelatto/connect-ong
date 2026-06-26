@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Rodape padrao reutilizavel com creditos e direitos reservados do projeto.
 class AppFooter extends StatelessWidget {
 
   const AppFooter({

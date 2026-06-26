@@ -1,5 +1,19 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Infraestrutura central de rede e sessão do app.
+///
+/// Responsabilidades:
+/// - Define a [baseUrl] da API Spring Boot, usada por todos os serviços
+///   (ponto único de configuração do endpoint).
+/// - Funciona como armazém do token JWT de acesso: mantém o token em memória
+///   e o persiste no SharedPreferences para sobreviver a reinícios do app.
+/// - Monta os cabeçalhos de autenticação ([jsonHeaders]/[authHeaders]) com o
+///   header `Authorization: Bearer <accessToken>` exigido pelo backend em
+///   todos os endpoints protegidos.
+///
+/// O token é gravado no login (via [setToken]), recarregado no startup (via
+/// [carregarToken], chamado em main) e limpo no logout (`setToken(null)`),
+/// garantindo que cada usuário acesse apenas os próprios dados.
 class ApiService {
   // Endereço base da API (backend Spring Boot).
   // Centralizado aqui para que todas as telas e serviços usem a mesma URL.

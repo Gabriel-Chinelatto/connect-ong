@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../models/conquista.dart';
 import 'api_service.dart';
 
+/// Servico de gamificacao (conquistas/badges do doador): consulta a lista
+/// de conquistas via GET /conquistas/doador/{usuarioId}, retornando tanto as
+/// ja desbloqueadas quanto as ainda bloqueadas.
 class ConquistaService {
   static const String _base = '${ApiService.baseUrl}/conquistas';
 

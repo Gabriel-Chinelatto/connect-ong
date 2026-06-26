@@ -15,6 +15,10 @@ import '../widgets/layout/auth_container.dart';
 import '../utils/page_transition.dart';
 import '../web/portal_institucional_screen.dart';
 
+/// Tela de login do doador (porta de entrada do app mobile).
+///
+/// Autentica e-mail/senha pela API, carrega as preferencias do usuario e
+/// segue para a Home do doador. Tambem da acesso ao portal institucional.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 

@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../models/perfil_publico_ong.dart';
 import 'api_service.dart';
 
+/// Servico do perfil publico de uma ONG: busca os dados completos exibidos
+/// ao doador (GET /ongs/{id}/perfil-publico), como descricao, contatos e
+/// indicadores da ONG.
 class PerfilPublicoService {
   static const String _base = '${ApiService.baseUrl}/ongs';
 

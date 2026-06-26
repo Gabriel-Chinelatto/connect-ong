@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 
 import 'api_service.dart';
 
+/// Servico de doacao financeira (PIX simulado): envia o valor doado pelo
+/// doador a uma ONG (POST /doacoes-financeiras) e retorna o comprovante da
+/// transacao.
 class DoacaoFinanceiraService {
   // Faz a doacao (PIX simulado) e retorna o comprovante.
   Future<Map<String, dynamic>> doar({

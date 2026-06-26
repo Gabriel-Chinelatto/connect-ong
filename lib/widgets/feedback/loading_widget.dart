@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// Indicador de carregamento centralizado, com mensagem opcional.
+///
+/// Usado enquanto telas aguardam respostas da API.
 class LoadingWidget extends StatelessWidget {
 
   final String? mensagem;

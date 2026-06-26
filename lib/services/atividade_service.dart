@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../models/atividade.dart';
 import 'api_service.dart';
 
+/// Servico do feed global de atividades da plataforma: consulta as acoes
+/// recentes (matches, doacoes, etc.) via GET /atividades?limit=, usado no
+/// mural/timeline do doador.
 class AtividadeService {
   static const String _base = '${ApiService.baseUrl}/atividades';
 

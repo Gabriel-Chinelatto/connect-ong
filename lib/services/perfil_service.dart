@@ -4,6 +4,10 @@ import 'package:http/http.dart' as http;
 
 import 'api_service.dart';
 
+/// Servico do perfil do proprio usuario logado: obtem
+/// (GET /usuarios/{id}/perfil) e atualiza (PUT /usuarios/{id}/perfil) os
+/// dados cadastrais, alem de alterar a senha (PUT /usuarios/{id}/senha),
+/// que exige a senha atual para confirmacao.
 class PerfilService {
   // Obter o perfil do usuario.
   Future<Map<String, dynamic>> obter(int usuarioId) async {

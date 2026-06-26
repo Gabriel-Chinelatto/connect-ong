@@ -3,6 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
+/// Fabrica central de temas (Material 3) do app do doador.
+///
+/// Constroi os temas claro/escuro a partir da paleta da marca e aplica
+/// ajustes de acessibilidade: fonte amigavel a dislexia (Lexend) e modo de
+/// alto contraste. E consumido pelo MaterialApp via [ConfigController].
 class AppTheme {
   // Mantidos como apelido da paleta (compatibilidade com telas existentes).
   static const Color primaryGreen = AppColors.primary;

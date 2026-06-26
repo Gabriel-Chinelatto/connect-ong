@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Campo de texto padrao do app, com icone-prefixo e dica (hint).
+///
+/// Reutilizado em formularios (ex.: login). Suporta campo de senha via
+/// [obscureText].
 class AppTextField extends StatelessWidget {
 
   final TextEditingController controller;

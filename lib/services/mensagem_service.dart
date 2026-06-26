@@ -5,6 +5,10 @@ import 'package:http/http.dart' as http;
 import '../models/mensagem.dart';
 import 'api_service.dart';
 
+/// Servico do chat de um match: lista (GET /mensagens?interesseId=) e envia
+/// (POST /mensagens) mensagens trocadas entre doador e ONG. O chat so existe
+/// apos a ONG aceitar o interesse, por isso toda mensagem referencia o
+/// interesseId (id do match).
 class MensagemService {
   // Lista as mensagens de um match (ordenadas por data).
   Future<List<Mensagem>> listar(int interesseId) async {

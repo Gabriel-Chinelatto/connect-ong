@@ -10,6 +10,9 @@ import 'services/api_service.dart';
 import 'config/config_controller.dart';
 import 'web/portal_institucional_screen.dart';
 
+/// Bootstrap do app: inicializa o binding do Flutter e recarrega o token JWT
+/// salvo (via [ApiService.carregarToken]) antes de exibir a UI, para que uma
+/// sessão anterior continue autenticada nas chamadas à API.
 void main() async {
 
   // Garante a inicialização do binding antes de acessar plugins (SharedPreferences).
@@ -23,6 +26,10 @@ void main() async {
   );
 }
 
+/// Raiz do app. Aplica o tema da marca e as preferências de acessibilidade
+/// (tema claro/escuro, dislexia, alto contraste, escala de fonte) reagindo ao
+/// [ConfigController]. Na web abre o portal institucional público; no mobile
+/// (app do doador) entra pelo [SplashDecider].
 class MyApp extends StatelessWidget {
 
   const MyApp({
@@ -69,6 +76,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// Decide a rota inicial no mobile: se não há sessão salva, vai para o login;
+/// se há, carrega as preferências do usuário e abre a home do doador.
 class SplashDecider extends StatefulWidget {
 
   const SplashDecider({

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// Tela que lista os integrantes do projeto (equipe de desenvolvimento).
+///
+/// Exibe nome, foto e papel de cada estudante do 4 DSN responsavel pelo
+/// Connect ONG.
 class IntegrantesProjetoScreen
     extends StatelessWidget {
 

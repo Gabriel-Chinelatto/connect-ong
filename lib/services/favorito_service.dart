@@ -5,7 +5,10 @@ import 'package:http/http.dart' as http;
 import '../models/favorito.dart';
 import 'api_service.dart';
 
-/// Servico de favoritos do doador (ONGs e campanhas).
+/// Servico de favoritos do doador (ONGs e campanhas) sobre /favoritos:
+/// lista os favoritos (GET), retorna apenas os alvoIds de um tipo para
+/// marcar a UI (GET /favoritos/ids), adiciona de forma idempotente (POST)
+/// e remove (DELETE por usuarioId+tipo+alvoId).
 class FavoritoService {
   static const String _base = '${ApiService.baseUrl}/favoritos';
 

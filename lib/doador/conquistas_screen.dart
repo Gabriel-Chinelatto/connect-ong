@@ -6,6 +6,8 @@ import '../services/conquista_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 
+/// Exibe as conquistas (gamificacao) desbloqueadas pelo doador conforme suas
+/// acoes na plataforma. Exige sessao ativa para carregar as conquistas do usuario.
 class ConquistasScreen extends StatefulWidget {
   const ConquistasScreen({super.key});
 

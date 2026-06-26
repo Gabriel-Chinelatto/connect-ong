@@ -7,6 +7,9 @@ import '../widgets/buttons/app_button.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/inputs/app_text_field.dart';
 
+/// Formulario de cadastro/edicao de uma doacao de item (nome, descricao,
+/// quantidade, categoria, tipo, urgencia). Quando recebe uma [Doacao] no
+/// construtor, opera em modo edicao; caso contrario, cria uma nova.
 class CadastrarDoacaoScreen extends StatefulWidget {
   final Doacao? doacao;
 

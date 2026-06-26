@@ -7,6 +7,9 @@ import '../services/avaliacao_service.dart';
 import 'chat_screen.dart';
 import 'prestacoes_screen.dart';
 
+/// Lista os interesses do doador e seu status (aguardando/aceito/recusado).
+/// Quando o interesse esta ACEITO (match), libera o acesso ao chat com a ONG e
+/// as prestacoes de contas.
 class MeusMatchesScreen extends StatefulWidget {
   const MeusMatchesScreen({super.key});
 

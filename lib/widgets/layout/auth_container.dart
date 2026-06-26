@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Cartao branco centralizado e rolavel das telas de autenticacao.
+///
+/// Padroniza o "card" arredondado com sombra usado como moldura do conteudo
+/// (ex.: formulario de login).
 class AuthContainer extends StatelessWidget {
 
   final Widget child;

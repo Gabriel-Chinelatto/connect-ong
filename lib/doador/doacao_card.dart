@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/doacao.dart';
 
+/// Card de exibicao de uma [Doacao] de item (nome, descricao, categoria,
+/// quantidade, tipo e urgencia). Componente visual reutilizavel nas listagens.
 class DoacaoCard extends StatelessWidget {
   final Doacao doacao;
   const DoacaoCard({super.key, required this.doacao});

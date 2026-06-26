@@ -13,6 +13,8 @@ import '../widgets/feedback/loading_widget.dart';
 import 'cadastrar_doacao_screen.dart';
 import '../widgets/common/app_footer.dart';
 
+/// Lista as doacoes de itens cadastradas pelo doador, permitindo editar/cadastrar
+/// novas e exportar a lista em PDF (relatorio de doacoes).
 class MinhasDoacoesScreen extends StatefulWidget {
   const MinhasDoacoesScreen({
     super.key,

@@ -5,6 +5,10 @@ import 'package:http/http.dart' as http;
 import '../models/notificacao.dart';
 import 'api_service.dart';
 
+/// Servico de notificacoes do usuario: lista as notificacoes
+/// (GET /notificacoes?usuarioId=), conta as nao lidas para o badge
+/// (GET /notificacoes/nao-lidas, retorna 0 em qualquer falha) e marca todas
+/// como lidas (PUT /notificacoes/marcar-todas).
 class NotificacaoService {
   Future<List<Notificacao>> listar(int usuarioId) async {
     final response = await http.get(

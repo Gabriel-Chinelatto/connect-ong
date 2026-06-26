@@ -1,3 +1,7 @@
+/// Modelo de uma ONG retornada/enviada pela API (serializavel via JSON).
+///
+/// Reune os dados publicos da instituicao (nome, contato, cidade, descricao)
+/// e o selo de verificacao.
 class Ong {
   final int? id; // ID agora é int, como geralmente é em APIs Spring Boot com Long
   final String nome;

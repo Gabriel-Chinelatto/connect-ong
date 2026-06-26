@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../doacao.dart';
 
+/// Cartao que exibe os dados de uma [Doacao] em lista.
+///
+/// Mostra categoria (com icone/cor proprios), descricao, tipo, quantidade e
+/// selos de "Urgente"/"Novo", alem de acoes opcionais de editar/excluir.
 class DoacaoCard extends StatelessWidget {
   final Doacao doacao;
 

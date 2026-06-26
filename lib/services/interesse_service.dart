@@ -5,6 +5,10 @@ import 'package:http/http.dart' as http;
 import '../models/interesse.dart';
 import 'api_service.dart';
 
+/// Servico do fluxo de match (hero feature): o doador demonstra interesse
+/// numa necessidade de ONG (POST /interesses) e consulta seus matches
+/// (GET /interesses?doadorId=). Quando a ONG aceita o interesse, o match
+/// fica habilitado e libera o chat com a ONG.
 class InteresseService {
   // Doador demonstra interesse em uma necessidade.
   Future<void> demonstrarInteresse({

@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../models/avaliacao.dart';
 import 'api_service.dart';
 
+/// Servico de avaliacoes de ONGs feitas pelo doador: registra nota e
+/// comentario (POST /avaliacoes, faz upsert por doador+ONG) e lista as
+/// avaliacoes de uma ONG (GET /avaliacoes?ongId=).
 class AvaliacaoService {
   // Doador avalia uma ONG (cria ou atualiza).
   Future<void> avaliar({

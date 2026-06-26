@@ -7,6 +7,9 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../screens/legal/documentos_legais_screen.dart';
 
+/// Central de configuracoes do doador: aparencia (tema/fonte), notificacoes,
+/// privacidade, seguranca e acessibilidade. Mudancas de aparencia sao aplicadas
+/// na hora e persistidas pelo ConfigController.
 class ConfiguracoesScreen extends StatefulWidget {
   const ConfiguracoesScreen({super.key});
 

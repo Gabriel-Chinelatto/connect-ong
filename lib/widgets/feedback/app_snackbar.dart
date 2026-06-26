@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Helper para exibir snackbars padronizados de feedback ao usuario.
+///
+/// Oferece [sucesso] (verde) e [erro] (vermelho), ambos no estilo flutuante e
+/// arredondado da marca.
 class AppSnackbar {
 
   static void sucesso(

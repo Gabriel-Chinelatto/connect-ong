@@ -4,6 +4,10 @@ import 'package:http/http.dart' as http;
 
 import 'api_service.dart';
 
+/// Servico de moderacao: registra denuncias de conteudo/conduta (POST
+/// /denuncias) contra um alvo (tipoAlvo + alvoId). O denuncianteId e
+/// opcional para permitir denuncia anonima; campos vazios sao omitidos do
+/// corpo.
 class DenunciaService {
   // Cria uma denuncia (POST /denuncias).
   // denuncianteId e opcional (null = anonimo).

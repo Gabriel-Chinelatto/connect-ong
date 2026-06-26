@@ -28,6 +28,9 @@ import '../config/config_controller.dart';
 import '../widgets/notificacao_bell.dart';
 import '../widgets/common/app_footer.dart';
 
+/// Tela inicial do doador: hub de navegacao com atalhos para as principais
+/// funcoes (necessidades, matches, doacoes, campanhas, favoritos, ranking,
+/// conquistas, perfil, configuracoes) alem de logout.
 class HomeDoadorScreen extends StatelessWidget {
 
   const HomeDoadorScreen({

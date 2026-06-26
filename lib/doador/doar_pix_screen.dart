@@ -5,6 +5,8 @@ import '../services/doacao_financeira_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 
+/// Doacao financeira via PIX para uma ONG especifica (recebida no construtor).
+/// Informa o valor, registra a doacao e exibe o comprovante retornado pela API.
 class DoarPixScreen extends StatefulWidget {
   final int ongId;
   final String ongNome;

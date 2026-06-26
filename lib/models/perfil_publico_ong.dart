@@ -76,6 +76,7 @@ class PerfilPublicoOng {
   }
 }
 
+/// Versao enxuta de uma necessidade exibida na lista do perfil publico da ONG.
 class NecessidadeResumo {
   final int id;
   final String titulo;
@@ -103,6 +104,7 @@ class NecessidadeResumo {
       );
 }
 
+/// Versao enxuta de uma campanha (com progresso) exibida no perfil publico da ONG.
 class CampanhaResumo {
   final int id;
   final String titulo;
@@ -133,6 +135,7 @@ class CampanhaResumo {
       );
 }
 
+/// Versao enxuta de uma avaliacao (nota + comentario) exibida no perfil publico da ONG.
 class AvaliacaoResumo {
   final String doadorNome;
   final int nota;
@@ -154,6 +157,7 @@ class AvaliacaoResumo {
       );
 }
 
+/// Versao enxuta de uma prestacao de contas exibida no perfil publico da ONG.
 class PrestacaoResumo {
   final String titulo;
   final String descricao;

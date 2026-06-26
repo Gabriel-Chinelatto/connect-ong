@@ -5,6 +5,10 @@ import 'package:http/http.dart' as http;
 import '../models/campanha.dart';
 import 'api_service.dart';
 
+/// Servico de campanhas de arrecadacao das ONGs: lista as campanhas em
+/// aberto (GET /campanhas?abertas=true) e registra contribuicoes do doador
+/// (POST /campanhas/{id}/contribuir), devolvendo a campanha com o total
+/// arrecadado atualizado.
 class CampanhaService {
   static const String _base = '${ApiService.baseUrl}/campanhas';
 

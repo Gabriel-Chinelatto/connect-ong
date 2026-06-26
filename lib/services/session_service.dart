@@ -5,6 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/usuario_logado.dart';
 import 'api_service.dart';
 
+/// Gerencia a sessão local do usuário logado.
+///
+/// Persiste/recupera o [UsuarioLogado] no SharedPreferences (como JSON), o que
+/// permite ao app decidir no startup se há sessão ativa. No [logout] remove o
+/// usuário salvo e também limpa o token JWT no [ApiService], encerrando o
+/// acesso autenticado.
 class SessionService {
 
   static const String usuarioKey =

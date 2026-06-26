@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Botao primario padrao do app (largura total, altura fixa).
+///
+/// Reutilizado em formularios e telas de acao. Quando [carregando] e true,
+/// desabilita o toque e mostra um indicador de progresso no lugar do texto.
 class AppButton extends StatelessWidget {
 
   final String texto;

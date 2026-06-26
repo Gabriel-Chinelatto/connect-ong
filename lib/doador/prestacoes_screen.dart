@@ -4,6 +4,8 @@ import '../models/prestacao.dart';
 import '../services/prestacao_service.dart';
 import '../theme/app_colors.dart';
 
+/// Exibe as prestacoes de contas de uma ONG referentes a um match (interesseId),
+/// mostrando como a doacao foi aplicada, com texto e foto comprovante.
 class PrestacoesScreen extends StatefulWidget {
   final int interesseId;
   final String ongNome;

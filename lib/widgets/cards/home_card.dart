@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Cartao de atalho da Home do doador para uma funcionalidade da plataforma.
+///
+/// Mostra icone, titulo e seta, com leve animacao de hover, e dispara [onTap]
+/// ao ser tocado.
 class HomeCard extends StatefulWidget {
 
   final IconData icon;

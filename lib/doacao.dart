@@ -1,3 +1,7 @@
+/// Modelo de uma doacao trocada com a API (serializavel via JSON).
+///
+/// Representa um item doado/necessario, com categoria, tipo, quantidade e
+/// marcadores de urgencia e novidade.
 class Doacao {
   final int? id;
 

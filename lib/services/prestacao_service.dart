@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../models/prestacao.dart';
 import 'api_service.dart';
 
+/// Servico de prestacao de contas de um match: lista os comprovantes/relatos
+/// que a ONG publica para o doador (GET /prestacoes?interesseId=), vinculados
+/// ao match (interesseId), ordenados do mais recente para o mais antigo.
 class PrestacaoService {
   // Lista as prestacoes de contas de um match (mais recentes primeiro).
   Future<List<Prestacao>> listar(int interesseId) async {

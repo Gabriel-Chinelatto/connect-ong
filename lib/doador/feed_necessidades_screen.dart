@@ -6,6 +6,10 @@ import '../services/interesse_service.dart';
 import '../services/session_service.dart';
 import '../services/perfil_service.dart';
 
+/// Feed das necessidades abertas das ONGs, com filtros (busca, categoria,
+/// urgentes) e priorizacao pela cidade do doador. Hero feature: ao demonstrar
+/// interesse numa necessidade, cria um interesse que a ONG pode aceitar (match),
+/// habilitando o chat.
 class FeedNecessidadesScreen extends StatefulWidget {
   const FeedNecessidadesScreen({super.key});
 

@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
+/// Transicoes de rota reutilizaveis para a navegacao do app.
+///
+/// Centraliza animacoes de pagina para manter um padrao visual consistente
+/// nas trocas de tela.
 class PageTransition {
+
+  /// Cria uma rota que combina fade com um leve deslize horizontal,
+  /// dando uma entrada suave a [page].
 
   static Route fade(
     Widget page,

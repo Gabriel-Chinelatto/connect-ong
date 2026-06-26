@@ -13,6 +13,9 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+/// Busca de ONGs receptoras: lista e filtra ONGs por nome, permite favoritar
+/// e abre o perfil publico ou a doacao via PIX. Ponto de partida para o doador
+/// escolher uma instituicao para apoiar.
 class BuscarReceptorScreen extends StatefulWidget {
   const BuscarReceptorScreen({super.key});
 

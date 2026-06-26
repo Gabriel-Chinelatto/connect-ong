@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/common/app_footer.dart';
 
+/// Tela "Sobre o Projeto" do app do doador.
+///
+/// Apresenta o Connect ONG: descricao, funcionalidades, compromisso com
+/// seguranca/LGPD/ODS, equipe de desenvolvimento e contexto academico.
 class DescricaoScreen
     extends StatelessWidget {
 

@@ -5,6 +5,8 @@ import '../services/interesse_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 
+/// Perfil do doador: edita dados pessoais (nome, telefone, cidade, estado, bio,
+/// foto) e exibe um resumo do impacto (total de matches e ONGs apoiadas).
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
 

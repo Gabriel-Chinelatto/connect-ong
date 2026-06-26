@@ -1,3 +1,8 @@
+/// Representa o usuário autenticado na sessão atual.
+///
+/// Guarda identidade e papel ([tipo]: 'DOADOR' ou 'ONG'). É serializado para o
+/// SharedPreferences pelo [SessionService] e usado para vincular ações às
+/// telas (ex.: id do doador nas chamadas à API).
 class UsuarioLogado {
 
   final int id;

@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../doacao.dart';
 import 'api_service.dart';
 
+/// Servico CRUD de doacoes de itens (nao financeiras) sobre /doacoes:
+/// listar (GET), cadastrar (POST), atualizar (PUT /doacoes/{id}) e excluir
+/// (DELETE /doacoes/{id}, espera 204 No Content).
 class DoacaoService {
 
   static const String baseUrl = ApiService.baseUrl;

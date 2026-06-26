@@ -47,6 +47,8 @@ class EstatisticasPublicas {
   );
 }
 
+/// Servico de transparencia/impacto: carrega os numeros publicos agregados
+/// da plataforma (GET /publico/estatisticas) usados nos paineis de impacto.
 class EstatisticaService {
   static final String _url = '${ApiService.baseUrl}/publico/estatisticas';
 
