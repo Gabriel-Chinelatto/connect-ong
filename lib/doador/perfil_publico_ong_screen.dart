@@ -1,0 +1,482 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../models/perfil_publico_ong.dart';
+import '../services/perfil_publico_service.dart';
+import '../theme/app_colors.dart';
+
+/// Pagina publica de uma ONG: avatar, selo de verificacao, nota, sobre,
+/// contato, campanhas, necessidades, avaliacoes e prestacoes de contas.
+class PerfilPublicoOngScreen extends StatefulWidget {
+  final int ongId;
+  final String ongNome;
+
+  const PerfilPublicoOngScreen({
+    super.key,
+    required this.ongId,
+    required this.ongNome,
+  });
+
+  @override
+  State<PerfilPublicoOngScreen> createState() => _PerfilPublicoOngScreenState();
+}
+
+class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
+  final PerfilPublicoService _service = PerfilPublicoService();
+  PerfilPublicoOng? _perfil;
+  bool _carregando = true;
+  bool _erro = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      _carregando = true;
+      _erro = false;
+    });
+    try {
+      final p = await _service.buscar(widget.ongId);
+      if (!mounted) return;
+      setState(() {
+        _perfil = p;
+        _carregando = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _carregando = false;
+        _erro = true;
+      });
+    }
+  }
+
+  void _compartilhar() {
+    final p = _perfil;
+    if (p == null) return;
+    final texto = StringBuffer()
+      ..writeln(p.nome + (p.verificada ? ' (ONG Verificada)' : ''))
+      ..writeln('Cidade: ${p.cidade}')
+      ..writeln(p.descricao)
+      ..writeln(
+          'Avaliacao: ${p.notaMedia.toStringAsFixed(1)} (${p.totalAvaliacoes} avaliacoes)')
+      ..writeln('Conheca no Connect ONG.');
+    Clipboard.setData(ClipboardData(text: texto.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Perfil copiado para compartilhar!',
+            style: GoogleFonts.poppins()),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(widget.ongNome),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        actions: [
+          if (_perfil != null)
+            IconButton(
+              tooltip: 'Compartilhar',
+              onPressed: _compartilhar,
+              icon: const Icon(Icons.share_outlined),
+            ),
+        ],
+      ),
+      body: _carregando
+          ? const Center(child: CircularProgressIndicator())
+          : _erro || _perfil == null
+              ? _vazio()
+              : RefreshIndicator(
+                  onRefresh: _carregar,
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _cabecalho(_perfil!),
+                      _statsRow(_perfil!),
+                      _secaoSobre(_perfil!),
+                      _secaoContato(_perfil!),
+                      if (_perfil!.campanhas.isNotEmpty)
+                        _secaoCampanhas(_perfil!),
+                      if (_perfil!.necessidades.isNotEmpty)
+                        _secaoNecessidades(_perfil!),
+                      if (_perfil!.prestacoes.isNotEmpty)
+                        _secaoPrestacoes(_perfil!),
+                      if (_perfil!.avaliacoes.isNotEmpty)
+                        _secaoAvaliacoes(_perfil!),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  Widget _vazio() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline,
+              size: 72, color: AppColors.primary.withValues(alpha: 0.4)),
+          const SizedBox(height: 16),
+          Text('Nao foi possivel carregar o perfil',
+              style: GoogleFonts.poppins(color: Colors.black54)),
+          const SizedBox(height: 12),
+          TextButton(onPressed: _carregar, child: const Text('Tentar de novo')),
+        ],
+      ),
+    );
+  }
+
+  // ---------- Cabecalho com avatar de inicial + selo + nota ----------
+  Widget _cabecalho(PerfilPublicoOng p) {
+    final inicial = p.nome.isNotEmpty ? p.nome[0].toUpperCase() : '?';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryDark],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6)),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Text(inicial,
+                style: GoogleFonts.poppins(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary)),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(p.nome,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+              ),
+              if (p.verificada) ...[
+                const SizedBox(width: 6),
+                const Icon(Icons.verified, color: Colors.white, size: 22),
+              ],
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.location_city_outlined,
+                  color: Colors.white70, size: 16),
+              const SizedBox(width: 4),
+              Text(p.cidade,
+                  style: GoogleFonts.poppins(color: Colors.white70)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _estrelas(p.notaMedia, p.totalAvaliacoes),
+        ],
+      ),
+    );
+  }
+
+  Widget _estrelas(double nota, int total) {
+    final cheias = nota.round().clamp(0, 5);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (int i = 0; i < 5; i++)
+          Icon(i < cheias ? Icons.star : Icons.star_border,
+              color: Colors.amber, size: 20),
+        const SizedBox(width: 8),
+        Text(
+          total > 0
+              ? '${nota.toStringAsFixed(1)} ($total)'
+              : 'Sem avaliacoes',
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
+        ),
+      ],
+    );
+  }
+
+  // ---------- Linha de estatisticas ----------
+  Widget _statsRow(PerfilPublicoOng p) {
+    Widget item(IconData icon, int valor, String label) => Expanded(
+          child: Column(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 24),
+              const SizedBox(height: 6),
+              Text('$valor',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700, fontSize: 18)),
+              Text(label,
+                  style: GoogleFonts.poppins(
+                      fontSize: 11, color: AppColors.textSecondary)),
+            ],
+          ),
+        );
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 16,
+              offset: const Offset(0, 6)),
+        ],
+      ),
+      child: Row(
+        children: [
+          item(Icons.favorite_outline, p.totalNecessidades, 'Necessidades'),
+          item(Icons.campaign_outlined, p.totalCampanhas, 'Campanhas'),
+          item(Icons.receipt_long_outlined, p.totalPrestacoes, 'Prestacoes'),
+        ],
+      ),
+    );
+  }
+
+  // ---------- Cartao de secao generico ----------
+  Widget _secao(String titulo, IconData icon, List<Widget> filhos) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 16,
+              offset: const Offset(0, 6)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Text(titulo,
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700, fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...filhos,
+        ],
+      ),
+    );
+  }
+
+  Widget _secaoSobre(PerfilPublicoOng p) {
+    return _secao('Sobre', Icons.info_outline, [
+      Text(
+        p.descricao.isNotEmpty ? p.descricao : 'Esta ONG ainda nao tem descricao.',
+        style: GoogleFonts.poppins(
+            fontSize: 14, height: 1.5, color: Colors.black87),
+      ),
+    ]);
+  }
+
+  Widget _secaoContato(PerfilPublicoOng p) {
+    Widget linha(IconData icon, String texto) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: AppColors.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text(texto, style: GoogleFonts.poppins(fontSize: 13))),
+            ],
+          ),
+        );
+    return _secao('Contato', Icons.contact_mail_outlined, [
+      linha(Icons.email_outlined, p.email),
+      linha(Icons.phone_outlined, p.telefone),
+      if (p.cnpj != null && p.cnpj!.isNotEmpty)
+        linha(Icons.badge_outlined, 'CNPJ: ${p.cnpj}'),
+    ]);
+  }
+
+  Widget _secaoCampanhas(PerfilPublicoOng p) {
+    return _secao('Campanhas', Icons.campaign_outlined, [
+      for (final c in p.campanhas) _cardCampanha(c),
+    ]);
+  }
+
+  Widget _cardCampanha(CampanhaResumo c) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(c.titulo,
+                    style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
+              ),
+              if (c.encerrada)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text('Encerrada',
+                      style: GoogleFonts.poppins(
+                          fontSize: 11, color: Colors.black54)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: c.progresso / 100,
+              minHeight: 8,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'R\$ ${c.valorArrecadado.toStringAsFixed(0)} de '
+            'R\$ ${c.metaValor.toStringAsFixed(0)} (${c.progresso}%)',
+            style: GoogleFonts.poppins(
+                fontSize: 12, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _secaoNecessidades(PerfilPublicoOng p) {
+    return _secao('Necessidades', Icons.favorite_outline, [
+      for (final n in p.necessidades)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                n.urgente ? Icons.priority_high : Icons.circle,
+                size: n.urgente ? 18 : 8,
+                color: n.urgente ? AppColors.error : AppColors.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(n.titulo,
+                        style: GoogleFonts.poppins(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    if (n.categoria.isNotEmpty)
+                      Text(n.categoria,
+                          style: GoogleFonts.poppins(
+                              fontSize: 12, color: AppColors.textSecondary)),
+                  ],
+                ),
+              ),
+              if (n.urgente)
+                Text('Urgente',
+                    style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+    ]);
+  }
+
+  Widget _secaoPrestacoes(PerfilPublicoOng p) {
+    return _secao('Prestacoes de contas', Icons.receipt_long_outlined, [
+      for (final pr in p.prestacoes)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(pr.titulo,
+                  style: GoogleFonts.poppins(
+                      fontSize: 14, fontWeight: FontWeight.w600)),
+              if (pr.descricao.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(pr.descricao,
+                    style: GoogleFonts.poppins(
+                        fontSize: 13, color: Colors.black87, height: 1.4)),
+              ],
+            ],
+          ),
+        ),
+    ]);
+  }
+
+  Widget _secaoAvaliacoes(PerfilPublicoOng p) {
+    return _secao('Avaliacoes', Icons.star_outline, [
+      for (final a in p.avaliacoes)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(a.doadorNome,
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(width: 8),
+                  for (int i = 0; i < 5; i++)
+                    Icon(i < a.nota ? Icons.star : Icons.star_border,
+                        size: 14, color: Colors.amber),
+                ],
+              ),
+              if (a.comentario != null && a.comentario!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(a.comentario!,
+                    style: GoogleFonts.poppins(
+                        fontSize: 13, color: Colors.black87, height: 1.4)),
+              ],
+            ],
+          ),
+        ),
+    ]);
+  }
+}

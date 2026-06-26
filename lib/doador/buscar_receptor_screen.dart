@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_application_1/ong.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_application_1/doador/doar_pix_screen.dart';
+import 'package:flutter_application_1/doador/perfil_publico_ong_screen.dart';
 
 import 'dart:convert';
 
@@ -227,6 +228,36 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF0A8449),
+                            side: const BorderSide(color: Color(0xFF0A8449)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (ong.id == null) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PerfilPublicoOngScreen(
+                                  ongId: ong.id!,
+                                  ongNome: ong.nome,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.account_balance_outlined),
+                          label: const Text("Ver perfil"),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
 
                       SizedBox(
                         width: double.infinity,
