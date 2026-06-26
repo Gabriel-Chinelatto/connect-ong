@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 
 import '../doacao.dart';
 import '../services/doacao_service.dart';
+import '../services/relatorio_pdf_service.dart';
+import '../services/session_service.dart';
 
 import '../widgets/cards/doacao_card.dart';
 import '../widgets/feedback/app_snackbar.dart';
@@ -152,6 +155,34 @@ class _MinhasDoacoesScreenState
     }
   }
 
+  Future<void> exportarPdf() async {
+    if (doacoes.isEmpty) return;
+
+    try {
+      final usuario =
+          await SessionService().obterUsuario();
+
+      if (!mounted) return;
+
+      final bytes = await RelatorioPdfService
+          .historicoDoacoes(
+        doacoes,
+        nomeDoador: usuario?.nome,
+      );
+
+      await Printing.layoutPdf(
+        onLayout: (format) async => bytes,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      AppSnackbar.erro(
+        context,
+        'Não foi possível gerar o PDF.',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,6 +190,17 @@ class _MinhasDoacoesScreenState
         title: const Text(
           'Minhas Doações',
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.picture_as_pdf_outlined,
+            ),
+            tooltip: 'Exportar PDF',
+            onPressed: doacoes.isEmpty
+                ? null
+                : exportarPdf,
+          ),
+        ],
       ),
       floatingActionButton:
           FloatingActionButton.extended(
