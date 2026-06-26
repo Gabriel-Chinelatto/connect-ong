@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'pages/login_page.dart';
@@ -6,6 +7,7 @@ import 'doador/home_doador_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/session_service.dart';
 import 'config/config_controller.dart';
+import 'web/portal_institucional_screen.dart';
 
 void main() {
 
@@ -49,7 +51,11 @@ class MyApp extends StatelessWidget {
               child: child!,
             );
           },
-          home: const SplashDecider(),
+          // Na web, a entrada e o portal institucional publico; no mobile
+          // (app do doador), segue direto para o fluxo de login/sessao.
+          home: kIsWeb
+              ? const PortalInstitucionalScreen()
+              : const SplashDecider(),
         );
       },
     );

@@ -13,6 +13,7 @@ import '../widgets/inputs/app_text_field.dart';
 import '../widgets/layout/auth_container.dart';
 
 import '../utils/page_transition.dart';
+import '../web/portal_institucional_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -163,7 +164,14 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               TextButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PortalInstitucionalScreen(),
+                    ),
+                  );
+                },
                 icon: const Icon(Icons.info_outline),
                 label: const Text('Sobre o Projeto'),
               ),
