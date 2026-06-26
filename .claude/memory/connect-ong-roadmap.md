@@ -37,7 +37,7 @@ Priority tiers: **[CORE]** = needed for a strong professional demo; **[PLUS]** =
 - 14 [STRETCH] Doação financeira (PIX simulado): ✅ DONE. DoacaoFinanceira entity (ongId/doadorId/valor/codigoPix/status CONFIRMADO); `POST/GET /doacoes-financeiras`; generates a fake "copia e cola" PIX code; notifies the ONG. Mobile: DoarPixScreen (valor + atalhos → comprovante with copy button), wired to the "Doar via PIX" button in buscar_receptor. No real gateway (TCC). api commit a01b680, mobile d58f17e. NOTE: a "doações recebidas" list on the desktop ONG panel is a small future add (ONG already gets a notification).
 
 **PHASE F — Segurança & Conformidade (Aug)**
-- 15 [PLUS] JWT + refresh token auth (BCrypt already in place); LGPD (consent, privacy policy, terms). Completes "sessões ativas / logout global" from Bloco 8.
+- 15 [PLUS] JWT + refresh token auth (BCrypt already in place); LGPD (consent, privacy policy, terms): ✅ DONE. JWT via jjwt 0.12.6 (NO Spring Security — API stays open by design; enforcement OFF until near final delivery). JwtService (gerarAccessToken 1h / gerarRefreshToken 7d / validar); login+cadastro+ONG-registro now return accessToken/refreshToken in UsuarioResponseDTO; AuthController POST /auth/refresh + GET /auth/me (Bearer). Tested end-to-end (positive + 401 on tampered token). LGPD: DocumentosLegaisScreen (Política de Privacidade + Termos de Uso) in BOTH apps; consent checkbox w/ tappable links blocks ONG cadastro (desktop) until accepted; links added to Configurações of both apps. Completes "sessões ativas / logout global" from Bloco 8.
 - 16 [STRETCH] Audit logs + hardened server-side validation.
 
 **PHASE G — Escalabilidade & DevOps (Aug)**
