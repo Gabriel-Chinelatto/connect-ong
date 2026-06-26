@@ -16,7 +16,7 @@ Existe um SEGUNDO computador (alem da maquina da escola `01gabriel.MAQCHINELATTO
 **Toolchain instalado/configurado nesta maquina:**
 - **JDK = Amazon Corretto 21** em `C:\Users\gabri\.jdks\corretto-21.0.3` (o JDK 8 que estava no PATH NAO serve p/ Spring Boot 3.5/Java 17). `JAVA_HOME` (User) corrigido p/ apontar p/ o Corretto 21 (antes apontava p/ `jdk-22` inexistente).
 - **Maven 3.9.11** instalado de forma permanente em `C:\Users\gabri\tools\apache-maven-3.9.11` (+ no PATH/MAVEN_HOME). NAO usar o `./mvnw` do projeto: o wrapper baixa o Maven via curl e falha pela interceptacao TLS do Avast (ver [[ambiente-java-avast-tls]]).
-- **Android SDK** em `C:\Users\gabri\AppData\Local\Android\Sdk` (cmdline-tools + emulador, em preparacao). **Android Studio** instalado em `C:\Program Files\Android\Android Studio`.
+- **Android SDK** PRONTO em `C:\Users\gabri\AppData\Local\Android\Sdk`: cmdline-tools, platform-tools, emulator, **platforms;android-36 + build-tools;36.0.0** (Flutter 3.44 exige API 36 p/ compilar, NAO 35), system-image `android-35;google_apis;x86_64`. **AVD `ConnectOng`** (pixel_6) criado, licencas aceitas, `flutter doctor` Android = VERDE. **Android Studio** em `C:\Program Files\Android\Android Studio`. Virtualizacao OK (Hyper-V/VBS ativo → emulador usa WHPX).
 - **Flutter 3.44.1** em `C:\flutter`. Devices: Windows, Chrome, Edge.
 - **Visual Studio Community 2022 JA instalado**, mas FALTA o workload "Desktop development with C++" → por isso o build Windows nativo falha ("Unable to find suitable Visual Studio toolchain"). Decisao do usuario (2026-06-26): deixar o desktop NATIVO p/ depois; por enquanto rodar no Chrome.
 
@@ -26,7 +26,7 @@ Existe um SEGUNDO computador (alem da maquina da escola `01gabriel.MAQCHINELATTO
 3. App doador: `cd connect-ong && flutter run -d chrome --web-port=5601` (no Chrome abre o PORTAL por `kIsWeb` → botao "Entrar" leva ao login).
 - **Scripts prontos** em `C:\Users\gabri\Desktop\INICIAR-FECITEC\` (1-backend.bat, 2/3 apps, LEIA-ME.txt). NAO versionados (caminhos sao especificos desta maquina, como o settings.local.json).
 
-**Mobile no EMULADOR:** trocar a `baseUrl` em `connect-ong/lib/services/api_service.dart` de `http://localhost:8080` p/ `http://10.0.2.2:8080` (linha ja existe comentada). No Chrome/desktop continua `localhost`.
+**Mobile no EMULADOR:** o script `4-app-doador-emulador.bat` sobe o AVD, faz `adb reverse tcp:8080 tcp:8080` e roda o app — assim a `baseUrl` continua `http://localhost:8080` (SEM precisar trocar p/ 10.0.2.2). So nao testei o boot real do emulador ainda (deixado pronto; usuario parou a sessao).
 
 **RISCO #1 DA FECITEC (decisao do usuario = confiar no MySQL da escola, sem banco local):** o app depende do MySQL remoto `143.106.241.3:3306`. Testar o login LOGO ao chegar no evento; se a rede da FECITEC nao alcancar esse IP, nada funciona. Plano B (nao adotado) seria um MySQL local. **LEMBRAR o usuario disso perto da data.**
 
