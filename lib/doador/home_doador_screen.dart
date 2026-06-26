@@ -13,6 +13,7 @@ import '../widgets/cards/home_card.dart';
 
 import 'minhas_doacoes_screen.dart';
 import 'buscar_receptor_screen.dart';
+import 'campanhas_screen.dart';
 import 'feed_necessidades_screen.dart';
 import 'meus_matches_screen.dart';
 import 'dashboard_impacto_screen.dart';
@@ -507,6 +508,19 @@ class HomeDoadorScreen extends StatelessWidget {
                               context,
                               PageTransition.fade(
                                 const FeedNecessidadesScreen(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        HomeCard(
+                          icon: Icons.campaign_outlined,
+                          label: 'Campanhas',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageTransition.fade(
+                                const CampanhasScreen(),
                               ),
                             );
                           },
