@@ -1,24 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../doador/main_shell.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 import '../services/login_service.dart';
+import '../services/estatistica_service.dart';
 import '../config/config_controller.dart';
 
 import '../widgets/buttons/app_button.dart';
 import '../widgets/feedback/app_snackbar.dart';
-import '../widgets/inputs/app_text_field.dart';
-import '../widgets/layout/auth_container.dart';
 
 import '../utils/page_transition.dart';
 import '../web/portal_institucional_screen.dart';
 
 /// Tela de login do doador (porta de entrada do app mobile).
 ///
-/// Autentica e-mail/senha pela API, carrega as preferencias do usuario e
-/// segue para a Home do doador. Tambem da acesso ao portal institucional.
+/// Redesenho (Bloco 21 / Fase 2), inspirado em telas de onboarding modernas:
+/// um "herói" com a marca + uma frase de impacto que alterna + os NÚMEROS REAIS
+/// da plataforma (prova social vinda de GET /publico/estatisticas), seguido do
+/// formulário de acesso. A tela é sempre clara (padrão de telas de autenticação),
+/// evitando problemas de contraste no modo escuro.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -34,58 +40,76 @@ class _LoginPageState extends State<LoginPage> {
 
   bool carregando = false;
 
-  Future<void> fazerLogin() async {
-    FocusScope.of(context).unfocus();
+  // Números reais da plataforma (prova social). Opcional: se a API não
+  // responder, a tela funciona igual, só não mostra os números.
+  EstatisticasPublicas? _stats;
 
-    setState(() {
-      carregando = true;
+  // Frases de impacto que alternam no herói.
+  static const List<String> _frases = [
+    'Conecte-se a quem precisa.',
+    'Sua doação vira história.',
+    'Transparência que gera impacto real.',
+  ];
+  int _fraseAtual = 0;
+  Timer? _fraseTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarEstatisticas();
+    // Alterna a frase de impacto a cada 4s (efeito "onboarding vivo").
+    _fraseTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted) return;
+      setState(() => _fraseAtual = (_fraseAtual + 1) % _frases.length);
     });
+  }
 
+  Future<void> _carregarEstatisticas() async {
     try {
-      // O app mobile e exclusivo do doador (tipoSelecionado 0 = DOADOR).
-      final usuario = await _loginService.fazerLogin(
-        email: emailController.text.trim(),
-        senha: senhaController.text.trim(),
-        tipoSelecionado: 0,
-      );
-
-      // Carrega as preferencias (tema, fonte, etc.) do usuario.
-      await ConfigController.instance.carregar(usuario.id);
-
+      final s = await EstatisticaService().carregar();
       if (!mounted) return;
-
-      AppSnackbar.sucesso(
-        context,
-        'Login realizado com sucesso!',
-      );
-
-      Navigator.pushReplacement(
-        context,
-        PageTransition.fade(
-          const MainShell(),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      AppSnackbar.erro(
-        context,
-        e.toString().replaceAll('Exception: ', ''),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          carregando = false;
-        });
-      }
+      setState(() => _stats = s);
+    } catch (_) {
+      // Silencioso: os números são um complemento, não bloqueiam o login.
     }
   }
 
   @override
   void dispose() {
+    _fraseTimer?.cancel();
     emailController.dispose();
     senhaController.dispose();
     super.dispose();
+  }
+
+  Future<void> fazerLogin() async {
+    FocusScope.of(context).unfocus();
+    setState(() => carregando = true);
+
+    try {
+      final usuario = await _loginService.fazerLogin(
+        email: emailController.text.trim(),
+        senha: senhaController.text.trim(),
+        tipoSelecionado: 0, // app mobile é exclusivo do doador
+      );
+
+      await ConfigController.instance.carregar(usuario.id);
+      if (!mounted) return;
+
+      AppSnackbar.sucesso(context, 'Login realizado com sucesso!');
+      Navigator.pushReplacement(
+        context,
+        PageTransition.fade(const MainShell()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackbar.erro(
+        context,
+        e.toString().replaceAll('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
   }
 
   @override
@@ -97,90 +121,229 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.primaryLight,
-              AppColors.primary,
-            ],
+            colors: [AppColors.primaryLight, AppColors.primary],
           ),
         ),
-        child: AuthContainer(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/logo.jpg',
-                height: 120,
-              ),
-
-              const SizedBox(height: 24),
-
-              const Text(
-                'Connect Ong',
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  children: [
+                    const SizedBox(height: AppSpacing.xl),
+                    _heroi(),
+                    const SizedBox(height: AppSpacing.xl),
+                    _cardFormulario(),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-              const SizedBox(height: 8),
-
-              const Text(
-                'Acesso do doador',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.primary,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              AppTextField(
-                controller: emailController,
-                hint: 'E-mail',
-                icon: Icons.email_outlined,
-              ),
-
-              const SizedBox(height: 20),
-
-              AppTextField(
-                controller: senhaController,
-                hint: 'Senha',
-                icon: Icons.lock_outline,
-                obscureText: true,
-              ),
-
-              const SizedBox(height: 32),
-
-              AppButton(
-                texto: 'ENTRAR',
-                carregando: carregando,
-                onPressed: fazerLogin,
-              ),
-
-              const SizedBox(height: 28),
-
-              TextButton(
-                onPressed: () {},
-                child: const Text(
-                  'Não tem conta? Cadastre-se',
-                ),
-              ),
-
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PortalInstitucionalScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.info_outline),
-                label: const Text('Sobre o Projeto'),
+  // ---- Herói: logo + frase de impacto que alterna + números reais ----
+  Widget _heroi() {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppRadius.brXl,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
+          child: Image.asset('assets/images/logo.jpg', height: 84),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const Text(
+          'Connect ONG',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Frase de impacto que troca suavemente.
+        SizedBox(
+          height: 30,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 450),
+            child: Text(
+              _frases[_fraseAtual],
+              key: ValueKey(_fraseAtual),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.95),
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+        if (_stats != null) ...[
+          const SizedBox(height: AppSpacing.lg),
+          _numerosReais(_stats!),
+        ],
+      ],
+    );
+  }
+
+  Widget _numerosReais(EstatisticasPublicas s) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _numero('${s.totalOngs}', 'ONGs'),
+        _divisor(),
+        _numero('R\$ ${s.valorTotalDoado.toStringAsFixed(0)}', 'doados'),
+        _divisor(),
+        _numero('${s.totalNecessidades}', 'causas'),
+      ],
+    );
+  }
+
+  Widget _numero(String valor, String rotulo) {
+    return Column(
+      children: [
+        Text(
+          valor,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          rotulo,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _divisor() => Container(
+        width: 1,
+        height: 32,
+        color: Colors.white.withValues(alpha: 0.35),
+      );
+
+  // ---- Card do formulário (sempre claro) ----
+  Widget _cardFormulario() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadius.brXl,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Acesso do doador',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _campo(
+            controller: emailController,
+            hint: 'E-mail',
+            icon: Icons.email_outlined,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _campo(
+            controller: senhaController,
+            hint: 'Senha',
+            icon: Icons.lock_outline,
+            obscure: true,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            texto: 'ENTRAR',
+            carregando: carregando,
+            onPressed: fazerLogin,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton(
+            onPressed: () => AppSnackbar.sucesso(
+              context,
+              'Cadastro de doador chega em breve!',
+            ),
+            child: const Text('Não tem conta? Cadastre-se'),
+          ),
+          TextButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const PortalInstitucionalScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.info_outline, size: 18),
+            label: const Text('Sobre o Projeto'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Campo de texto sempre claro (independe do tema), para o card branco.
+  Widget _campo({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: AppColors.textTertiary),
+        prefixIcon: Icon(icon, color: AppColors.textSecondary),
+        filled: true,
+        fillColor: AppColors.surfaceMuted,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: AppRadius.brMd,
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppRadius.brMd,
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: AppRadius.brMd,
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
       ),
     );

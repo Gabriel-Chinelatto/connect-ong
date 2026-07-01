@@ -59,12 +59,12 @@ class _InicioTabState extends State<InicioTab> {
           children: [
             _saudacao(),
             const SizedBox(height: AppSpacing.xl),
-            const Text(
+            Text(
               'Atalhos',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -143,8 +143,11 @@ class _InicioTabState extends State<InicioTab> {
   }
 
   Widget _cardAtalho(_Atalho a) {
+    // Cores do TEMA (reagem a claro/escuro) em vez de constantes fixas — assim
+    // o card fica legivel nos dois modos.
+    final cs = Theme.of(context).colorScheme;
     return Material(
-      color: AppColors.surface,
+      color: cs.surface,
       borderRadius: AppRadius.brLg,
       child: InkWell(
         borderRadius: AppRadius.brLg,
@@ -153,7 +156,7 @@ class _InicioTabState extends State<InicioTab> {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             borderRadius: AppRadius.brLg,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: cs.outlineVariant),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,17 +164,17 @@ class _InicioTabState extends State<InicioTab> {
             children: [
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: const BoxDecoration(
-                  color: AppColors.primarySurface,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: AppRadius.brMd,
                 ),
                 child: Icon(a.icone, color: AppColors.primary),
               ),
               Text(
                 a.rotulo,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: cs.onSurface,
                 ),
               ),
             ],
