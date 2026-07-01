@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../doador/home_doador_screen.dart';
+import '../doador/main_shell.dart';
 
 import '../theme/app_colors.dart';
 
@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         PageTransition.fade(
-          const HomeDoadorScreen(),
+          const MainShell(),
         ),
       );
     } catch (e) {

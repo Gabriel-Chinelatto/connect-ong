@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'pages/login_page.dart';
 
-import 'doador/home_doador_screen.dart';
+import 'doador/main_shell.dart';
 import 'theme/app_theme.dart';
 import 'services/session_service.dart';
 import 'services/api_service.dart';
@@ -134,7 +134,7 @@ class _SplashDeciderState
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => const HomeDoadorScreen(),
+        builder: (_) => const MainShell(),
       ),
     );
   }

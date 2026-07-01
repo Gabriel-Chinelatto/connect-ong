@@ -92,6 +92,35 @@ class AppTheme {
           ),
         ),
       ),
+      // Barra de navegacao inferior (shell do app) com a cara da marca:
+      // fundo neutro, "pilula" verde suave no item ativo e icone/rotulo em verde.
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: surface,
+        elevation: 3,
+        height: 68,
+        indicatorColor: escuro
+            ? AppColors.primary.withValues(alpha: 0.30)
+            : AppColors.primarySurface,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final bool ativo = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: ativo
+                ? AppColors.primary
+                : (escuro ? Colors.white60 : AppColors.textSecondary),
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final bool ativo = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 12,
+            fontWeight: ativo ? FontWeight.w600 : FontWeight.w500,
+            color: ativo
+                ? AppColors.primary
+                : (escuro ? Colors.white60 : AppColors.textSecondary),
+          );
+        }),
+      ),
     );
   }
 }
