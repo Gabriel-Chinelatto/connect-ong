@@ -21,16 +21,29 @@ Para CADA um dos 3 repositorios, na ordem (mobile primeiro, pois carrega memoria
 Descubra o caminho real de cada repo testando os candidatos sob `%USERPROFILE%`
 (o layout muda entre os PCs). So opere nos que existirem e tiverem `.git`.
 
-Em cada repo, rode nesta ordem:
-- `git pull --rebase --autostash` (traz o remoto guardando o local; se der conflito,
-  PARE nesse repo, avise o usuario e nao force).
-- `git add -A`
-- Se houver algo staged (`git diff --cached --quiet` retorna non-zero): `git commit`
-  com uma mensagem curta em portugues descrevendo o que mudou (ou "sync" se nada
-  obvio) e `git push`. Se nao houver, so informe "nada novo".
+Em cada repo, rode nesta ordem (o objetivo e SINCRONIZAR SEM REGRESSAO):
+
+1. **Pull seguro** — `git pull --rebase --autostash` (traz o remoto guardando o
+   local; nunca reverte trabalho). Se der conflito: `git rebase --abort` para
+   restaurar o estado anterior, PARE nesse repo e avise o usuario. NUNCA use
+   `--force`/`reset --hard`.
+2. **Registrar local** — `git add -A`; se houver staged (`git diff --cached --quiet`
+   retorna non-zero) faca `git commit` com mensagem curta em portugues.
+3. **Verificar ANTES de enviar (impede regressao)** — so envie se a verificacao
+   passar, para nao propagar um erro ao outro PC:
+   - repo Flutter (tem `pubspec.yaml`): `flutter analyze` deve estar limpo.
+   - backend (raiz `connect-ong-api`): compilar em
+     `API - Chinelatto - att2\API - Chinelatto\API - Chinelatto` com
+     `mvn -q -o -DskipTests compile` (ou `mvnw` neste PC) sem erro. Idealmente rode
+     tambem `mvn -q test` (os testes sao a real barreira de regressao) quando der.
+4. **Enviar** — se a verificacao passou E ha commits a frente do remoto
+   (`git rev-list --count @{u}..HEAD` > 0): `git push`. Se a verificacao falhou,
+   NAO empurre: deixe o commit local, e avise o usuario para corrigir e sincronizar
+   de novo. Se nada a frente: "ja estava em dia".
 
 Atalho pratico: existe o `sincronizar.bat` na raiz do repo mobile que faz exatamente
-isso com um clique; voce pode rodar o mesmo fluxo por comandos aqui no chat.
+isso com um clique (pull seguro + verificacao + push). Voce pode rodar o mesmo fluxo
+por comandos aqui no chat.
 
 ## Regras
 - NUNCA use `--force`/`reset --hard`. Em conflito de merge/rebase, pare e reporte.
