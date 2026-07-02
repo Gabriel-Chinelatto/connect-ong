@@ -259,29 +259,40 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                       )
                     else
                       const Spacer(),
-                    interessado
-                        ? FilledButton.tonalIcon(
-                            onPressed: null,
-                            icon: const Icon(Icons.check, size: 18),
-                            label: const Text('Enviado'),
-                          )
-                        : FilledButton.icon(
-                            // Desabilita enquanto o POST esta em andamento.
-                            onPressed:
-                                enviando ? null : () => _demonstrarInteresse(n),
-                            icon: enviando
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2, color: Colors.white))
-                                : const Icon(Icons.favorite, size: 18),
-                            label: Text(enviando ? 'Enviando...' : 'Tenho interesse'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
+                    // Transicao suave entre "Tenho interesse" -> "Enviado"
+                    // (o "momento de recompensa" da acao principal do app).
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, anim) =>
+                          ScaleTransition(scale: anim, child: child),
+                      child: interessado
+                          ? FilledButton.tonalIcon(
+                              key: const ValueKey('enviado'),
+                              onPressed: null,
+                              icon: const Icon(Icons.check, size: 18),
+                              label: const Text('Enviado'),
+                            )
+                          : FilledButton.icon(
+                              key: const ValueKey('interesse'),
+                              // Desabilita enquanto o POST esta em andamento.
+                              onPressed: enviando
+                                  ? null
+                                  : () => _demonstrarInteresse(n),
+                              icon: enviando
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: Colors.white))
+                                  : const Icon(Icons.favorite, size: 18),
+                              label: Text(
+                                  enviando ? 'Enviando...' : 'Tenho interesse'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
-                          ),
+                    ),
                   ],
                 ),
               ],

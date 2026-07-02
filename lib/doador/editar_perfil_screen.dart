@@ -162,15 +162,19 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                 Center(
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 46,
-                        backgroundColor: AppColors.primary,
-                        backgroundImage: avatarImg,
-                        child: avatarImg == null
-                            ? Text(iniciais,
-                                style: const TextStyle(
-                                    fontSize: 40, color: AppColors.onPrimary))
-                            : null,
+                      Hero(
+                        tag: 'avatar-doador',
+                        child: CircleAvatar(
+                          radius: 46,
+                          backgroundColor: AppColors.primary,
+                          backgroundImage: avatarImg,
+                          child: avatarImg == null
+                              ? Text(iniciais,
+                                  style: const TextStyle(
+                                      fontSize: 40,
+                                      color: AppColors.onPrimary))
+                              : null,
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: _escolherFoto,

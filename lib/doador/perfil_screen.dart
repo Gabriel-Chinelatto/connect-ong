@@ -225,15 +225,18 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     return Row(
       children: [
-        CircleAvatar(
-          radius: 36,
-          backgroundColor: AppColors.primary,
-          backgroundImage: avatarImg,
-          child: avatarImg == null
-              ? Text(iniciais,
-                  style: const TextStyle(
-                      fontSize: 30, color: AppColors.onPrimary))
-              : null,
+        Hero(
+          tag: 'avatar-doador',
+          child: CircleAvatar(
+            radius: 36,
+            backgroundColor: AppColors.primary,
+            backgroundImage: avatarImg,
+            child: avatarImg == null
+                ? Text(iniciais,
+                    style: const TextStyle(
+                        fontSize: 30, color: AppColors.onPrimary))
+                : null,
+          ),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(

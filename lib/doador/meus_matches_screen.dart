@@ -32,6 +32,7 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
 
   List<Interesse> _matches = [];
   bool _carregando = true;
+  bool _erro = false;
 
   @override
   void initState() {
@@ -40,7 +41,10 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
   }
 
   Future<void> _carregar() async {
-    setState(() => _carregando = true);
+    setState(() {
+      _carregando = true;
+      _erro = false;
+    });
     try {
       final usuario = await _sessionService.obterUsuario();
       if (usuario == null) {
@@ -55,8 +59,12 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
         _carregando = false;
       });
     } catch (e) {
+      // Distingue "sem matches" de "a API caiu".
       if (!mounted) return;
-      setState(() => _carregando = false);
+      setState(() {
+        _carregando = false;
+        _erro = true;
+      });
     }
   }
 
@@ -73,23 +81,19 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
   }
 
   Widget _acao(IconData icone, String texto, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadius.brSm,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icone, size: 15, color: AppColors.primary),
-            const SizedBox(width: 4),
-            Text(texto,
-                style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
-          ],
-        ),
+    // TextButton.icon garante area de toque >= 48px (acessibilidade).
+    return TextButton.icon(
+      onPressed: onTap,
+      icon: Icon(icone, size: 16, color: AppColors.primary),
+      label: Text(texto,
+          style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600)),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+        minimumSize: const Size(0, 40),
       ),
     );
   }
@@ -279,6 +283,22 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
     );
   }
 
+  // Estado de erro (API caiu): diferente de "sem matches", com retry.
+  Widget _erroWidget() {
+    return ListView(
+      children: [
+        const SizedBox(height: 100),
+        EmptyState(
+          icone: Icons.cloud_off_outlined,
+          mensagem: 'Não foi possível carregar',
+          detalhe: 'Verifique sua conexão e tente novamente.',
+          acaoRotulo: 'Tentar de novo',
+          onAcao: _carregar,
+        ),
+      ],
+    );
+  }
+
   Widget _vazio() {
     // Dentro de um ListView para o pull-to-refresh continuar funcionando.
     return ListView(
@@ -311,13 +331,15 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
         color: AppColors.primary,
         child: _carregando
             ? const Center(child: CircularProgressIndicator())
-            : _matches.isEmpty
-                ? _vazio()
-                : ListView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    itemCount: _matches.length,
-                    itemBuilder: (context, i) => _card(_matches[i]),
-                  ),
+            : _erro
+                ? _erroWidget()
+                : _matches.isEmpty
+                    ? _vazio()
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        itemCount: _matches.length,
+                        itemBuilder: (context, i) => _card(_matches[i]),
+                      ),
       ),
     );
   }
