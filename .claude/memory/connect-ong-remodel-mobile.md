@@ -28,3 +28,14 @@ Remodelação profissional do app MOBILE (doador) = Bloco 21 do [[connect-ong-ro
 - Gráficos: SVG/flutter_svg, cores da marca (ver [[preferencia-graficos]]).
 
 **Roadmap em fases (commit/push a cada fase estável):** 0 Fundação/design system (tokens+componentes) → 1 Shell de navegação (bottom nav 5 abas) → 2 Login/onboarding → 3 Home curada → 4 Redesenho tela-a-tela → 5 Correções de dados (minhas doações real) + foto galeria → 6 Extras (assistente por regras, gamificação, microinterações).
+
+**FASE 6 (2026-07-02, sessão "estratégia de ataque") — FEITO:**
+- `HomeDoadorScreen` APOSENTADA (deletada, junto com `home_card`): funções absorvidas em "Acesso rápido" na aba Início (fileira de atalhos circulares estilo iFood) + menu em seções na aba Perfil (hub estilo Instagram: avatar+stats+ListTiles "Minha conta"/"Sobre o projeto"). Form de edição movido p/ nova `EditarPerfilScreen` (pop com `true` → hub recarrega).
+- Harmonização dark mode: `AppSnackbar`, `AppFooter` (ano dinâmico), `NotificacaoBell` (cor default do tema; era `Colors.white` invisível no claro), `DoacaoCard` reescrito, `doar_pix` sem `_snack` local. Deletados mortos: `ong_card.dart`, `doador/doacao_card.dart`, `auth_container.dart`.
+- **Categorias canônicas** (decisão: SEM acento e no PLURAL no banco — `Alimentos, Roupas, Higiene, Brinquedos, Educacao, Saude` — por causa do utf8mb4 pendente; rótulo com acento só na UI): mobile `lib/utils/categorias.dart` (normalizar/rotulo/icone + testes) aplicado em dropdown do cadastro, chips do feed, cards; backend `util/Categorias.java` normaliza na escrita (NÃO rejeita, p/ não quebrar o desktop), `GET /categorias` público, filtro `?categoria=` em /necessidades e /campanhas (commit backend `d8844de`).
+- Shell ADAPTATIVO: `NavigationRail` + conteúdo max 840px quando largura ≥900 (desktop/janela larga); `NavigationBar` no celular.
+- `EmptyState` compartilhado (widgets/feedback) aplicado em 8 telas.
+- Verificação: `flutter analyze` limpo, `flutter test` 8/8, backend `mvnw test` 19/19.
+- **BLOQUEIO**: `flutter build windows` falha — **Modo de Desenvolvedor do Windows desativado** (symlinks p/ plugins). Usuário precisa ativar (`start ms-settings:developers`).
+
+**Pendências do diagnóstico ainda NÃO feitas:** cadastro de doador multi-passo estilo Instagram (não existe signup; precisa endpoint no backend — ver [[connect-ong-deferred]]); imagens/fotos nos cards de necessidades/campanhas/ONGs; busca na aba Início; remoção dos imports diretos de google_fonts (8 telas, redundantes); regra única de transição (fade vs MaterialPageRoute).
