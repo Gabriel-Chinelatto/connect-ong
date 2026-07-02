@@ -17,9 +17,13 @@ import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
 import '../widgets/notificacao_bell.dart';
 
+import 'buscar_receptor_screen.dart';
 import 'campanhas_screen.dart';
-import 'home_doador_screen.dart';
+import 'favoritos_screen.dart';
+import 'minhas_doacoes_screen.dart';
+import 'mural_impacto_screen.dart';
 import 'ranking_transparencia_screen.dart';
+import 'timeline_atividades_screen.dart';
 
 /// Aba INÍCIO do shell do doador — home CURADA (Fase 3).
 ///
@@ -119,6 +123,8 @@ class _InicioTabState extends State<InicioTab> {
               _topo(),
               const SizedBox(height: AppSpacing.lg),
               _cardImpacto(),
+              const SizedBox(height: AppSpacing.lg),
+              _acessoRapido(),
               const SizedBox(height: AppSpacing.xl),
               if (_carregando)
                 const Padding(
@@ -131,8 +137,6 @@ class _InicioTabState extends State<InicioTab> {
                 _secaoUrgentes(),
                 const SizedBox(height: AppSpacing.xl),
                 _secaoOngs(),
-                const SizedBox(height: AppSpacing.xl),
-                _botaoTodasFuncoes(),
               ],
             ],
           ),
@@ -559,16 +563,66 @@ class _InicioTabState extends State<InicioTab> {
     );
   }
 
-  Widget _botaoTodasFuncoes() {
-    return OutlinedButton.icon(
-      onPressed: () => _abrir(const HomeDoadorScreen()),
-      icon: const Icon(Icons.apps),
-      label: const Text('Ver todas as funções'),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
-        side: const BorderSide(color: AppColors.primary),
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.brLg),
+  // ---- Acesso rapido: atalhos para as demais funcoes (estilo fileira de
+  // categorias de apps de marketplace). Absorve o antigo hub em grade.
+  Widget _acessoRapido() {
+    final atalhos = <(IconData, String, VoidCallback)>[
+      (Icons.search, 'Buscar ONGs',
+          () => _abrir(const BuscarReceptorScreen())),
+      (Icons.volunteer_activism_outlined, 'Minhas doações',
+          () => _abrir(const MinhasDoacoesScreen())),
+      (Icons.favorite_outline, 'Favoritos',
+          () => _abrir(const FavoritosScreen())),
+      (Icons.dynamic_feed_outlined, 'Atividades',
+          () => _abrir(const TimelineAtividadesScreen())),
+      (Icons.public, 'Nosso impacto',
+          () => _abrir(const MuralImpactoScreen())),
+      (Icons.emoji_events_outlined, 'Ranking',
+          () => _abrir(const RankingTransparenciaScreen())),
+    ];
+
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: atalhos.length,
+        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
+        itemBuilder: (_, i) {
+          final (icone, rotulo, acao) = atalhos[i];
+          return _atalho(icone, rotulo, acao);
+        },
+      ),
+    );
+  }
+
+  Widget _atalho(IconData icone, String rotulo, VoidCallback onTap) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadius.brLg,
+      child: SizedBox(
+        width: 76,
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icone, color: AppColors.primary, size: 26),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              rotulo,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
       ),
     );
   }
