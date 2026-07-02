@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/escala.dart';
+import '../widgets/feedback/empty_state.dart';
 
 /// Painel de impacto do doador: mostra em numeros a participacao dele.
 /// Calculado a partir dos interesses/matches que o app ja carrega.
@@ -30,6 +31,7 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
   static const Color _acentoRosa = Color(0xFFEC4899);
 
   bool _carregando = true;
+  bool _erro = false;
   String _nome = '';
   int _totalInteresses = 0;
   int _aceitos = 0;
@@ -43,7 +45,10 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
   }
 
   Future<void> _carregar() async {
-    setState(() => _carregando = true);
+    setState(() {
+      _carregando = true;
+      _erro = false;
+    });
     try {
       final usuario = await _sessionService.obterUsuario();
       if (usuario == null) {
@@ -71,7 +76,10 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _carregando = false);
+      setState(() {
+        _carregando = false;
+        _erro = true;
+      });
     }
   }
 
@@ -130,7 +138,22 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : _erro
+              ? RefreshIndicator(
+                  onRefresh: _carregar,
+                  color: AppColors.primary,
+                  child: ListView(children: [
+                    const SizedBox(height: 100),
+                    EmptyState(
+                      icone: Icons.cloud_off_outlined,
+                      mensagem: 'Não foi possível carregar',
+                      detalhe: 'Verifique sua conexão e tente novamente.',
+                      acaoRotulo: 'Tentar de novo',
+                      onAcao: _carregar,
+                    ),
+                  ]),
+                )
+              : RefreshIndicator(
               onRefresh: _carregar,
               color: AppColors.primary,
               child: ListView(
