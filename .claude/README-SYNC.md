@@ -19,11 +19,16 @@ entao vem junto no `git clone`/`git pull`:
 
 ## O que cada maquina configura UMA VEZ (nao vai para o git)
 - **`settings.local.json`** — coisas especificas da maquina: o modo de permissao e
-  os caminhos absolutos dos **outros dois repos** (backend e desktop) e da pasta
-  temp, que mudam conforme o usuario do Windows.
-  1. Copie `settings.local.json.example` para `settings.local.json`.
-  2. Troque `SEU_USUARIO` pelo usuario do Windows daquela maquina.
-  Esse arquivo esta no `.gitignore` de proposito (cada PC tem o seu).
+  os caminhos absolutos dos **outros dois repos** (backend e desktop), que mudam
+  conforme o usuario do Windows. Esse arquivo esta no `.gitignore` de proposito
+  (cada PC tem o seu).
+  - **AUTOMATICO:** basta rodar o `sincronizar.bat` (duplo-clique). Na primeira vez
+    numa maquina, se o `settings.local.json` nao existir, ele **cria sozinho** a
+    partir do modelo, ja preenchido com os caminhos reais dos repos daquela maquina
+    (descobre backend e desktop). Depois disso, **reabra o Claude Code** no repo
+    mobile para ele carregar a config. So gera se nao existir — nunca sobrescreve o seu.
+  - Manual (opcional): copie `settings.local.json.example` para `settings.local.json`
+    e troque `SEU_USUARIO` pelo usuario do Windows daquela maquina.
 
 ## Fluxo de trabalho nos dois PCs
 1. Em cada maquina, clone os 3 repos:
