@@ -5,6 +5,7 @@ import '../services/estatistica_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/escala.dart';
 import '../widgets/feedback/empty_state.dart';
 
 /// Mural de Impacto: vitrine pública dos números coletivos da plataforma
@@ -198,7 +199,8 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
         physics: const NeverScrollableScrollPhysics(),
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
-        childAspectRatio: 1.5,
+        // Cards mais altos quando a fonte aumenta.
+        childAspectRatio: 1.5 / fatorFonte(context),
         children: [for (final i in itens) _cardStat(i)],
       ),
     );

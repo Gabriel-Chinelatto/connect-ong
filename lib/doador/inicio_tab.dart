@@ -15,6 +15,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/categorias.dart';
+import '../utils/escala.dart';
 import '../utils/page_transition.dart';
 import '../widgets/notificacao_bell.dart';
 
@@ -113,10 +114,7 @@ class _InicioTabState extends State<InicioTab> {
   /// Alturas fixas (carrosseis/atalhos) escaladas junto com o tamanho de
   /// fonte escolhido nas Configurações — evita overflow de pixels quando o
   /// usuário aumenta a fonte.
-  double _altura(double base) {
-    final fator = MediaQuery.textScalerOf(context).scale(14) / 14;
-    return base * fator.clamp(1.0, 1.6);
-  }
+  double _altura(double base) => base * fatorFonte(context);
 
   @override
   Widget build(BuildContext context) {

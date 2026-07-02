@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/categorias.dart';
+import '../utils/escala.dart';
 import '../widgets/cards/capa_categoria.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
@@ -323,7 +324,8 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
           ),
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
-            height: 40,
+            // Altura dos chips escala com a fonte (evita overflow de pixels).
+            height: 40 * fatorFonte(context),
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [

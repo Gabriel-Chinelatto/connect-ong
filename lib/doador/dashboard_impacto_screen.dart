@@ -7,6 +7,7 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/escala.dart';
 
 /// Painel de impacto do doador: mostra em numeros a participacao dele.
 /// Calculado a partir dos interesses/matches que o app ja carrega.
@@ -117,7 +118,8 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        // Aba do shell: nunca mostra seta de voltar.
+        // Aba do shell: nunca mostra seta de voltar (mesmo se houver rota
+        // abaixo na pilha, como o portal na web).
         automaticallyImplyLeading: false,
         title: const Text('Meu Impacto'),
         titleTextStyle: TextStyle(
@@ -153,7 +155,8 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: AppSpacing.md,
                     mainAxisSpacing: AppSpacing.md,
-                    childAspectRatio: 1.15,
+                    // Cards ficam mais altos quando a fonte aumenta.
+                    childAspectRatio: 1.15 / fatorFonte(context),
                     children: [
                       _statCard(Icons.handshake, '$_aceitos',
                           'Matches realizados', AppColors.primary),

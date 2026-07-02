@@ -6,6 +6,7 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/escala.dart';
 import '../widgets/feedback/empty_state.dart';
 
 /// Exibe as conquistas (gamificacao) desbloqueadas pelo doador conforme suas
@@ -114,11 +115,12 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: _conquistas.length,
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               crossAxisSpacing: AppSpacing.md,
                               mainAxisSpacing: AppSpacing.md,
-                              childAspectRatio: 0.85,
+                              // Cards mais altos quando a fonte aumenta.
+                              childAspectRatio: 0.85 / fatorFonte(context),
                             ),
                             itemBuilder: (_, i) => _card(_conquistas[i]),
                           ),
