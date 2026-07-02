@@ -5,6 +5,7 @@ import '../services/doacao_service.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../utils/categorias.dart';
 import '../widgets/buttons/app_button.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/inputs/app_text_field.dart';
@@ -46,7 +47,7 @@ class _CadastrarDoacaoScreenState
 
   bool produtoNovo = false;
 
-  String categoria = 'Alimento';
+  String categoria = 'Alimentos';
 
   String tipo = 'Nova';
 
@@ -73,7 +74,9 @@ class _CadastrarDoacaoScreenState
     quantidadeController.text =
         doacao.quantidade.toString();
 
-    categoria = doacao.categoria;
+    // Normaliza valores legados ("Alimento", "Educação"...) para o canonico,
+    // senao o Dropdown nao encontra o valor entre os itens.
+    categoria = Categorias.normalizar(doacao.categoria);
 
     tipo = doacao.tipo;
 
@@ -397,37 +400,35 @@ class _CadastrarDoacaoScreenState
                         labelText:
                             'Categoria',
                       ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'Alimento',
-                          child: Text(
-                            'Alimento',
+                      // Lista canonica unica (utils/categorias.dart), espelhada
+                      // no backend. Se uma doacao antiga tiver categoria fora
+                      // da lista, ela entra como item extra para nao quebrar.
+                      items: [
+                        for (final c
+                            in Categorias.todas)
+                          DropdownMenuItem(
+                            value: c.valor,
+                            child: Row(
+                              children: [
+                                Icon(c.icone,
+                                    size: 18,
+                                    color: AppColors
+                                        .primary),
+                                const SizedBox(
+                                    width: 8),
+                                Text(c.rotulo),
+                              ],
+                            ),
                           ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Roupa',
-                          child: Text(
-                            'Roupa',
+                        if (!Categorias.todas.any(
+                            (c) =>
+                                c.valor ==
+                                categoria))
+                          DropdownMenuItem(
+                            value: categoria,
+                            child:
+                                Text(categoria),
                           ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Higiene',
-                          child: Text(
-                            'Higiene',
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Brinquedo',
-                          child: Text(
-                            'Brinquedo',
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Educação',
-                          child: Text(
-                            'Educação',
-                          ),
-                        ),
                       ],
                       onChanged: (value) {
                         setState(() {

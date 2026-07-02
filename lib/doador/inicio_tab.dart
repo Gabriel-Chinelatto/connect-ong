@@ -14,6 +14,7 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/categorias.dart';
 import '../utils/page_transition.dart';
 import '../widgets/notificacao_bell.dart';
 
@@ -346,7 +347,7 @@ class _InicioTabState extends State<InicioTab> {
               ],
               Flexible(
                 child: Text(
-                  n.categoria,
+                  Categorias.rotulo(n.categoria),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),

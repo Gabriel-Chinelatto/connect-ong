@@ -9,6 +9,7 @@ import '../services/perfil_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/categorias.dart';
 import '../widgets/feedback/app_snackbar.dart';
 
 /// Feed das necessidades abertas das ONGs (aba Explorar), com filtros (busca,
@@ -91,9 +92,12 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
     }
   }
 
+  // Categorias presentes nos dados, ja normalizadas para o valor canonico
+  // (utils/categorias.dart) — evita chips duplicados tipo "Alimento" e
+  // "Alimentos" quando ha dados legados.
   List<String> get _categorias {
     final set = _necessidades
-        .map((n) => n.categoria)
+        .map((n) => Categorias.normalizar(n.categoria))
         .where((c) => c.isNotEmpty)
         .toSet()
         .toList();
@@ -110,7 +114,8 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
           n.titulo.toLowerCase().contains(q) ||
           (n.ongNome ?? '').toLowerCase().contains(q) ||
           n.categoria.toLowerCase().contains(q);
-      final bateCategoria = _categoria == null || n.categoria == _categoria;
+      final bateCategoria = _categoria == null ||
+          Categorias.normalizar(n.categoria) == _categoria;
       final bateUrgente = !_soUrgentes || n.urgente;
       return bateBusca && bateCategoria && bateUrgente;
     }).toList();
@@ -258,9 +263,17 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
         color: cs.surfaceContainerHighest,
         borderRadius: AppRadius.brSm,
       ),
-      child: Text(
-        categoria,
-        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Categorias.icone(categoria),
+              size: 14, color: cs.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            Categorias.rotulo(categoria),
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+          ),
+        ],
       ),
     );
   }
@@ -328,7 +341,9 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(right: AppSpacing.sm),
                     child: FilterChip(
-                      label: Text(c),
+                      avatar: Icon(Categorias.icone(c),
+                          size: 16, color: AppColors.primary),
+                      label: Text(Categorias.rotulo(c)),
                       selected: _categoria == c,
                       selectedColor: AppColors.primary.withValues(alpha: 0.15),
                       checkmarkColor: AppColors.primary,
