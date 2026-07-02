@@ -1,0 +1,2 @@
+# Batch precisa de CRLF para o call/label e parsing funcionarem no cmd.exe
+*.bat text eol=crlf
