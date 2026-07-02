@@ -61,4 +61,26 @@ class PerfilService {
       throw Exception(msgErro);
     }
   }
+
+  // Excluir a propria conta (soft-delete no backend: desativa a conta e
+  // preserva o historico). Exige o token do dono (Authorization: Bearer);
+  // o backend valida que so o dono pode excluir.
+  Future<void> excluirConta(int usuarioId) async {
+    final response = await http.delete(
+      Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId'),
+      headers: ApiService.authHeaders(),
+    ).timeout(ApiService.timeout);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      String msgErro;
+      try {
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        msgErro = (body is Map && body['erro'] != null)
+            ? body['erro'].toString()
+            : 'Erro (HTTP ${response.statusCode})';
+      } catch (_) {
+        msgErro = 'Erro (HTTP ${response.statusCode})';
+      }
+      throw Exception(msgErro);
+    }
+  }
 }

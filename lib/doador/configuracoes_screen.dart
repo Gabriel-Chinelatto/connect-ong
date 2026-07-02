@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../config/config_controller.dart';
 import '../models/preferencia.dart';
+import '../pages/login_page.dart';
+import '../services/api_service.dart';
 import '../services/perfil_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/page_transition.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../screens/legal/documentos_legais_screen.dart';
 
@@ -23,6 +26,7 @@ class ConfiguracoesScreen extends StatefulWidget {
 class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
   late Preferencia _p;
   int? _usuarioId;
+  bool _excluindo = false;
 
   @override
   void initState() {
@@ -166,6 +170,18 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _abrirDocumento(DocumentoLegal.termos),
           ),
+
+          // Zona de perigo: acao destrutiva, destacada em vermelho.
+          _secaoPerigo('Zona de perigo', Icons.warning_amber_rounded),
+          ListTile(
+            leading: const Icon(Icons.delete_forever, color: AppColors.error),
+            title: const Text(
+              'Excluir minha conta',
+              style: TextStyle(color: AppColors.error),
+            ),
+            subtitle: const Text('Desativa sua conta permanentemente'),
+            onTap: _excluindo ? null : _confirmarExcluirConta,
+          ),
           const SizedBox(height: 24),
         ],
       ),
@@ -177,6 +193,86 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => DocumentosLegaisScreen(tipo: tipo),
+      ),
+    );
+  }
+
+  // Confirma e executa a exclusao (soft-delete) da propria conta.
+  Future<void> _confirmarExcluirConta() async {
+    if (_excluindo) return;
+
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir minha conta?'),
+        content: const Text(
+          'Tem certeza? Sua conta será desativada e você não poderá mais '
+          'acessá-la. Esta ação não pode ser desfeita pelo app.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+    if (!mounted) return;
+
+    // Anti-duplo-toque: nao dispara duas exclusoes.
+    setState(() => _excluindo = true);
+
+    try {
+      final usuario = await SessionService().obterUsuario();
+      if (!mounted) return;
+      if (usuario == null) {
+        setState(() => _excluindo = false);
+        AppSnackbar.erro(context, 'Sessão expirada. Entre novamente.');
+        return;
+      }
+
+      await PerfilService().excluirConta(usuario.id);
+      if (!mounted) return;
+
+      // Mesmo fluxo do logout: limpa sessao/token + preferencias e volta ao login.
+      await SessionService().logout();
+      ConfigController.instance.limpar();
+      if (!mounted) return;
+      Navigator.pushReplacement(
+          context, PageTransition.fade(const LoginPage()));
+      AppSnackbar.sucesso(context, 'Conta excluída.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _excluindo = false);
+      AppSnackbar.erro(context, ApiService.mensagemAmigavel(e));
+    }
+  }
+
+  Widget _secaoPerigo(String titulo, IconData icone) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      child: Row(
+        children: [
+          Icon(icone, size: 20, color: AppColors.error),
+          const SizedBox(width: 8),
+          Text(
+            titulo,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.error,
+            ),
+          ),
+        ],
       ),
     );
   }
