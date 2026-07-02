@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../services/perfil_service.dart';
 import '../services/interesse_service.dart';
@@ -44,6 +48,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
   int _matches = 0;
   int _ongs = 0;
 
+  // Foto escolhida da galeria (base64) e seus bytes decodificados p/ exibir.
+  String _fotoBase64 = '';
+  Uint8List? _fotoBytes;
+
   @override
   void dispose() {
     _nome.dispose();
@@ -82,6 +90,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
         _estado.text = perfil['estado'] ?? '';
         _bio.text = perfil['bio'] ?? '';
         _fotoUrl.text = perfil['fotoUrl'] ?? '';
+        _fotoBase64 = perfil['fotoBase64'] ?? '';
+        _fotoBytes =
+            _fotoBase64.isNotEmpty ? base64Decode(_fotoBase64) : null;
         _matches = aceitos.length;
         _ongs = aceitos
             .map((m) => m.ongNome)
@@ -112,6 +123,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         'estado': _estado.text.trim(),
         'bio': _bio.text.trim(),
         'fotoUrl': _fotoUrl.text.trim(),
+        'fotoBase64': _fotoBase64,
       });
       if (!mounted) return;
       setState(() => _salvando = false);
@@ -121,6 +133,31 @@ class _PerfilScreenState extends State<PerfilScreen> {
       setState(() => _salvando = false);
       AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
     }
+  }
+
+  // Abre a galeria, escolhe uma imagem (reduzida) e a guarda como base64.
+  Future<void> _escolherFoto() async {
+    final XFile? img = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 70,
+    );
+    if (img == null) return;
+    final bytes = await img.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      _fotoBytes = bytes;
+      _fotoBase64 = base64Encode(bytes);
+    });
+  }
+
+  // Imagem do avatar: prioriza a foto da galeria (base64); depois a URL antiga.
+  ImageProvider? _avatarImagem() {
+    if (_fotoBytes != null) return MemoryImage(_fotoBytes!);
+    final url = _fotoUrl.text.trim();
+    if (url.isNotEmpty) return NetworkImage(url);
+    return null;
   }
 
   Future<void> _logout() async {
@@ -134,7 +171,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final iniciais = _nome.text.isNotEmpty ? _nome.text[0].toUpperCase() : '?';
-    final foto = _fotoUrl.text.trim();
+    final avatarImg = _avatarImagem();
 
     return Scaffold(
       appBar: AppBar(
@@ -151,16 +188,24 @@ class _PerfilScreenState extends State<PerfilScreen> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
                 Center(
-                  child: CircleAvatar(
-                    radius: 46,
-                    backgroundColor: AppColors.primary,
-                    backgroundImage:
-                        foto.isNotEmpty ? NetworkImage(foto) : null,
-                    child: foto.isEmpty
-                        ? Text(iniciais,
-                            style: const TextStyle(
-                                fontSize: 40, color: Colors.white))
-                        : null,
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 46,
+                        backgroundColor: AppColors.primary,
+                        backgroundImage: avatarImg,
+                        child: avatarImg == null
+                            ? Text(iniciais,
+                                style: const TextStyle(
+                                    fontSize: 40, color: Colors.white))
+                            : null,
+                      ),
+                      TextButton.icon(
+                        onPressed: _escolherFoto,
+                        icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                        label: const Text('Trocar foto'),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -184,7 +229,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 _campo(_cidade, 'Cidade'),
                 _campo(_estado, 'Estado'),
                 _campo(_bio, 'Bio', linhas: 3),
-                _campo(_fotoUrl, 'URL da foto (opcional)'),
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
                   height: 52,
