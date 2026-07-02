@@ -5,11 +5,14 @@ import '../models/preferencia.dart';
 import '../services/perfil_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/feedback/app_snackbar.dart';
 import '../screens/legal/documentos_legais_screen.dart';
 
 /// Central de configuracoes do doador: aparencia (tema/fonte), notificacoes,
 /// privacidade, seguranca e acessibilidade. Mudancas de aparencia sao aplicadas
 /// na hora e persistidas pelo ConfigController.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class ConfiguracoesScreen extends StatefulWidget {
   const ConfiguracoesScreen({super.key});
 
@@ -41,8 +44,11 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configurações'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -282,21 +288,11 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
                 if (!dialogContext.mounted) return;
                 Navigator.pop(dialogContext);
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Senha alterada com sucesso! 💚'),
-                    backgroundColor: AppColors.primary,
-                  ),
-                );
+                AppSnackbar.sucesso(context, 'Senha alterada com sucesso! 💚');
               } catch (e) {
                 if (!dialogContext.mounted) return;
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  SnackBar(
-                    content:
-                        Text(e.toString().replaceFirst('Exception: ', '')),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                AppSnackbar.erro(dialogContext,
+                    e.toString().replaceFirst('Exception: ', ''));
               }
             },
             child: const Text('Salvar'),

@@ -4,11 +4,15 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/ranking_ong.dart';
 import '../services/ranking_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
 import 'perfil_publico_ong_screen.dart';
 
 /// Tela publica com o ranking de transparencia das ONGs, ordenado por score.
 /// Mostra posicao, medalha do nivel, nome, cidade e o score/nivel a direita.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class RankingTransparenciaScreen extends StatefulWidget {
   const RankingTransparenciaScreen({super.key});
 
@@ -44,16 +48,16 @@ class _RankingTransparenciaScreenState
     }
   }
 
-  // Cor da medalha por nivel de transparencia.
+  // Cor da medalha por nivel de transparencia (tokens centralizados).
   Color _corNivel(String nivel) {
     switch (nivel.toUpperCase()) {
       case 'OURO':
-        return const Color(0xFFF59E0B);
+        return AppColors.ouro;
       case 'PRATA':
-        return const Color(0xFF9CA3AF);
+        return AppColors.prata;
       case 'BRONZE':
       default:
-        return const Color(0xFFCD7F32);
+        return AppColors.bronze;
     }
   }
 
@@ -75,12 +79,15 @@ class _RankingTransparenciaScreenState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Ranking de Transparencia'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
@@ -88,9 +95,10 @@ class _RankingTransparenciaScreenState
               ? _vazio()
               : RefreshIndicator(
                   onRefresh: _carregar,
+                  color: AppColors.primary,
                   child: ListView.builder(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: _ranking.length,
                     itemBuilder: (_, i) => _card(_ranking[i], i + 1),
                   ),
@@ -99,42 +107,37 @@ class _RankingTransparenciaScreenState
   }
 
   Widget _vazio() {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.emoji_events_outlined,
               size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text('Ranking ainda nao disponivel',
-              style: GoogleFonts.poppins(color: Colors.black54)),
+              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
         ],
       ),
     );
   }
 
   Widget _card(RankingOng r, int posicao) {
+    final cs = Theme.of(context).colorScheme;
     final cor = _corNivel(r.nivel);
     final top3 = posicao <= 3;
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
         border: top3
             ? Border.all(color: cor.withValues(alpha: 0.6), width: 1.5)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: top3 ? 0.08 : 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+            : Border.all(color: cs.outlineVariant),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadius.brLg,
         onTap: () => _abrirPerfil(r),
         child: Row(
           children: [
@@ -146,7 +149,7 @@ class _RankingTransparenciaScreenState
                 style: GoogleFonts.poppins(
                   fontSize: top3 ? 18 : 16,
                   fontWeight: FontWeight.w700,
-                  color: top3 ? cor : AppColors.textSecondary,
+                  color: top3 ? cor : cs.onSurfaceVariant,
                 ),
               ),
             ),
@@ -175,7 +178,9 @@ class _RankingTransparenciaScreenState
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
-                              fontSize: 15, fontWeight: FontWeight.w700),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: cs.onSurface),
                         ),
                       ),
                       if (r.verificada) ...[
@@ -189,7 +194,7 @@ class _RankingTransparenciaScreenState
                   Text(
                     r.cidade,
                     style: GoogleFonts.poppins(
-                        fontSize: 12, color: AppColors.textSecondary),
+                        fontSize: 12, color: cs.onSurfaceVariant),
                   ),
                 ],
               ),

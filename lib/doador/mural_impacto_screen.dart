@@ -4,10 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/estatistica_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 /// Mural de Impacto: vitrine pública dos números coletivos da plataforma
 /// (ONGs, doadores, conexões, prestações, valor doado) com destaque para as
 /// pessoas alcançadas. Reaproveita GET /publico/estatisticas.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class MuralImpactoScreen extends StatefulWidget {
   const MuralImpactoScreen({super.key});
 
@@ -56,11 +60,13 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Nosso Impacto'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
@@ -68,6 +74,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
               ? _vazio()
               : RefreshIndicator(
                   onRefresh: _carregar,
+                  color: AppColors.primary,
                   child: ListView(
                     physics: const BouncingScrollPhysics(),
                     children: [
@@ -76,7 +83,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
                       _grade(),
                       const SizedBox(height: 28),
                       _rodape(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
                     ],
                   ),
                 ),
@@ -84,16 +91,17 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
   }
 
   Widget _vazio() {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.error_outline,
               size: 72, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text('Nao foi possivel carregar o impacto',
-              style: GoogleFonts.poppins(color: Colors.black54)),
-          const SizedBox(height: 12),
+              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
+          const SizedBox(height: AppSpacing.sm),
           TextButton(onPressed: _carregar, child: const Text('Tentar de novo')),
         ],
       ),
@@ -101,6 +109,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
   }
 
   Widget _hero() {
+    // Hero mantem o gradiente da marca (identidade), com conteudo branco por cima.
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -114,10 +123,10 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppRadius.brXl,
               boxShadow: [
                 BoxShadow(
                     color: Colors.black.withValues(alpha: 0.10),
@@ -153,23 +162,19 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
   }
 
   Widget _destaquePessoas() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 18, 16, 4),
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.12),
-              blurRadius: 22,
-              offset: const Offset(0, 8)),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brXl,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Column(
         children: [
           Icon(Icons.diversity_1, color: AppColors.primary, size: 36),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           _contador(_pessoasAlcancadas,
               style: GoogleFonts.poppins(
                   fontSize: 44,
@@ -177,7 +182,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
                   color: AppColors.primary)),
           Text('pessoas alcancadas (estimativa)',
               style: GoogleFonts.poppins(
-                  fontSize: 13, color: AppColors.textSecondary)),
+                  fontSize: 13, color: cs.onSurfaceVariant)),
         ],
       ),
     );
@@ -209,27 +214,23 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
   }
 
   Widget _cardStat(_ItemStat i) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 14,
-              offset: const Offset(0, 6)),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadius.brMd,
             ),
             child: Icon(i.icon, color: AppColors.primary, size: 22),
           ),
@@ -238,23 +239,24 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
               style: GoogleFonts.poppins(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary)),
+                  color: cs.onSurface)),
           Text(i.label,
               style: GoogleFonts.poppins(
-                  fontSize: 12, color: AppColors.textSecondary)),
+                  fontSize: 12, color: cs.onSurfaceVariant)),
         ],
       ),
     );
   }
 
   Widget _rodape() {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppRadius.brLg,
         ),
         child: Row(
           children: [
@@ -266,7 +268,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
                 children: [
                   Text('Total doado via PIX',
                       style: GoogleFonts.poppins(
-                          fontSize: 13, color: AppColors.textSecondary)),
+                          fontSize: 13, color: cs.onSurfaceVariant)),
                   Text('R\$ ${_stats.valorTotalDoado.toStringAsFixed(2)}',
                       style: GoogleFonts.poppins(
                           fontSize: 22,

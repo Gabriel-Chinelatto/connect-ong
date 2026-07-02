@@ -7,9 +7,13 @@ import '../services/denuncia_service.dart';
 import '../services/perfil_publico_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../widgets/feedback/app_snackbar.dart';
 
 /// Pagina publica de uma ONG: avatar, selo de verificacao, nota, sobre,
 /// contato, campanhas, necessidades, avaliacoes e prestacoes de contas.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class PerfilPublicoOngScreen extends StatefulWidget {
   final int ongId;
   final String ongNome;
@@ -68,14 +72,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
           'Avaliacao: ${p.notaMedia.toStringAsFixed(1)} (${p.totalAvaliacoes} avaliacoes)')
       ..writeln('Conheca no Connect ONG.');
     Clipboard.setData(ClipboardData(text: texto.toString()));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Perfil copiado para compartilhar!',
-            style: GoogleFonts.poppins()),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppSnackbar.sucesso(context, 'Perfil copiado para compartilhar!');
   }
 
   // Abre o dialog de denuncia da ONG.
@@ -110,25 +107,12 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Denuncia enviada. Obrigado.',
-                        style: GoogleFonts.poppins()),
-                    backgroundColor: Colors.green,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                AppSnackbar.sucesso(context, 'Denuncia enviada. Obrigado.');
               } catch (_) {
                 if (!dialogContext.mounted) return;
                 setStateDialog(() => enviando = false);
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  SnackBar(
-                    content: Text('Nao foi possivel enviar a denuncia.',
-                        style: GoogleFonts.poppins()),
-                    backgroundColor: AppColors.error,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                AppSnackbar.erro(
+                    dialogContext, 'Nao foi possivel enviar a denuncia.');
               }
             }
 
@@ -197,12 +181,15 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(widget.ongNome),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
+        ),
         actions: [
           if (_perfil != null)
             IconButton(
@@ -246,6 +233,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   }
 
   Widget _vazio() {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -254,7 +242,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               size: 72, color: AppColors.primary.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text('Nao foi possivel carregar o perfil',
-              style: GoogleFonts.poppins(color: Colors.black54)),
+              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
           const SizedBox(height: 12),
           TextButton(onPressed: _carregar, child: const Text('Tentar de novo')),
         ],
@@ -335,16 +323,16 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     );
   }
 
-  // Cor da medalha por nivel de transparencia.
+  // Cor da medalha por nivel de transparencia (tokens centralizados).
   Color _corNivel(String nivel) {
     switch (nivel.toUpperCase()) {
       case 'OURO':
-        return const Color(0xFFF59E0B);
+        return AppColors.ouro;
       case 'PRATA':
-        return const Color(0xFF9CA3AF);
+        return AppColors.prata;
       case 'BRONZE':
       default:
-        return const Color(0xFFCD7F32);
+        return AppColors.bronze;
     }
   }
 
@@ -387,7 +375,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
       children: [
         for (int i = 0; i < 5; i++)
           Icon(i < cheias ? Icons.star : Icons.star_border,
-              color: Colors.amber, size: 20),
+              color: AppColors.ouro, size: 20),
         const SizedBox(width: 8),
         Text(
           total > 0
@@ -401,6 +389,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
 
   // ---------- Linha de estatisticas ----------
   Widget _statsRow(PerfilPublicoOng p) {
+    final cs = Theme.of(context).colorScheme;
     Widget item(IconData icon, int valor, String label) => Expanded(
           child: Column(
             children: [
@@ -408,10 +397,12 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               const SizedBox(height: 6),
               Text('$valor',
                   style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w700, fontSize: 18)),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      color: cs.onSurface)),
               Text(label,
                   style: GoogleFonts.poppins(
-                      fontSize: 11, color: AppColors.textSecondary)),
+                      fontSize: 11, color: cs.onSurfaceVariant)),
             ],
           ),
         );
@@ -419,14 +410,9 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 16,
-              offset: const Offset(0, 6)),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Row(
         children: [
@@ -440,18 +426,14 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
 
   // ---------- Cartao de secao generico ----------
   Widget _secao(String titulo, IconData icon, List<Widget> filhos) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 16,
-              offset: const Offset(0, 6)),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,7 +444,9 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               const SizedBox(width: 8),
               Text(titulo,
                   style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w700, fontSize: 16)),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: cs.onSurface)),
             ],
           ),
           const SizedBox(height: 14),
@@ -473,16 +457,18 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   }
 
   Widget _secaoSobre(PerfilPublicoOng p) {
+    final cs = Theme.of(context).colorScheme;
     return _secao('Sobre', Icons.info_outline, [
       Text(
         p.descricao.isNotEmpty ? p.descricao : 'Esta ONG ainda nao tem descricao.',
         style: GoogleFonts.poppins(
-            fontSize: 14, height: 1.5, color: Colors.black87),
+            fontSize: 14, height: 1.5, color: cs.onSurface),
       ),
     ]);
   }
 
   Widget _secaoContato(PerfilPublicoOng p) {
+    final cs = Theme.of(context).colorScheme;
     Widget linha(IconData icon, String texto) => Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
@@ -490,7 +476,9 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               Icon(icon, size: 18, color: AppColors.primary),
               const SizedBox(width: 10),
               Expanded(
-                  child: Text(texto, style: GoogleFonts.poppins(fontSize: 13))),
+                  child: Text(texto,
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, color: cs.onSurface))),
             ],
           ),
         );
@@ -509,6 +497,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   }
 
   Widget _cardCampanha(CampanhaResumo c) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -519,19 +508,21 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               Expanded(
                 child: Text(c.titulo,
                     style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: cs.onSurface)),
               ),
               if (c.encerrada)
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                    color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('Encerrada',
                       style: GoogleFonts.poppins(
-                          fontSize: 11, color: Colors.black54)),
+                          fontSize: 11, color: cs.onSurfaceVariant)),
                 ),
             ],
           ),
@@ -541,7 +532,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             child: LinearProgressIndicator(
               value: c.progresso / 100,
               minHeight: 8,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: cs.surfaceContainerHighest,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
@@ -550,7 +541,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             'R\$ ${c.valorArrecadado.toStringAsFixed(0)} de '
             'R\$ ${c.metaValor.toStringAsFixed(0)} (${c.progresso}%)',
             style: GoogleFonts.poppins(
-                fontSize: 12, color: AppColors.textSecondary),
+                fontSize: 12, color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -558,6 +549,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   }
 
   Widget _secaoNecessidades(PerfilPublicoOng p) {
+    final cs = Theme.of(context).colorScheme;
     return _secao('Necessidades', Icons.favorite_outline, [
       for (final n in p.necessidades)
         Padding(
@@ -577,11 +569,13 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                   children: [
                     Text(n.titulo,
                         style: GoogleFonts.poppins(
-                            fontSize: 14, fontWeight: FontWeight.w600)),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface)),
                     if (n.categoria.isNotEmpty)
                       Text(n.categoria,
                           style: GoogleFonts.poppins(
-                              fontSize: 12, color: AppColors.textSecondary)),
+                              fontSize: 12, color: cs.onSurfaceVariant)),
                   ],
                 ),
               ),
@@ -598,6 +592,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   }
 
   Widget _secaoPrestacoes(PerfilPublicoOng p) {
+    final cs = Theme.of(context).colorScheme;
     return _secao('Prestacoes de contas', Icons.receipt_long_outlined, [
       for (final pr in p.prestacoes)
         Padding(
@@ -607,12 +602,16 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             children: [
               Text(pr.titulo,
                   style: GoogleFonts.poppins(
-                      fontSize: 14, fontWeight: FontWeight.w600)),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface)),
               if (pr.descricao.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(pr.descricao,
                     style: GoogleFonts.poppins(
-                        fontSize: 13, color: Colors.black87, height: 1.4)),
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant,
+                        height: 1.4)),
               ],
             ],
           ),
@@ -621,6 +620,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   }
 
   Widget _secaoAvaliacoes(PerfilPublicoOng p) {
+    final cs = Theme.of(context).colorScheme;
     return _secao('Avaliacoes', Icons.star_outline, [
       for (final a in p.avaliacoes)
         Padding(
@@ -632,18 +632,22 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                 children: [
                   Text(a.doadorNome,
                       style: GoogleFonts.poppins(
-                          fontSize: 13, fontWeight: FontWeight.w600)),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurface)),
                   const SizedBox(width: 8),
                   for (int i = 0; i < 5; i++)
                     Icon(i < a.nota ? Icons.star : Icons.star_border,
-                        size: 14, color: Colors.amber),
+                        size: 14, color: AppColors.ouro),
                 ],
               ),
               if (a.comentario != null && a.comentario!.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(a.comentario!,
                     style: GoogleFonts.poppins(
-                        fontSize: 13, color: Colors.black87, height: 1.4)),
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant,
+                        height: 1.4)),
               ],
             ],
           ),

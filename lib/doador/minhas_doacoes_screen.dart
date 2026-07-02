@@ -6,6 +6,8 @@ import '../services/doacao_service.dart';
 import '../services/relatorio_pdf_service.dart';
 import '../services/session_service.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
 import '../widgets/cards/doacao_card.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/loading_widget.dart';
@@ -15,6 +17,8 @@ import '../widgets/common/app_footer.dart';
 
 /// Lista as doacoes de itens cadastradas pelo doador, permitindo editar/cadastrar
 /// novas e exportar a lista em PDF (relatorio de doacoes).
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class MinhasDoacoesScreen extends StatefulWidget {
   const MinhasDoacoesScreen({
     super.key,
@@ -187,10 +191,16 @@ class _MinhasDoacoesScreenState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Minhas Doações',
+        ),
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
         ),
         actions: [
           IconButton(
@@ -207,7 +217,7 @@ class _MinhasDoacoesScreenState
       floatingActionButton:
           FloatingActionButton.extended(
         backgroundColor:
-            const Color(0xFF0A8449),
+            AppColors.primary,
         elevation: 6,
         icon: const Icon(
           Icons.add,
@@ -241,25 +251,23 @@ class _MinhasDoacoesScreenState
                       24,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(
-                        0xFFEAF6EE,
-                      ),
+                      color: AppColors.primary
+                          .withValues(alpha: 0.10),
                       borderRadius:
-                          BorderRadius.circular(
-                        24,
-                      ),
+                          AppRadius.brXl,
                     ),
                     child: Column(
                       crossAxisAlignment:
                           CrossAxisAlignment
                               .start,
                       children: [
-                        const Text(
+                        Text(
                           'Gerencie suas doações',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight:
                                 FontWeight.bold,
+                            color: cs.onSurface,
                           ),
                         ),
                         const SizedBox(
@@ -268,8 +276,8 @@ class _MinhasDoacoesScreenState
                         Text(
                           '${doacoes.length} doações cadastradas',
                           style: TextStyle(
-                            color: Colors
-                                .grey.shade700,
+                            color: cs
+                                .onSurfaceVariant,
                             fontSize: 16,
                           ),
                         ),
@@ -288,16 +296,15 @@ class _MinhasDoacoesScreenState
                         child: Column(
                           mainAxisAlignment:
                               MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Icon(
                               Icons
                                   .volunteer_activism_outlined,
                               size: 72,
-                              color:
-                                  Color(0xFFB0BEC5),
+                              color: cs.outline,
                             ),
 
-                            SizedBox(
+                            const SizedBox(
                               height: 16,
                             ),
 
@@ -307,18 +314,19 @@ class _MinhasDoacoesScreenState
                                 fontSize: 20,
                                 fontWeight:
                                     FontWeight.w600,
+                                color: cs.onSurface,
                               ),
                             ),
 
-                            SizedBox(
+                            const SizedBox(
                               height: 8,
                             ),
 
                             Text(
                               'Clique em "Nova Doação" para começar.',
                               style: TextStyle(
-                                color:
-                                    Colors.black54,
+                                color: cs
+                                    .onSurfaceVariant,
                               ),
                             ),
                           ],

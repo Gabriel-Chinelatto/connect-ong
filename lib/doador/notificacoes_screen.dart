@@ -7,6 +7,8 @@ import '../theme/app_colors.dart';
 
 /// Lista as notificacoes do doador (mensagens, prestacoes, matches, etc.) e
 /// permite marcar todas como lidas.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class NotificacoesScreen extends StatefulWidget {
   const NotificacoesScreen({super.key});
 
@@ -69,32 +71,37 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notificações'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
+        ),
         actions: [
           if (_itens.any((n) => !n.lida))
             TextButton(
               onPressed: _marcarTodas,
               child: const Text('Marcar todas',
-                  style: TextStyle(color: Colors.white)),
+                  style: TextStyle(color: AppColors.primary)),
             ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _carregar,
+        color: AppColors.primary,
         child: _carregando
             ? const Center(child: CircularProgressIndicator())
             : _itens.isEmpty
                 ? ListView(
-                    children: const [
-                      SizedBox(height: 140),
+                    children: [
+                      const SizedBox(height: 140),
                       Center(
                         child: Text('Nenhuma notificação ainda.',
-                            style:
-                                TextStyle(fontSize: 16, color: Colors.grey)),
+                            style: TextStyle(
+                                fontSize: 16, color: cs.onSurfaceVariant)),
                       ),
                     ],
                   )
@@ -116,10 +123,12 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
                           ),
                           title: Text(n.titulo,
                               style: TextStyle(
+                                  color: cs.onSurface,
                                   fontWeight: n.lida
                                       ? FontWeight.normal
                                       : FontWeight.bold)),
-                          subtitle: Text(n.mensagem),
+                          subtitle: Text(n.mensagem,
+                              style: TextStyle(color: cs.onSurfaceVariant)),
                           trailing: n.lida
                               ? null
                               : const Icon(Icons.circle,

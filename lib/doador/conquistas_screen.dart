@@ -5,9 +5,13 @@ import '../models/conquista.dart';
 import '../services/conquista_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 /// Exibe as conquistas (gamificacao) desbloqueadas pelo doador conforme suas
 /// acoes na plataforma. Exige sessao ativa para carregar as conquistas do usuario.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class ConquistasScreen extends StatefulWidget {
   const ConquistasScreen({super.key});
 
@@ -78,8 +82,11 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conquistas'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
@@ -95,12 +102,13 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
                     )
                   : RefreshIndicator(
                       onRefresh: _carregar,
+                      color: AppColors.primary,
                       child: ListView(
                         physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         children: [
                           _contador(desbloqueadas, total),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.md),
                           GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
@@ -108,8 +116,8 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
+                              crossAxisSpacing: AppSpacing.md,
+                              mainAxisSpacing: AppSpacing.md,
                               childAspectRatio: 0.85,
                             ),
                             itemBuilder: (_, i) => _card(_conquistas[i]),
@@ -122,15 +130,15 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
 
   Widget _contador(int desbloqueadas, int total) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadius.brLg,
       ),
       child: Row(
         children: [
           const Icon(Icons.emoji_events, color: AppColors.primary, size: 28),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Text(
             '$desbloqueadas de $total conquistadas',
             style: GoogleFonts.poppins(
@@ -145,27 +153,21 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
   }
 
   Widget _card(Conquista c) {
+    final cs = Theme.of(context).colorScheme;
     final conquistada = c.conquistada;
-    final corIcone = conquistada ? AppColors.primary : Colors.grey.shade400;
+    final corIcone = conquistada ? AppColors.primary : cs.onSurfaceVariant;
     final corFundoIcone = conquistada
         ? AppColors.primary.withValues(alpha: 0.12)
-        : Colors.grey.shade200;
-    final corTitulo = conquistada ? AppColors.textPrimary : Colors.grey.shade500;
-    final corDescricao =
-        conquistada ? AppColors.textSecondary : Colors.grey.shade400;
+        : cs.surfaceContainerHighest;
+    final corTitulo = conquistada ? cs.onSurface : cs.onSurfaceVariant;
+    final corDescricao = cs.onSurfaceVariant;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -189,19 +191,19 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cs.surface,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     conquistada ? Icons.check_circle : Icons.lock_outline,
                     size: 18,
-                    color: conquistada ? AppColors.primary : Colors.grey.shade500,
+                    color: conquistada ? AppColors.primary : cs.onSurfaceVariant,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             c.titulo,
             textAlign: TextAlign.center,
@@ -231,15 +233,16 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
   }
 
   Widget _vazio({required IconData icone, required String mensagem}) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icone, size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text(
             mensagem,
-            style: GoogleFonts.poppins(color: Colors.black54),
+            style: GoogleFonts.poppins(color: cs.onSurfaceVariant),
           ),
         ],
       ),

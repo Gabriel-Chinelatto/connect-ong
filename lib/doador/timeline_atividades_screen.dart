@@ -4,8 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/atividade.dart';
 import '../services/atividade_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 /// Feed global de atividades recentes da plataforma (Timeline).
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class TimelineAtividadesScreen extends StatefulWidget {
   const TimelineAtividadesScreen({super.key});
 
@@ -74,11 +78,15 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Atividades'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
@@ -86,9 +94,10 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
               ? _vazio()
               : RefreshIndicator(
                   onRefresh: _carregar,
+                  color: AppColors.primary,
                   child: ListView.builder(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: _atividades.length,
                     itemBuilder: (_, i) => _card(_atividades[i]),
                   ),
@@ -97,35 +106,31 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
   }
 
   Widget _vazio() {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.dynamic_feed_outlined,
               size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text('Nenhuma atividade recente ainda',
-              style: GoogleFonts.poppins(color: Colors.black54)),
+              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
         ],
       ),
     );
   }
 
   Widget _card(Atividade a) {
+    final cs = Theme.of(context).colorScheme;
     final tempo = _tempoRelativo(a.dataCriacao);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm + 4),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,6 +159,7 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     height: 1.35,
+                    color: cs.onSurface,
                   ),
                 ),
                 if (a.ongNome != null && a.ongNome!.isNotEmpty) ...[
@@ -172,7 +178,7 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
                     tempo,
                     style: GoogleFonts.poppins(
                       fontSize: 11,
-                      color: AppColors.textSecondary,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                 ],

@@ -6,6 +6,8 @@ import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_application_1/services/favorito_service.dart';
 import 'package:flutter_application_1/services/session_service.dart';
 import 'package:flutter_application_1/theme/app_colors.dart';
+import 'package:flutter_application_1/theme/app_radius.dart';
+import 'package:flutter_application_1/widgets/feedback/app_snackbar.dart';
 import 'package:flutter_application_1/doador/doar_pix_screen.dart';
 import 'package:flutter_application_1/doador/perfil_publico_ong_screen.dart';
 
@@ -16,6 +18,9 @@ import 'package:http/http.dart' as http;
 /// Busca de ONGs receptoras: lista e filtra ONGs por nome, permite favoritar
 /// e abre o perfil publico ou a doacao via PIX. Ponto de partida para o doador
 /// escolher uma instituicao para apoiar.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
+/// A logica de rede (chamadas http diretas) foi preservada intacta.
 class BuscarReceptorScreen extends StatefulWidget {
   const BuscarReceptorScreen({super.key});
 
@@ -76,14 +81,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
       }
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red.shade400,
-          content:
-              Text('Erro ao atualizar favorito', style: GoogleFonts.poppins()),
-        ),
-      );
+      AppSnackbar.erro(context, 'Erro ao atualizar favorito');
     }
   }
 
@@ -113,15 +111,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
         carregando = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-
-          backgroundColor: Colors.red.shade400,
-
-          content: Text("Erro ao conectar API", style: GoogleFonts.poppins()),
-        ),
-      );
+      AppSnackbar.erro(context, 'Erro ao conectar API');
     }
   }
 
@@ -138,23 +128,16 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
   }
 
   Widget _buildOngCard(Ong ong) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
 
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
 
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: AppRadius.brLg,
 
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-
-            blurRadius: 18,
-
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: cs.outlineVariant),
       ),
 
       child: Padding(
@@ -170,7 +153,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                   padding: const EdgeInsets.all(14),
 
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0A8449).withValues(alpha: 0.12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
 
                     borderRadius: BorderRadius.circular(18),
                   ),
@@ -178,7 +161,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                   child: const Icon(
                     Icons.volunteer_activism,
 
-                    color: Color(0xFF0A8449),
+                    color: AppColors.primary,
 
                     size: 28,
                   ),
@@ -199,7 +182,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF222222),
+                                color: cs.onSurface,
                               ),
                             ),
                           ),
@@ -231,9 +214,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                         ),
 
                         decoration: BoxDecoration(
-                          color: (ong.verificada
-                                  ? Colors.blue
-                                  : const Color(0xFF0A8449))
+                          color: AppColors.primary
                               .withValues(alpha: 0.1),
 
                           borderRadius: BorderRadius.circular(20),
@@ -244,7 +225,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                           children: [
                             if (ong.verificada) ...[
                               const Icon(Icons.verified,
-                                  size: 14, color: Colors.blue),
+                                  size: 14, color: AppColors.primary),
                               const SizedBox(width: 4),
                             ],
                             Text(
@@ -253,9 +234,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                                   : "ONG Parceira",
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
-                                color: ong.verificada
-                                    ? Colors.blue
-                                    : const Color(0xFF0A8449),
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -281,7 +260,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
                           fontSize: 15,
 
-                          color: const Color(0xFF0A8449),
+                          color: AppColors.primary,
                         ),
                       ),
 
@@ -295,7 +274,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
                           height: 1.5,
 
-                          color: Colors.black87,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 18),
@@ -304,8 +283,8 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF0A8449),
-                            side: const BorderSide(color: Color(0xFF0A8449)),
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
@@ -335,7 +314,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0A8449),
+                            backgroundColor: AppColors.primary,
 
                             foregroundColor: Colors.white,
 
@@ -376,16 +355,20 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
   }
 
   Widget _buildInfoTile(IconData icon, String text) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
 
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF0A8449)),
+          Icon(icon, size: 20, color: AppColors.primary),
 
           const SizedBox(width: 10),
 
-          Expanded(child: Text(text, style: GoogleFonts.poppins(fontSize: 14))),
+          Expanded(
+              child: Text(text,
+                  style: GoogleFonts.poppins(
+                      fontSize: 14, color: cs.onSurface))),
         ],
       ),
     );
@@ -417,9 +400,10 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
       ),
 
       body: Container(
+        // Hero da marca: gradiente verde (funciona no claro e no escuro).
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0A8449), Color(0xFF066537)],
+            colors: [AppColors.primary, AppColors.primaryDark],
 
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -470,20 +454,21 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    style: GoogleFonts.poppins(),
+                    // A caixa de busca e branca (sobre o hero verde); texto escuro.
+                    style: GoogleFonts.poppins(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       hintText: "Buscar ONG por nome ou cidade",
                       hintStyle: GoogleFonts.poppins(color: Colors.grey),
                       border: InputBorder.none,
                       prefixIcon: const Icon(
                         Icons.search,
-                        color: Color(0xFF0A8449),
+                        color: AppColors.primary,
                       ),
                       suffixIcon: IconButton(
                         onPressed: _buscarOng,
                         icon: const Icon(
                           Icons.arrow_forward,
-                          color: Color(0xFF0A8449),
+                          color: AppColors.primary,
                         ),
                       ),
                     ),

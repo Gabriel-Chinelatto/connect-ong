@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../doacao.dart';
 import '../services/doacao_service.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
 import '../widgets/buttons/app_button.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/inputs/app_text_field.dart';
@@ -10,6 +12,8 @@ import '../widgets/inputs/app_text_field.dart';
 /// Formulario de cadastro/edicao de uma doacao de item (nome, descricao,
 /// quantidade, categoria, tipo, urgencia). Quando recebe uma [Doacao] no
 /// construtor, opera em modo edicao; caso contrario, cria uma nova.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class CadastrarDoacaoScreen extends StatefulWidget {
   final Doacao? doacao;
 
@@ -185,12 +189,18 @@ class _CadastrarDoacaoScreenState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text(
           editando
               ? 'Editar Doação'
               : 'Cadastrar Doação',
+        ),
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
         ),
       ),
       body: SingleChildScrollView(
@@ -200,11 +210,12 @@ class _CadastrarDoacaoScreenState
             constraints: const BoxConstraints(
               maxWidth: 760,
             ),
-            child: Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(28),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: AppRadius.brXl,
+                border:
+                    Border.all(color: cs.outlineVariant),
               ),
               child: Padding(
                 padding:
@@ -219,9 +230,8 @@ class _CadastrarDoacaoScreenState
                         24,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(
-                          0xFFEAF6EE,
-                        ),
+                        color: AppColors.primary
+                            .withValues(alpha: 0.10),
                         borderRadius:
                             BorderRadius.circular(
                           24,
@@ -234,9 +244,8 @@ class _CadastrarDoacaoScreenState
                             height: 72,
                             decoration:
                                 const BoxDecoration(
-                              color: Color(
-                                0xFF0A8449,
-                              ),
+                              color:
+                                  AppColors.primary,
                               shape:
                                   BoxShape.circle,
                             ),
@@ -282,9 +291,8 @@ class _CadastrarDoacaoScreenState
                                       : 'Preencha os dados para disponibilizar uma nova doação.',
                                   style:
                                       TextStyle(
-                                    color: Colors
-                                        .grey
-                                        .shade700,
+                                    color: cs
+                                        .onSurfaceVariant,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -492,9 +500,7 @@ class _CadastrarDoacaoScreenState
                         'Destacar esta doação.',
                       ),
                       activeThumbColor:
-                          const Color(
-                        0xFF0A8449,
-                      ),
+                          AppColors.primary,
                       onChanged: (value) {
                         setState(() {
                           urgente = value;
@@ -513,9 +519,7 @@ class _CadastrarDoacaoScreenState
                         'Indica que o item está em excelentes condições.',
                       ),
                       activeThumbColor:
-                          const Color(
-                        0xFF0A8449,
-                      ),
+                          AppColors.primary,
                       onChanged: (value) {
                         setState(() {
                           produtoNovo =

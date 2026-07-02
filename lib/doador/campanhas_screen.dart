@@ -6,9 +6,14 @@ import '../services/campanha_service.dart';
 import '../services/favorito_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/feedback/app_snackbar.dart';
 
 /// Lista as campanhas ativas das ONGs que o doador pode apoiar, com opcao de
 /// favoritar cada campanha (persistido por usuario via FavoritoService).
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class CampanhasScreen extends StatefulWidget {
   const CampanhasScreen({super.key});
 
@@ -62,12 +67,7 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
       }
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red.shade400,
-          content: Text('Erro ao atualizar favorito'),
-        ),
-      );
+      AppSnackbar.erro(context, 'Erro ao atualizar favorito');
     }
   }
 
@@ -104,9 +104,9 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
                 prefixIcon: Icon(Icons.attach_money),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
-              spacing: 8,
+              spacing: AppSpacing.sm,
               children: [10, 25, 50, 100]
                   .map((v) => ActionChip(
                         label: Text('R\$ $v'),
@@ -143,23 +143,16 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
         doadorNome: _meuNome,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primary,
-          content: Text(atualizada.encerrada
-              ? 'Obrigado! A campanha atingiu a meta! 🎉'
-              : 'Obrigado pela contribuição de R\$ ${valor.toStringAsFixed(2)}!'),
-        ),
+      AppSnackbar.sucesso(
+        context,
+        atualizada.encerrada
+            ? 'Obrigado! A campanha atingiu a meta! 🎉'
+            : 'Obrigado pela contribuição de R\$ ${valor.toStringAsFixed(2)}!',
       );
       _carregar();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red.shade400,
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-        ),
-      );
+      AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -168,8 +161,11 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campanhas'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
@@ -177,9 +173,10 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
               ? _vazio()
               : RefreshIndicator(
                   onRefresh: _carregar,
+                  color: AppColors.primary,
                   child: ListView.builder(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: _campanhas.length,
                     itemBuilder: (_, i) => _card(_campanhas[i]),
                   ),
@@ -188,34 +185,30 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
   }
 
   Widget _vazio() {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.campaign_outlined,
               size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text('Nenhuma campanha ativa no momento',
-              style: GoogleFonts.poppins(color: Colors.black54)),
+              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
         ],
       ),
     );
   }
 
   Widget _card(Campanha c) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,23 +217,23 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
             children: [
               if (c.destaque)
                 Container(
-                  margin: const EdgeInsets.only(right: 8),
+                  margin: const EdgeInsets.only(right: AppSpacing.sm),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.ouro.withValues(alpha: 0.2),
+                    borderRadius: AppRadius.brSm,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.star, size: 14, color: Colors.amber),
+                      const Icon(Icons.star, size: 14, color: AppColors.ouro),
                       const SizedBox(width: 4),
                       Text('Destaque',
                           style: GoogleFonts.poppins(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: Colors.orange.shade800)),
+                              color: AppColors.ouro)),
                     ],
                   ),
                 ),
@@ -248,7 +241,9 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
                 child: Text(
                   c.titulo,
                   style: GoogleFonts.poppins(
-                      fontSize: 18, fontWeight: FontWeight.w700),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface),
                 ),
               ),
               if (_usuarioId != null)
@@ -277,26 +272,28 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
           const SizedBox(height: 10),
           Text(c.descricao,
               style: GoogleFonts.poppins(
-                  fontSize: 14, color: Colors.black54, height: 1.4)),
-          const SizedBox(height: 16),
+                  fontSize: 14, color: cs.onSurfaceVariant, height: 1.4)),
+          const SizedBox(height: AppSpacing.md),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.brSm,
             child: LinearProgressIndicator(
               value: c.progresso / 100,
               minHeight: 10,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: cs.surfaceContainerHighest,
               valueColor:
                   const AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('R\$ ${c.valorArrecadado.toStringAsFixed(0)} de '
                   'R\$ ${c.metaValor.toStringAsFixed(0)}',
                   style: GoogleFonts.poppins(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface)),
               Text('${c.progresso}%',
                   style: GoogleFonts.poppins(
                       fontSize: 13,
@@ -304,7 +301,7 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
                       color: AppColors.primary)),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -314,7 +311,7 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                    borderRadius: AppRadius.brMd),
               ),
               icon: const Icon(Icons.favorite),
               label: const Text('Contribuir'),
