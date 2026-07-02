@@ -6,6 +6,7 @@ import '../services/atividade_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../widgets/feedback/empty_state.dart';
 
 /// Feed global de atividades recentes da plataforma (Timeline).
 ///
@@ -106,18 +107,9 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
   }
 
   Widget _vazio() {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.dynamic_feed_outlined,
-              size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: AppSpacing.md),
-          Text('Nenhuma atividade recente ainda',
-              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
-        ],
-      ),
+    return const EmptyState(
+      icone: Icons.dynamic_feed_outlined,
+      mensagem: 'Nenhuma atividade recente ainda',
     );
   }
 

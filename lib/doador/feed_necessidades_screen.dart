@@ -11,6 +11,7 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/categorias.dart';
 import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/feedback/empty_state.dart';
 
 /// Feed das necessidades abertas das ONGs (aba Explorar), com filtros (busca,
 /// categoria, urgentes) e priorizacao pela cidade do doador. Hero feature: ao
@@ -279,22 +280,11 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   }
 
   Widget _vazio(String msg) {
-    final cs = Theme.of(context).colorScheme;
+    // Dentro de um ListView para o pull-to-refresh continuar funcionando.
     return ListView(
       children: [
         const SizedBox(height: 100),
-        Icon(Icons.inbox_outlined, size: 56, color: cs.outline),
-        const SizedBox(height: AppSpacing.md),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              msg,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
-            ),
-          ),
-        ),
+        EmptyState(icone: Icons.inbox_outlined, mensagem: msg),
       ],
     );
   }

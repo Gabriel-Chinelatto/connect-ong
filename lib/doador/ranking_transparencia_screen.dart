@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
+import '../widgets/feedback/empty_state.dart';
 import 'perfil_publico_ong_screen.dart';
 
 /// Tela publica com o ranking de transparencia das ONGs, ordenado por score.
@@ -107,18 +108,9 @@ class _RankingTransparenciaScreenState
   }
 
   Widget _vazio() {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.emoji_events_outlined,
-              size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: AppSpacing.md),
-          Text('Ranking ainda nao disponivel',
-              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
-        ],
-      ),
+    return const EmptyState(
+      icone: Icons.emoji_events_outlined,
+      mensagem: 'Ranking ainda não disponível',
     );
   }
 

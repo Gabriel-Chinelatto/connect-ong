@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/feedback/empty_state.dart';
 
 import 'chat_screen.dart';
 import 'prestacoes_screen.dart';
@@ -279,19 +280,14 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
   }
 
   Widget _vazio() {
-    final cs = Theme.of(context).colorScheme;
+    // Dentro de um ListView para o pull-to-refresh continuar funcionando.
     return ListView(
-      children: [
-        const SizedBox(height: 100),
-        Icon(Icons.handshake_outlined, size: 56, color: cs.outline),
-        const SizedBox(height: AppSpacing.md),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Text(
-            'Você ainda não tem matches.\nVá ao Explorar e encontre uma causa para apoiar!',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
-          ),
+      children: const [
+        SizedBox(height: 100),
+        EmptyState(
+          icone: Icons.handshake_outlined,
+          mensagem: 'Você ainda não tem matches.',
+          detalhe: 'Vá ao Explorar e encontre uma causa para apoiar!',
         ),
       ],
     );

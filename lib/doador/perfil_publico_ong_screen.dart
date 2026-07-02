@@ -9,6 +9,7 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/feedback/empty_state.dart';
 
 /// Pagina publica de uma ONG: avatar, selo de verificacao, nota, sobre,
 /// contato, campanhas, necessidades, avaliacoes e prestacoes de contas.
@@ -233,20 +234,11 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   }
 
   Widget _vazio() {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline,
-              size: 72, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 16),
-          Text('Nao foi possivel carregar o perfil',
-              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
-          const SizedBox(height: 12),
-          TextButton(onPressed: _carregar, child: const Text('Tentar de novo')),
-        ],
-      ),
+    return EmptyState(
+      icone: Icons.error_outline,
+      mensagem: 'Não foi possível carregar o perfil',
+      acaoRotulo: 'Tentar de novo',
+      onAcao: _carregar,
     );
   }
 

@@ -7,6 +7,7 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../widgets/feedback/empty_state.dart';
 
 /// Exibe as conquistas (gamificacao) desbloqueadas pelo doador conforme suas
 /// acoes na plataforma. Exige sessao ativa para carregar as conquistas do usuario.
@@ -233,19 +234,6 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
   }
 
   Widget _vazio({required IconData icone, required String mensagem}) {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icone, size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            mensagem,
-            style: GoogleFonts.poppins(color: cs.onSurfaceVariant),
-          ),
-        ],
-      ),
-    );
+    return EmptyState(icone: icone, mensagem: mensagem);
   }
 }

@@ -6,6 +6,7 @@ import '../services/estatistica_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../widgets/feedback/empty_state.dart';
 
 /// Mural de Impacto: vitrine pública dos números coletivos da plataforma
 /// (ONGs, doadores, conexões, prestações, valor doado) com destaque para as
@@ -91,20 +92,11 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
   }
 
   Widget _vazio() {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline,
-              size: 72, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: AppSpacing.md),
-          Text('Nao foi possivel carregar o impacto',
-              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
-          const SizedBox(height: AppSpacing.sm),
-          TextButton(onPressed: _carregar, child: const Text('Tentar de novo')),
-        ],
-      ),
+    return EmptyState(
+      icone: Icons.error_outline,
+      mensagem: 'Não foi possível carregar o impacto',
+      acaoRotulo: 'Tentar de novo',
+      onAcao: _carregar,
     );
   }
 

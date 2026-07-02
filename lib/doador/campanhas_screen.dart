@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/feedback/empty_state.dart';
 
 /// Lista as campanhas ativas das ONGs que o doador pode apoiar, com opcao de
 /// favoritar cada campanha (persistido por usuario via FavoritoService).
@@ -185,18 +186,9 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
   }
 
   Widget _vazio() {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.campaign_outlined,
-              size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: AppSpacing.md),
-          Text('Nenhuma campanha ativa no momento',
-              style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
-        ],
-      ),
+    return const EmptyState(
+      icone: Icons.campaign_outlined,
+      mensagem: 'Nenhuma campanha ativa no momento',
     );
   }
 
