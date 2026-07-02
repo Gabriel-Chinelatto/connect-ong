@@ -54,4 +54,38 @@ class MensagemService {
       throw Exception(msgErro);
     }
   }
+
+  // Presenca do OUTRO participante (online, ultimoVisto, digitando). Chamar
+  // tambem registra a MINHA presenca (heartbeat). Best-effort: NUNCA quebra o
+  // chat — em qualquer erro/timeout ou status != 200 devolve um default seguro.
+  Future<Map<String, dynamic>> status(int interesseId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            '${ApiService.baseUrl}/mensagens/status?interesseId=$interesseId'),
+        headers: ApiService.authHeaders(),
+      ).timeout(ApiService.timeout);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes))
+            as Map<String, dynamic>;
+      }
+    } catch (_) {
+      // ignorado: presenca e best-effort.
+    }
+    return {'online': false, 'ultimoVisto': null, 'digitando': false};
+  }
+
+  // Sinaliza que o usuario esta digitando. Best-effort: erros sao ignorados.
+  Future<void> digitando(int interesseId) async {
+    try {
+      await http.post(
+        Uri.parse(
+            '${ApiService.baseUrl}/mensagens/digitando?interesseId=$interesseId'),
+        headers: ApiService.jsonHeaders(),
+      ).timeout(ApiService.timeout);
+    } catch (_) {
+      // ignorado: heartbeat de digitacao e best-effort.
+    }
+  }
 }

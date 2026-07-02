@@ -40,14 +40,26 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _enviando = false;
   Timer? _timer;
 
+  // Presenca do OUTRO participante (best-effort, sem spinner/erro).
+  bool _online = false;
+  String? _ultimoVisto;
+  bool _digitando = false;
+
+  // Throttle do heartbeat de digitacao: no maximo 1 envio a cada 2s.
+  DateTime? _ultimoHeartbeat;
+
   @override
   void initState() {
     super.initState();
     _carregar(primeira: true);
+    _carregarStatus();
     // Polling: busca novas mensagens a cada 2 segundos.
     _timer = Timer.periodic(
       const Duration(seconds: 2),
-      (_) => _carregar(),
+      (_) {
+        _carregar();
+        _carregarStatus();
+      },
     );
   }
 
@@ -73,6 +85,31 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       if (primeira) setState(() => _carregando = false);
     }
+  }
+
+  // Presenca do outro participante. Best-effort: o service ja devolve default
+  // seguro, entao aqui nao ha spinner nem estado de erro.
+  Future<void> _carregarStatus() async {
+    final status = await _service.status(widget.interesseId);
+    if (!mounted) return;
+    setState(() {
+      _online = (status['online'] ?? false) as bool;
+      _ultimoVisto = status['ultimoVisto'] as String?;
+      _digitando = (status['digitando'] ?? false) as bool;
+    });
+  }
+
+  // Heartbeat de digitacao (best-effort) com throttle de 2s: so avisa o
+  // backend enquanto ha texto e no maximo 1 vez a cada 2 segundos.
+  void _aoDigitar(String texto) {
+    if (texto.trim().isEmpty) return;
+    final agora = DateTime.now();
+    if (_ultimoHeartbeat != null &&
+        agora.difference(_ultimoHeartbeat!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _ultimoHeartbeat = agora;
+    _service.digitando(widget.interesseId);
   }
 
   void _irParaOFim() {
@@ -108,6 +145,19 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // Texto de presenca exibido abaixo do nome na AppBar. String vazia quando
+  // nao ha nada relevante a mostrar.
+  String _textoPresenca() {
+    if (_online) return 'online';
+    if (_ultimoVisto != null) {
+      final dt = DateTime.parse(_ultimoVisto!).toLocal();
+      final hh = dt.hour.toString().padLeft(2, '0');
+      final mm = dt.minute.toString().padLeft(2, '0');
+      return 'visto por último às $hh:$mm';
+    }
+    return '';
+  }
+
   Widget _bolha(Mensagem m) {
     final cs = Theme.of(context).colorScheme;
     final minha = m.remetente == widget.meuRemetente;
@@ -128,12 +178,33 @@ class _ChatScreenState extends State<ChatScreen> {
             bottomRight: Radius.circular(minha ? 4 : 16),
           ),
         ),
-        child: Text(
-          m.conteudo,
-          style: TextStyle(
-            color: minha ? Colors.white : cs.onSurface,
-            height: 1.3,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              m.conteudo,
+              style: TextStyle(
+                color: minha ? Colors.white : cs.onSurface,
+                height: 1.3,
+              ),
+            ),
+            // Check de "visto" apenas nas MINHAS mensagens.
+            if (minha)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Icon(
+                    m.lida ? Icons.done_all : Icons.check,
+                    size: 14,
+                    color: m.lida
+                        ? Colors.lightBlueAccent
+                        : Colors.white70,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -161,13 +232,38 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Text(
-                widget.titulo,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.titulo,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface),
+                  ),
+                  if (_digitando)
+                    Text(
+                      'digitando...',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  else if (_textoPresenca().isNotEmpty)
+                    Text(
+                      _textoPresenca(),
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -221,6 +317,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
+                      onChanged: _aoDigitar,
                       onSubmitted: (_) => _enviar(),
                     ),
                   ),
