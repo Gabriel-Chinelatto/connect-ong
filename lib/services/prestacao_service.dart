@@ -14,7 +14,7 @@ class PrestacaoService {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/prestacoes?interesseId=$interesseId'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar prestações de contas');
     }

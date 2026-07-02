@@ -22,11 +22,19 @@ class InteresseService {
         'necessidadeId': necessidadeId,
         'doadorId': doadorId,
       }),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      final body = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(body['erro'] ?? 'Erro ao demonstrar interesse');
+      String msgErro;
+      try {
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        msgErro = (body is Map && body['erro'] != null)
+            ? body['erro'].toString()
+            : 'Erro (HTTP ${response.statusCode})';
+      } catch (_) {
+        msgErro = 'Erro (HTTP ${response.statusCode})';
+      }
+      throw Exception(msgErro);
     }
   }
 
@@ -35,7 +43,7 @@ class InteresseService {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/interesses?doadorId=$doadorId'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar seus matches');

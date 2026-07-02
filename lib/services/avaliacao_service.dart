@@ -25,7 +25,7 @@ class AvaliacaoService {
         'nota': nota,
         'comentario': comentario,
       }),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200 && response.statusCode != 201) {
       final body = jsonDecode(utf8.decode(response.bodyBytes));
       throw Exception(body['erro'] ?? 'Erro ao enviar avaliação');
@@ -37,7 +37,7 @@ class AvaliacaoService {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/avaliacoes?ongId=$ongId'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar avaliações');
     }

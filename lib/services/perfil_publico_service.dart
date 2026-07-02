@@ -14,7 +14,7 @@ class PerfilPublicoService {
   /// Busca o perfil publico completo de uma ONG (GET /ongs/{id}/perfil-publico).
   Future<PerfilPublicoOng> buscar(int ongId) async {
     final response = await http.get(Uri.parse('$_base/$ongId/perfil-publico'),
-        headers: ApiService.authHeaders());
+        headers: ApiService.authHeaders()).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       return PerfilPublicoOng.fromJson(
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>);

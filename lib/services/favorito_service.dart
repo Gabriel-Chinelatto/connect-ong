@@ -16,7 +16,7 @@ class FavoritoService {
   Future<List<Favorito>> listar(int usuarioId) async {
     final response =
         await http.get(Uri.parse('$_base?usuarioId=$usuarioId'),
-            headers: ApiService.authHeaders());
+            headers: ApiService.authHeaders()).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       final List data = jsonDecode(utf8.decode(response.bodyBytes));
       return data.map((e) => Favorito.fromJson(e)).toList();
@@ -28,7 +28,7 @@ class FavoritoService {
   Future<Set<int>> ids(int usuarioId, String tipo) async {
     final response = await http
         .get(Uri.parse('$_base/ids?usuarioId=$usuarioId&tipo=$tipo'),
-            headers: ApiService.authHeaders());
+            headers: ApiService.authHeaders()).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       final List data = jsonDecode(utf8.decode(response.bodyBytes));
       return data.map((e) => (e as num).toInt()).toSet();
@@ -46,7 +46,7 @@ class FavoritoService {
         'tipo': tipo,
         'alvoId': alvoId,
       }),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Erro ao favoritar');
     }
@@ -58,7 +58,7 @@ class FavoritoService {
       Uri.parse(
           '$_base?usuarioId=$usuarioId&tipo=$tipo&alvoId=$alvoId'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Erro ao remover favorito');
     }

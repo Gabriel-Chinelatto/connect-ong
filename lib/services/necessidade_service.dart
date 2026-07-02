@@ -14,7 +14,7 @@ class NecessidadeService {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/necessidades?status=ABERTA'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar necessidades');

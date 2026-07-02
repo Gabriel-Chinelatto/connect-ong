@@ -87,7 +87,8 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
   Future<void> _carregarOngs() async {
     try {
       final response =
-          await http.get(Uri.parse(_baseUrl), headers: ApiService.authHeaders());
+          await http.get(Uri.parse(_baseUrl), headers: ApiService.authHeaders())
+              .timeout(ApiService.timeout);
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));

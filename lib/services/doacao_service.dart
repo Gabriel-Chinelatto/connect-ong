@@ -17,7 +17,7 @@ class DoacaoService {
     final response = await http.get(
       Uri.parse('$baseUrl/doacoes/minhas'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -44,7 +44,7 @@ class DoacaoService {
       body: jsonEncode(
         doacao.toJson(),
       ),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode != 200 &&
         response.statusCode != 201) {
@@ -65,7 +65,7 @@ class DoacaoService {
       body: jsonEncode(
         doacao.toJson(),
       ),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -82,7 +82,7 @@ class DoacaoService {
         '$baseUrl/doacoes/$id',
       ),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode != 204) {
       throw Exception(

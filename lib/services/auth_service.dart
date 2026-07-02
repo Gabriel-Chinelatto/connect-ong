@@ -40,7 +40,7 @@ class AuthService {
 
         'senha': senha,
       }),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode == 200) {
 
@@ -54,15 +54,17 @@ class AuthService {
       return resp;
     }
 
-    final body = jsonDecode(
-      utf8.decode(response.bodyBytes),
-    );
+    String msgErro;
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      msgErro = (body is Map && body['erro'] != null)
+          ? body['erro'].toString()
+          : 'Erro (HTTP ${response.statusCode})';
+    } catch (_) {
+      msgErro = 'Erro (HTTP ${response.statusCode})';
+    }
 
-    throw Exception(
-
-      body['erro'] ??
-          'Erro ao realizar login',
-    );
+    throw Exception(msgErro);
   }
 
   /// Cadastro público de doador: `POST /usuarios/registro`.
@@ -91,13 +93,21 @@ class AuthService {
         if (cidade != null && cidade.isNotEmpty) 'cidade': cidade,
         if (estado != null && estado.isNotEmpty) 'estado': estado,
       }),
-    );
+    ).timeout(ApiService.timeout);
 
     if (response.statusCode == 201) {
       return jsonDecode(utf8.decode(response.bodyBytes));
     }
 
-    final body = jsonDecode(utf8.decode(response.bodyBytes));
-    throw Exception(body['erro'] ?? 'Erro ao criar a conta');
+    String msgErro;
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      msgErro = (body is Map && body['erro'] != null)
+          ? body['erro'].toString()
+          : 'Erro (HTTP ${response.statusCode})';
+    } catch (_) {
+      msgErro = 'Erro (HTTP ${response.statusCode})';
+    }
+    throw Exception(msgErro);
   }
 }

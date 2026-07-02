@@ -14,7 +14,7 @@ class RankingService {
   Future<List<RankingOng>> listar({int limite = 20}) async {
     final response = await http.get(
         Uri.parse('${ApiService.baseUrl}/publico/ranking?limite=$limite'),
-        headers: ApiService.authHeaders());
+        headers: ApiService.authHeaders()).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       final raw = jsonDecode(utf8.decode(response.bodyBytes));
       if (raw is List) {

@@ -14,7 +14,7 @@ class ConquistaService {
   /// Lista as conquistas do doador (conquistadas e bloqueadas).
   Future<List<Conquista>> doador(int usuarioId) async {
     final response = await http.get(Uri.parse('$_base/doador/$usuarioId'),
-        headers: ApiService.authHeaders());
+        headers: ApiService.authHeaders()).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       final List data = jsonDecode(utf8.decode(response.bodyBytes));
       return data.map((e) => Conquista.fromJson(e)).toList();

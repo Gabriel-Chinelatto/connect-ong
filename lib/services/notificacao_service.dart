@@ -14,7 +14,7 @@ class NotificacaoService {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/notificacoes?usuarioId=$usuarioId'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar notificações');
     }
@@ -27,7 +27,7 @@ class NotificacaoService {
       Uri.parse(
           '${ApiService.baseUrl}/notificacoes/nao-lidas?usuarioId=$usuarioId'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) return 0;
     final body = jsonDecode(utf8.decode(response.bodyBytes));
     return (body['naoLidas'] ?? 0) as int;
@@ -38,6 +38,6 @@ class NotificacaoService {
       Uri.parse(
           '${ApiService.baseUrl}/notificacoes/marcar-todas?usuarioId=$usuarioId'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
   }
 }

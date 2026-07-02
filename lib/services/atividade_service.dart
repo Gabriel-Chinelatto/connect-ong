@@ -15,7 +15,7 @@ class AtividadeService {
   /// dataCriacao desc.
   Future<List<Atividade>> listarRecentes({int limit = 30}) async {
     final response = await http.get(Uri.parse('$_base?limit=$limit'),
-        headers: ApiService.authHeaders());
+        headers: ApiService.authHeaders()).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       final List data = jsonDecode(utf8.decode(response.bodyBytes));
       return data.map((e) => Atividade.fromJson(e)).toList();

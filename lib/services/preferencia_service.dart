@@ -15,7 +15,7 @@ class PreferenciaService {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/preferencias'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar preferências');
     }
@@ -28,7 +28,7 @@ class PreferenciaService {
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/preferencias'),
       headers: ApiService.jsonHeaders(),
       body: jsonEncode(prefs.toJson()),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
       throw Exception('Erro ao salvar preferências');
     }

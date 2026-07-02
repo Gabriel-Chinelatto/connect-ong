@@ -28,7 +28,7 @@ class DenunciaService {
         'motivo': motivo,
         if (descricao != null && descricao.isNotEmpty) 'descricao': descricao,
       }),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Erro ao enviar denuncia');
     }

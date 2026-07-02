@@ -45,12 +45,19 @@ class SessionService {
       return null;
     }
 
-    final usuarioJson =
-        jsonDecode(usuarioString);
+    try {
+      final usuarioJson =
+          jsonDecode(usuarioString);
 
-    return UsuarioLogado.fromJson(
-      usuarioJson,
-    );
+      return UsuarioLogado.fromJson(
+        usuarioJson,
+      );
+    } catch (_) {
+      // Sessão corrompida (JSON inválido/parcial): limpa tudo e força o
+      // fluxo de login em vez de travar o app.
+      await logout();
+      return null;
+    }
   }
 
   Future<void> logout() async {

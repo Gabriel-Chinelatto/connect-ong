@@ -22,10 +22,18 @@ class DoacaoFinanceiraService {
         'doadorId': doadorId,
         'valor': valor,
       }),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200 && response.statusCode != 201) {
-      final body = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(body['erro'] ?? 'Erro ao processar a doação');
+      String msgErro;
+      try {
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        msgErro = (body is Map && body['erro'] != null)
+            ? body['erro'].toString()
+            : 'Erro (HTTP ${response.statusCode})';
+      } catch (_) {
+        msgErro = 'Erro (HTTP ${response.statusCode})';
+      }
+      throw Exception(msgErro);
     }
     return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
   }

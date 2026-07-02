@@ -14,7 +14,7 @@ class PerfilService {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/perfil'),
       headers: ApiService.authHeaders(),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar perfil');
     }
@@ -30,7 +30,7 @@ class PerfilService {
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/perfil'),
       headers: ApiService.jsonHeaders(),
       body: jsonEncode(dados),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
       throw Exception('Erro ao salvar perfil');
     }
@@ -47,10 +47,18 @@ class PerfilService {
       Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/senha'),
       headers: ApiService.jsonHeaders(),
       body: jsonEncode({'senhaAtual': senhaAtual, 'novaSenha': novaSenha}),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
-      final body = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(body['erro'] ?? 'Erro ao alterar senha');
+      String msgErro;
+      try {
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        msgErro = (body is Map && body['erro'] != null)
+            ? body['erro'].toString()
+            : 'Erro (HTTP ${response.statusCode})';
+      } catch (_) {
+        msgErro = 'Erro (HTTP ${response.statusCode})';
+      }
+      throw Exception(msgErro);
     }
   }
 }

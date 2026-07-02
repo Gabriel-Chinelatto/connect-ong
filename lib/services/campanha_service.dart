@@ -15,7 +15,7 @@ class CampanhaService {
   /// Lista as campanhas abertas (nao encerradas).
   Future<List<Campanha>> listarAbertas() async {
     final response = await http.get(Uri.parse('$_base?abertas=true'),
-        headers: ApiService.authHeaders());
+        headers: ApiService.authHeaders()).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       final List data = jsonDecode(utf8.decode(response.bodyBytes));
       return data.map((e) => Campanha.fromJson(e)).toList();
@@ -33,7 +33,7 @@ class CampanhaService {
       Uri.parse('$_base/$campanhaId/contribuir'),
       headers: ApiService.jsonHeaders(),
       body: jsonEncode({'valor': valor, 'doadorNome': doadorNome}),
-    );
+    ).timeout(ApiService.timeout);
     if (response.statusCode == 200) {
       return Campanha.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
     }
