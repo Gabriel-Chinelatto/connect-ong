@@ -12,9 +12,10 @@ class DoacaoService {
 
   static const String baseUrl = ApiService.baseUrl;
 
+  /// Lista as doacoes do PROPRIO doador (o backend filtra pelo token).
   Future<List<Doacao>> listarDoacoes() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/doacoes'),
+      Uri.parse('$baseUrl/doacoes/minhas'),
       headers: ApiService.authHeaders(),
     );
 
