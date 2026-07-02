@@ -55,6 +55,30 @@ class MensagemService {
     }
   }
 
+  // Reage a uma mensagem (POST /mensagens/{id}/reacao). Toggle no backend:
+  // tocar no mesmo codigo remove; codigo diferente troca. `emojiCode` e um
+  // CODIGO (ex.: 'LIKE'), nao o caractere.
+  Future<void> reagir(int mensagemId, String emojiCode) async {
+    final response = await http.post(
+      Uri.parse('${ApiService.baseUrl}/mensagens/$mensagemId/reacao'),
+      headers: ApiService.jsonHeaders(),
+      body: jsonEncode({'emoji': emojiCode}),
+    ).timeout(ApiService.timeout);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      String msgErro;
+      try {
+        final body = jsonDecode(utf8.decode(response.bodyBytes));
+        msgErro = (body is Map && body['erro'] != null)
+            ? body['erro'].toString()
+            : 'Erro (HTTP ${response.statusCode})';
+      } catch (_) {
+        msgErro = 'Erro (HTTP ${response.statusCode})';
+      }
+      throw Exception(msgErro);
+    }
+  }
+
   // Presenca do OUTRO participante (online, ultimoVisto, digitando). Chamar
   // tambem registra a MINHA presenca (heartbeat). Best-effort: NUNCA quebra o
   // chat — em qualquer erro/timeout ou status != 200 devolve um default seguro.

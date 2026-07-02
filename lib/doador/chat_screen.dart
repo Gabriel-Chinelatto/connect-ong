@@ -10,6 +10,27 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/feedback/app_snackbar.dart';
 
+/// Mapa CODIGO -> emoji das reacoes. O backend guarda o codigo (ex.: 'LIKE'),
+/// e a UI mostra o caractere correspondente.
+const Map<String, String> _emojiReacoes = {
+  'LIKE': '👍',
+  'LOVE': '❤️',
+  'LAUGH': '😂',
+  'WOW': '😮',
+  'SAD': '😢',
+  'PRAY': '🙏',
+};
+
+/// Ordem fixa dos codigos exibidos no seletor de reacao.
+const List<String> _codigosReacoes = [
+  'LIKE',
+  'LOVE',
+  'LAUGH',
+  'WOW',
+  'SAD',
+  'PRAY',
+];
+
 /// Tela de chat de um match. Atualiza automaticamente a cada 2 segundos
 /// (polling) — confiavel e funciona em qualquer plataforma.
 ///
@@ -145,6 +166,57 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // Abre o seletor de reacao (bottom sheet) para uma mensagem. Ao tocar num
+  // emoji, fecha o sheet e envia a reacao.
+  void _abrirSeletorReacao(Mensagem m) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetCtx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                for (final codigo in _codigosReacoes)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () {
+                      Navigator.of(sheetCtx).pop();
+                      _reagir(m, codigo);
+                    },
+                    child: Container(
+                      constraints: const BoxConstraints(
+                          minWidth: 44, minHeight: 44),
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        _emojiReacoes[codigo] ?? '',
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Envia a reacao (toggle no backend) e recarrega para refletir o estado.
+  Future<void> _reagir(Mensagem m, String codigo) async {
+    try {
+      await _service.reagir(m.id, codigo);
+      await _carregar();
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
+      }
+    }
+  }
+
   // Texto de presenca exibido abaixo do nome na AppBar. String vazia quando
   // nao ha nada relevante a mostrar.
   String _textoPresenca() {
@@ -163,49 +235,88 @@ class _ChatScreenState extends State<ChatScreen> {
     final minha = m.remetente == widget.meuRemetente;
     return Align(
       alignment: minha ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 320),
-        margin: const EdgeInsets.symmetric(
-            vertical: 4, horizontal: AppSpacing.md),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: minha ? AppColors.primary : cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(minha ? 16 : 4),
-            bottomRight: Radius.circular(minha ? 4 : 16),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              m.conteudo,
-              style: TextStyle(
-                color: minha ? Colors.white : cs.onSurface,
-                height: 1.3,
-              ),
-            ),
-            // Check de "visto" apenas nas MINHAS mensagens.
-            if (minha)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Icon(
-                    m.lida ? Icons.done_all : Icons.check,
-                    size: 14,
-                    color: m.lida
-                        ? Colors.lightBlueAccent
-                        : Colors.white70,
-                  ),
+      child: Column(
+        crossAxisAlignment:
+            minha ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onLongPress: () => _abrirSeletorReacao(m),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 320),
+              margin: const EdgeInsets.symmetric(
+                  vertical: 4, horizontal: AppSpacing.md),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: minha ? AppColors.primary : cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(minha ? 16 : 4),
+                  bottomRight: Radius.circular(minha ? 4 : 16),
                 ),
               ),
-          ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    m.conteudo,
+                    style: TextStyle(
+                      color: minha ? Colors.white : cs.onSurface,
+                      height: 1.3,
+                    ),
+                  ),
+                  // Check de "visto" apenas nas MINHAS mensagens.
+                  if (minha)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Icon(
+                          m.lida ? Icons.done_all : Icons.check,
+                          size: 14,
+                          color: m.lida
+                              ? Colors.lightBlueAccent
+                              : Colors.white70,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          // Chip com as reacoes (emojis), quando houver.
+          if (m.reacoes.isNotEmpty) _chipReacoes(m),
+        ],
+      ),
+    );
+  }
+
+  // Pequeno "chip" com os emojis das reacoes da mensagem. Destaca sutilmente
+  // quando ha uma reacao do MEU lado.
+  Widget _chipReacoes(Mensagem m) {
+    final cs = Theme.of(context).colorScheme;
+    final euReagi =
+        m.reacoes.any((r) => r.lado == widget.meuRemetente);
+    final texto =
+        m.reacoes.map((r) => _emojiReacoes[r.emoji] ?? '').join();
+    return Padding(
+      padding: const EdgeInsets.only(
+          left: AppSpacing.md, right: AppSpacing.md, top: 2, bottom: 2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: euReagi
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+          border: euReagi
+              ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
+              : null,
         ),
+        child: Text(texto, style: const TextStyle(fontSize: 13)),
       ),
     );
   }
