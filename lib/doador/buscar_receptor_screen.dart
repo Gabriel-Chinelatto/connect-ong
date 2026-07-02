@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter_application_1/ong.dart';
 import 'package:flutter_application_1/services/api_service.dart';
@@ -179,7 +178,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                           Expanded(
                             child: Text(
                               ong.nome,
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 color: cs.onSurface,
@@ -232,7 +231,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                               ong.verificada
                                   ? "ONG Verificada"
                                   : "ONG Parceira",
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
@@ -255,7 +254,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                       Text(
                         'Descrição',
 
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
 
                           fontSize: 15,
@@ -269,7 +268,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                       Text(
                         ong.descricao,
 
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 14,
 
                           height: 1.5,
@@ -367,7 +366,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
           Expanded(
               child: Text(text,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 14, color: cs.onSurface))),
         ],
       ),
@@ -391,7 +390,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
         title: Text(
           "Buscar Receptor",
 
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             color: Colors.white,
 
             fontWeight: FontWeight.w600,
@@ -420,7 +419,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
                 Text(
                   "Encontre uma ONG",
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -431,7 +430,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
 
                 Text(
                   "Busque instituições para realizar doações",
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 14,
                     color: Colors.white70,
                   ),
@@ -455,10 +454,10 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                   child: TextField(
                     controller: _searchController,
                     // A caixa de busca e branca (sobre o hero verde); texto escuro.
-                    style: GoogleFonts.poppins(color: AppColors.textPrimary),
+                    style: TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       hintText: "Buscar ONG por nome ou cidade",
-                      hintStyle: GoogleFonts.poppins(color: Colors.grey),
+                      hintStyle: TextStyle(color: Colors.grey),
                       border: InputBorder.none,
                       prefixIcon: const Icon(
                         Icons.search,
@@ -491,7 +490,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                     ),
                     child: Text(
                       "${_resultados.length} ONGs encontradas",
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
@@ -522,7 +521,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   "Nenhuma ONG encontrada",
-                                  style: GoogleFonts.poppins(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                   ),

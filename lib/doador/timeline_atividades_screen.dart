@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../models/atividade.dart';
 import '../services/atividade_service.dart';
@@ -147,7 +146,7 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
               children: [
                 Text(
                   a.descricao,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     height: 1.35,
@@ -158,7 +157,7 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
                   const SizedBox(height: 4),
                   Text(
                     a.ongNome!,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 12,
                       color: AppColors.primary,
                     ),
@@ -168,7 +167,7 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
                   const SizedBox(height: 6),
                   Text(
                     tempo,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                       fontSize: 11,
                       color: cs.onSurfaceVariant,
                     ),

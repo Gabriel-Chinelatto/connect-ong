@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../models/campanha.dart';
 import '../services/campanha_service.dart';
@@ -222,7 +221,7 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
                       const Icon(Icons.star, size: 14, color: AppColors.ouro),
                       const SizedBox(width: 4),
                       Text('Destaque',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: AppColors.ouro)),
@@ -232,7 +231,7 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
               Expanded(
                 child: Text(
                   c.titulo,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurface),
@@ -259,11 +258,11 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
             const SizedBox(height: 2),
             Text(c.ongNome!,
                 style:
-                    GoogleFonts.poppins(fontSize: 13, color: AppColors.primary)),
+                    TextStyle(fontSize: 13, color: AppColors.primary)),
           ],
           const SizedBox(height: 10),
           Text(c.descricao,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                   fontSize: 14, color: cs.onSurfaceVariant, height: 1.4)),
           const SizedBox(height: AppSpacing.md),
           ClipRRect(
@@ -282,12 +281,12 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
             children: [
               Text('R\$ ${c.valorArrecadado.toStringAsFixed(0)} de '
                   'R\$ ${c.metaValor.toStringAsFixed(0)}',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface)),
               Text('${c.progresso}%',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary)),

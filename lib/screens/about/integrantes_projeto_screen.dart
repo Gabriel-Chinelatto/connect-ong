@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Tela que lista os integrantes do projeto (equipe de desenvolvimento).
 ///
@@ -91,7 +90,7 @@ class IntegrantesProjetoScreen
           'Integrantes do Projeto',
 
           style:
-              GoogleFonts.poppins(
+              TextStyle(
 
             fontWeight:
                 FontWeight.w600,
@@ -269,8 +268,7 @@ class IntegrantesProjetoScreen
                                     'nome']!,
 
                                 style:
-                                    GoogleFonts
-                                        .poppins(
+                                    TextStyle(
 
                                   fontSize:
                                       18,
@@ -327,8 +325,7 @@ class IntegrantesProjetoScreen
                                 'descricao']!,
 
                             style:
-                                GoogleFonts
-                                    .poppins(
+                                TextStyle(
 
                               fontSize:
                                   14,

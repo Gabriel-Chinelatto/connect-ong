@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../pages/login_page.dart';
 import '../screens/legal/documentos_legais_screen.dart';
@@ -87,7 +86,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
         Text(
           titulo,
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.w800,
             color: const Color(0xFF1B2B22),
@@ -97,7 +96,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
         Text(
           subtitulo,
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontSize: 16,
             color: Colors.black54,
             height: 1.5,
@@ -138,7 +137,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
               Text(
                 'Conectando quem quer ajudar\na quem precisa',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 40,
                   height: 1.2,
                   fontWeight: FontWeight.w800,
@@ -150,7 +149,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                 'O Connect ONG aproxima doadores e organizações sociais, '
                 'tornando as doações simples, transparentes e cheias de propósito.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 17,
                   height: 1.6,
                   color: Colors.white.withValues(alpha: 0.92),
@@ -171,7 +170,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                           horizontal: 30, vertical: 18),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
-                      textStyle: GoogleFonts.poppins(
+                      textStyle: TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 16),
                     ),
                     icon: const Icon(Icons.login),
@@ -186,7 +185,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                           horizontal: 30, vertical: 18),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
-                      textStyle: GoogleFonts.poppins(
+                      textStyle: TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 16),
                     ),
                     icon: const Icon(Icons.favorite_outline),
@@ -251,7 +250,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
           const SizedBox(height: 12),
           Text(
             numero,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
                 color: AppColors.primary),
@@ -260,7 +259,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
           Text(
             rotulo,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
+            style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
         ],
       ),
@@ -431,14 +430,14 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
           Text(
             nome,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             papel,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 13, color: AppColors.primary),
+            style: TextStyle(fontSize: 13, color: AppColors.primary),
           ),
         ],
       ),
@@ -491,7 +490,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                       iconColor: AppColors.primary,
                       title: Text(
                         e[0],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 15),
                       ),
                       children: [
@@ -499,7 +498,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             e[1],
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                                 color: Colors.black54, height: 1.5),
                           ),
                         ),
@@ -552,7 +551,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle:
-            GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+            TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       );
 
   // ------------------------------------------------------------ RODAPE
@@ -574,7 +573,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                   const SizedBox(width: 10),
                   Text(
                     'Connect ONG',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.w700),
@@ -584,13 +583,13 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
               const SizedBox(height: 12),
               Text(
                 'Projeto Integrador • COTIL / UNICAMP • 2026',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                     color: Colors.white60, fontSize: 13),
               ),
               const SizedBox(height: 6),
               Text(
                 'Feito com 💚 para causar impacto social.',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                     color: Colors.white60, fontSize: 13),
               ),
             ],
@@ -626,7 +625,7 @@ class _AppBarTopo extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     'Connect ONG',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: const Color(0xFF1B2B22)),
@@ -642,7 +641,7 @@ class _AppBarTopo extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
-                  textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  textStyle: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 child: const Text('Entrar'),
               ),
@@ -691,14 +690,14 @@ class _CardValor extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             titulo,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 fontSize: 19, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             texto,
             style:
-                GoogleFonts.poppins(color: Colors.black54, height: 1.55),
+                TextStyle(color: Colors.black54, height: 1.55),
           ),
         ],
       ),
@@ -730,7 +729,7 @@ class _CardPasso extends StatelessWidget {
             backgroundColor: AppColors.primary,
             child: Text(
               numero,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
                   fontSize: 18),
@@ -739,14 +738,14 @@ class _CardPasso extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             titulo,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             texto,
             style:
-                GoogleFonts.poppins(color: Colors.black54, height: 1.55),
+                TextStyle(color: Colors.black54, height: 1.55),
           ),
         ],
       ),
@@ -777,14 +776,14 @@ class _CardOds extends StatelessWidget {
         children: [
           Text(
             'ODS $numero',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 color: Colors.white70,
                 fontSize: 14,
                 fontWeight: FontWeight.w600),
           ),
           Text(
             titulo,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,

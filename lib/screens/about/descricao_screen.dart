@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/common/app_footer.dart';
 
 /// Tela "Sobre o Projeto" do app do doador.
@@ -40,7 +39,7 @@ class DescricaoScreen
           'Sobre o Projeto',
 
           style:
-              GoogleFonts.poppins(
+              TextStyle(
 
             fontWeight:
                 FontWeight.w600,
@@ -128,7 +127,7 @@ class DescricaoScreen
               'Connect Ong',
 
               style:
-                  GoogleFonts.poppins(
+                  TextStyle(
 
                 fontSize: 34,
 
@@ -156,7 +155,7 @@ class DescricaoScreen
                   TextAlign.center,
 
               style:
-                  GoogleFonts.poppins(
+                  TextStyle(
 
                 fontSize: 15,
 
@@ -184,7 +183,7 @@ class DescricaoScreen
                     TextAlign.justify,
 
                 style:
-                    GoogleFonts.poppins(
+                    TextStyle(
 
                   fontSize: 15,
 
@@ -257,7 +256,7 @@ _buildModernCard(
 
         textAlign: TextAlign.justify,
 
-        style: GoogleFonts.poppins(
+        style: TextStyle(
 
           fontSize: 15,
 
@@ -394,8 +393,7 @@ _buildModernCard(
                     'Projeto Integrador',
 
                     style:
-                        GoogleFonts
-                            .poppins(
+                        TextStyle(
 
                       fontSize: 18,
 
@@ -417,8 +415,7 @@ _buildModernCard(
                         TextAlign.center,
 
                     style:
-                        GoogleFonts
-                            .poppins(
+                        TextStyle(
 
                       fontSize: 14,
 
@@ -436,8 +433,7 @@ _buildModernCard(
                     '2026',
 
                     style:
-                        GoogleFonts
-                            .poppins(
+                        TextStyle(
 
                       fontWeight:
                           FontWeight
@@ -570,8 +566,7 @@ const SizedBox(
                   title,
 
                   style:
-                      GoogleFonts
-                          .poppins(
+                      TextStyle(
 
                     fontSize: 19,
 
@@ -652,7 +647,7 @@ const SizedBox(
               text,
 
               style:
-                  GoogleFonts.poppins(
+                  TextStyle(
 
                 fontSize: 15,
 
@@ -751,8 +746,7 @@ const SizedBox(
                   nome,
 
                   style:
-                      GoogleFonts
-                          .poppins(
+                      TextStyle(
 
                     fontWeight:
                         FontWeight
@@ -771,8 +765,7 @@ const SizedBox(
                   cargo,
 
                   style:
-                      GoogleFonts
-                          .poppins(
+                      TextStyle(
 
                     color:
                         Colors.black54,

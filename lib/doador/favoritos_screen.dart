@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../models/favorito.dart';
 import '../services/favorito_service.dart';
@@ -121,7 +120,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> {
         children: [
           Icon(icon, size: 80, color: AppColors.primary.withValues(alpha: 0.4)),
           const SizedBox(height: AppSpacing.md),
-          Text(texto, style: GoogleFonts.poppins(color: cs.onSurfaceVariant)),
+          Text(texto, style: TextStyle(color: cs.onSurfaceVariant)),
         ],
       ),
     );
@@ -152,12 +151,12 @@ class _FavoritosScreenState extends State<FavoritosScreen> {
         ),
         title: Text(
           f.alvoNome,
-          style: GoogleFonts.poppins(
+          style: TextStyle(
               fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface),
         ),
         subtitle: Text(
           isOng ? 'ONG' : 'Campanha',
-          style: GoogleFonts.poppins(fontSize: 12, color: cs.onSurfaceVariant),
+          style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.favorite, color: AppColors.error),

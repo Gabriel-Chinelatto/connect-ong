@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../models/ranking_ong.dart';
 import '../services/ranking_service.dart';
@@ -138,7 +137,7 @@ class _RankingTransparenciaScreenState
               width: 36,
               child: Text(
                 '#$posicao',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: top3 ? 18 : 16,
                   fontWeight: FontWeight.w700,
                   color: top3 ? cor : cs.onSurfaceVariant,
@@ -169,7 +168,7 @@ class _RankingTransparenciaScreenState
                           r.nome,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: cs.onSurface),
@@ -185,7 +184,7 @@ class _RankingTransparenciaScreenState
                   const SizedBox(height: 2),
                   Text(
                     r.cidade,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontSize: 12, color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -198,14 +197,14 @@ class _RankingTransparenciaScreenState
               children: [
                 Text(
                   '${r.score}',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: AppColors.primary),
                 ),
                 Text(
                   _rotuloNivel(r.nivel),
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: cor),

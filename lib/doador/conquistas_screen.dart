@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../models/conquista.dart';
 import '../services/conquista_service.dart';
@@ -142,7 +141,7 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
           const SizedBox(width: AppSpacing.md),
           Text(
             '$desbloqueadas de $total conquistadas',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.primary,
@@ -210,7 +209,7 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: corTitulo,
@@ -222,7 +221,7 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
             textAlign: TextAlign.center,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 11.5,
               height: 1.3,
               color: corDescricao,

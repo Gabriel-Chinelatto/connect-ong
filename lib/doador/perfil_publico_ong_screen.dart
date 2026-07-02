@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../models/perfil_publico_ong.dart';
 import '../services/denuncia_service.dart';
@@ -119,7 +118,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
 
             return AlertDialog(
               title: Text('Denunciar ONG',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontWeight: FontWeight.w700)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +131,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                       for (final e in motivos.entries)
                         DropdownMenuItem(
                           value: e.key,
-                          child: Text(e.value, style: GoogleFonts.poppins()),
+                          child: Text(e.value, style: TextStyle()),
                         ),
                     ],
                     onChanged: enviando
@@ -272,7 +271,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             ),
             alignment: Alignment.center,
             child: Text(inicial,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary)),
@@ -284,7 +283,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               Flexible(
                 child: Text(p.nome,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                         color: Colors.white)),
@@ -303,7 +302,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                   color: Colors.white70, size: 16),
               const SizedBox(width: 4),
               Text(p.cidade,
-                  style: GoogleFonts.poppins(color: Colors.white70)),
+                  style: TextStyle(color: Colors.white70)),
             ],
           ),
           const SizedBox(height: 10),
@@ -350,7 +349,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
           const SizedBox(width: 6),
           Text(
             'Transparencia: ${_rotuloNivel(nivel)} ($score)',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 color: Colors.white,
                 fontSize: 13,
                 fontWeight: FontWeight.w600),
@@ -373,7 +372,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
           total > 0
               ? '${nota.toStringAsFixed(1)} ($total)'
               : 'Sem avaliacoes',
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
+          style: TextStyle(color: Colors.white, fontSize: 13),
         ),
       ],
     );
@@ -388,12 +387,12 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               Icon(icon, color: AppColors.primary, size: 24),
               const SizedBox(height: 6),
               Text('$valor',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 18,
                       color: cs.onSurface)),
               Text(label,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 11, color: cs.onSurfaceVariant)),
             ],
           ),
@@ -435,7 +434,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               Icon(icon, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text(titulo,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
                       color: cs.onSurface)),
@@ -453,7 +452,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     return _secao('Sobre', Icons.info_outline, [
       Text(
         p.descricao.isNotEmpty ? p.descricao : 'Esta ONG ainda nao tem descricao.',
-        style: GoogleFonts.poppins(
+        style: TextStyle(
             fontSize: 14, height: 1.5, color: cs.onSurface),
       ),
     ]);
@@ -469,7 +468,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               const SizedBox(width: 10),
               Expanded(
                   child: Text(texto,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                           fontSize: 13, color: cs.onSurface))),
             ],
           ),
@@ -499,7 +498,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             children: [
               Expanded(
                 child: Text(c.titulo,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                         color: cs.onSurface)),
@@ -513,7 +512,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('Encerrada',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                           fontSize: 11, color: cs.onSurfaceVariant)),
                 ),
             ],
@@ -532,7 +531,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
           Text(
             'R\$ ${c.valorArrecadado.toStringAsFixed(0)} de '
             'R\$ ${c.metaValor.toStringAsFixed(0)} (${c.progresso}%)',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 fontSize: 12, color: cs.onSurfaceVariant),
           ),
         ],
@@ -560,20 +559,20 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(n.titulo,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: cs.onSurface)),
                     if (n.categoria.isNotEmpty)
                       Text(n.categoria,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(
                               fontSize: 12, color: cs.onSurfaceVariant)),
                   ],
                 ),
               ),
               if (n.urgente)
                 Text('Urgente',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontSize: 11,
                         color: AppColors.error,
                         fontWeight: FontWeight.w600)),
@@ -593,14 +592,14 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(pr.titulo,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface)),
               if (pr.descricao.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(pr.descricao,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontSize: 13,
                         color: cs.onSurfaceVariant,
                         height: 1.4)),
@@ -623,7 +622,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               Row(
                 children: [
                   Text(a.doadorNome,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: cs.onSurface)),
@@ -636,7 +635,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               if (a.comentario != null && a.comentario!.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(a.comentario!,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(
                         fontSize: 13,
                         color: cs.onSurfaceVariant,
                         height: 1.4)),

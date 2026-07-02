@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../services/estatistica_service.dart';
 import '../theme/app_colors.dart';
@@ -136,7 +135,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
           Text(
             'Juntos transformamos vidas',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -146,7 +145,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
           Text(
             'O resultado coletivo de cada doacao na plataforma',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
+            style: TextStyle(fontSize: 13, color: Colors.white),
           ),
         ],
       ),
@@ -168,12 +167,12 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
           Icon(Icons.diversity_1, color: AppColors.primary, size: 36),
           const SizedBox(height: AppSpacing.sm),
           _contador(_pessoasAlcancadas,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                   fontSize: 44,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary)),
           Text('pessoas alcancadas (estimativa)',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                   fontSize: 13, color: cs.onSurfaceVariant)),
         ],
       ),
@@ -228,12 +227,12 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
           ),
           const Spacer(),
           _contador(i.valor,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
                   color: cs.onSurface)),
           Text(i.label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                   fontSize: 12, color: cs.onSurfaceVariant)),
         ],
       ),
@@ -259,10 +258,10 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Total doado via PIX',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                           fontSize: 13, color: cs.onSurfaceVariant)),
                   Text('R\$ ${_stats.valorTotalDoado.toStringAsFixed(2)}',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
                           color: AppColors.primary)),
