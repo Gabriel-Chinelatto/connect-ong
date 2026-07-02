@@ -297,6 +297,8 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // Aba do shell: nunca mostra seta de voltar.
+        automaticallyImplyLeading: false,
         title: const Text('Meus Matches'),
         titleTextStyle: TextStyle(
           fontSize: 20,

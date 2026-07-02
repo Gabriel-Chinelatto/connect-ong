@@ -101,6 +101,31 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _logout() async {
+    // Confirmacao antes de sair (evita logout acidental).
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sair da conta?'),
+        content: const Text(
+            'Você vai precisar entrar de novo para continuar ajudando.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
     await _sessionService.logout();
     ConfigController.instance.limpar();
     if (!mounted) return;
@@ -121,6 +146,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        // Aba do shell: nunca mostra seta de voltar. Sair do app so pelo
+        // botao "Sair" (com confirmacao), como nos apps de rede social.
+        automaticallyImplyLeading: false,
         title: const Text('Meu Perfil'),
         titleTextStyle: TextStyle(
           fontSize: 20,

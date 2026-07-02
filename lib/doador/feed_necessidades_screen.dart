@@ -363,6 +363,8 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
     final filtradas = _filtradas;
     return Scaffold(
       appBar: AppBar(
+        // Aba do shell: nunca mostra seta de voltar.
+        automaticallyImplyLeading: false,
         title: const Text('Explorar'),
         titleTextStyle: TextStyle(
           fontSize: 20,

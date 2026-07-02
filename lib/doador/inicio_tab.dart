@@ -110,6 +110,14 @@ class _InicioTabState extends State<InicioTab> {
     return nome.split(' ').first;
   }
 
+  /// Alturas fixas (carrosseis/atalhos) escaladas junto com o tamanho de
+  /// fonte escolhido nas Configurações — evita overflow de pixels quando o
+  /// usuário aumenta a fonte.
+  double _altura(double base) {
+    final fator = MediaQuery.textScalerOf(context).scale(14) / 14;
+    return base * fator.clamp(1.0, 1.6);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -275,7 +283,7 @@ class _InicioTabState extends State<InicioTab> {
           _vazio('Nenhuma campanha ativa no momento.')
         else
           SizedBox(
-            height: 176,
+            height: _altura(176),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _campanhas.length,
@@ -347,7 +355,7 @@ class _InicioTabState extends State<InicioTab> {
           _vazio('Nenhuma necessidade aberta agora.')
         else
           SizedBox(
-            height: 150,
+            height: _altura(150),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _urgentes.length,
@@ -435,7 +443,7 @@ class _InicioTabState extends State<InicioTab> {
           _vazio('Ranking indisponível no momento.')
         else
           SizedBox(
-            height: 132,
+            height: _altura(132),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _ongsDestaque.length,
@@ -622,7 +630,7 @@ class _InicioTabState extends State<InicioTab> {
     ];
 
     return SizedBox(
-      height: 92,
+      height: _altura(98),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: atalhos.length,

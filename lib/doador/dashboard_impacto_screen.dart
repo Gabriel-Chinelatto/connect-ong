@@ -117,6 +117,8 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
+        // Aba do shell: nunca mostra seta de voltar.
+        automaticallyImplyLeading: false,
         title: const Text('Meu Impacto'),
         titleTextStyle: TextStyle(
           fontSize: 20,
