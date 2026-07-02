@@ -4,12 +4,20 @@ import '../models/interesse.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
 import '../services/avaliacao_service.dart';
+
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/feedback/app_snackbar.dart';
+
 import 'chat_screen.dart';
 import 'prestacoes_screen.dart';
 
 /// Lista os interesses do doador e seu status (aguardando/aceito/recusado).
 /// Quando o interesse esta ACEITO (match), libera o acesso ao chat com a ONG e
 /// as prestacoes de contas.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + cores do TEMA (dark mode ok).
 class MeusMatchesScreen extends StatefulWidget {
   const MeusMatchesScreen({super.key});
 
@@ -20,8 +28,6 @@ class MeusMatchesScreen extends StatefulWidget {
 class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
   final InteresseService _interesseService = InteresseService();
   final SessionService _sessionService = SessionService();
-
-  static const Color _verde = Color(0xFF0A8449);
 
   List<Interesse> _matches = [];
   bool _carregando = true;
@@ -53,30 +59,36 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
     }
   }
 
-  // Cor e rotulo por status do interesse.
+  // Cor e rotulo por status do interesse (cores semanticas do tema).
   (Color, String, IconData) _estilo(String status) {
     switch (status) {
       case 'ACEITO':
-        return (_verde, 'Aceito', Icons.check_circle);
+        return (AppColors.success, 'Aceito', Icons.check_circle);
       case 'RECUSADO':
-        return (Colors.red.shade600, 'Recusado', Icons.cancel);
+        return (AppColors.error, 'Recusado', Icons.cancel);
       default:
-        return (Colors.orange.shade700, 'Aguardando', Icons.hourglass_top);
+        return (AppColors.warning, 'Aguardando', Icons.hourglass_top);
     }
   }
 
   Widget _acao(IconData icone, String texto, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icone, size: 14, color: _verde),
-          const SizedBox(width: 4),
-          Text(texto,
-              style: const TextStyle(
-                  color: _verde, fontSize: 12, fontWeight: FontWeight.w600)),
-        ],
+      borderRadius: AppRadius.brSm,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icone, size: 15, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Text(texto,
+                style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }
@@ -127,8 +139,8 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
                 children: List.generate(5, (idx) {
                   return IconButton(
                     icon: Icon(
-                      idx < nota ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
+                      idx < nota ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: AppColors.ouro,
                       size: 32,
                     ),
                     onPressed: () => setStateDialog(() => nota = idx + 1),
@@ -148,7 +160,7 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancelar'),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () async {
                 try {
                   await AvaliacaoService().avaliar(
@@ -160,21 +172,11 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
                   if (!dialogContext.mounted) return;
                   Navigator.pop(dialogContext);
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Avaliação enviada! Obrigado 💚'),
-                      backgroundColor: _verde,
-                    ),
-                  );
+                  AppSnackbar.sucesso(context, 'Avaliação enviada! Obrigado 💚');
                 } catch (e) {
-                  if (!dialogContext.mounted) return;
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(
-                      content:
-                          Text(e.toString().replaceFirst('Exception: ', '')),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  if (!mounted) return;
+                  AppSnackbar.erro(
+                      context, e.toString().replaceFirst('Exception: ', ''));
                 }
               },
               child: const Text('Enviar'),
@@ -189,86 +191,109 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
   }
 
   Widget _card(Interesse i) {
+    final cs = Theme.of(context).colorScheme;
     final (cor, rotulo, icone) = _estilo(i.status);
     final aceito = i.status == 'ACEITO';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: aceito
-            ? () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatScreen(
-                      interesseId: i.id,
-                      meuRemetente: 'DOADOR',
-                      titulo: i.ongNome ?? 'Conversa',
-                    ),
-                  ),
-                );
-              }
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: cor.withValues(alpha: 0.12),
-                child: Icon(icone, color: cor),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      i.necessidadeTitulo ?? 'Necessidade',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      i.ongNome ?? 'ONG',
-                      style: const TextStyle(color: _verde),
-                    ),
-                    if (aceito) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 6,
-                        children: [
-                          _acao(Icons.chat_bubble_outline, 'Conversar',
-                              () => _abrirChat(i)),
-                          _acao(Icons.receipt_long, 'Prestação',
-                              () => _abrirPrestacoes(i)),
-                          _acao(Icons.star_outline, 'Avaliar ONG',
-                              () => _abrirAvaliar(i)),
-                        ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: AppRadius.brLg,
+          onTap: aceito ? () => _abrirChat(i) : null,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: cor.withValues(alpha: 0.12),
+                  child: Icon(icone, color: cor),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        i.necessidadeTitulo ?? 'Necessidade',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            color: cs.onSurface),
                       ),
+                      const SizedBox(height: 2),
+                      Text(
+                        i.ongNome ?? 'ONG',
+                        style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600),
+                      ),
+                      if (aceito) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Wrap(
+                          spacing: AppSpacing.md,
+                          runSpacing: 6,
+                          children: [
+                            _acao(Icons.chat_bubble_outline, 'Conversar',
+                                () => _abrirChat(i)),
+                            _acao(Icons.receipt_long, 'Prestação',
+                                () => _abrirPrestacoes(i)),
+                            _acao(Icons.star_outline, 'Avaliar',
+                                () => _abrirAvaliar(i)),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: cor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  rotulo,
-                  style: TextStyle(color: cor, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
+                const SizedBox(width: AppSpacing.sm),
+                _badgeStatus(cor, rotulo),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _badgeStatus(Color cor, String rotulo) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: cor.withValues(alpha: 0.12),
+        borderRadius: AppRadius.brSm,
+      ),
+      child: Text(
+        rotulo,
+        style: TextStyle(
+            color: cor, fontWeight: FontWeight.w700, fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _vazio() {
+    final cs = Theme.of(context).colorScheme;
+    return ListView(
+      children: [
+        const SizedBox(height: 100),
+        Icon(Icons.handshake_outlined, size: 56, color: cs.outline),
+        const SizedBox(height: AppSpacing.md),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Text(
+            'Você ainda não tem matches.\nVá ao Explorar e encontre uma causa para apoiar!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 
@@ -277,31 +302,21 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus Matches'),
-        backgroundColor: _verde,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _carregar,
+        color: AppColors.primary,
         child: _carregando
             ? const Center(child: CircularProgressIndicator())
             : _matches.isEmpty
-                ? ListView(
-                    children: const [
-                      SizedBox(height: 120),
-                      Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Text(
-                            'Você ainda não demonstrou interesse em nenhuma necessidade.\nVá ao feed e encontre uma causa!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
+                ? _vazio()
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: _matches.length,
                     itemBuilder: (context, i) => _card(_matches[i]),
                   ),

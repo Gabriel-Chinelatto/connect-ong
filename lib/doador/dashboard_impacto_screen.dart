@@ -4,8 +4,14 @@ import '../models/interesse.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+
 /// Painel de impacto do doador: mostra em numeros a participacao dele.
 /// Calculado a partir dos interesses/matches que o app ja carrega.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + cores do TEMA (dark mode ok).
 class DashboardImpactoScreen extends StatefulWidget {
   const DashboardImpactoScreen({super.key});
 
@@ -18,7 +24,9 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
   final InteresseService _interesseService = InteresseService();
   final SessionService _sessionService = SessionService();
 
-  static const Color _verde = Color(0xFF0A8449);
+  // Acentos decorativos dos cartoes (apenas tint de icone).
+  static const Color _acentoAzul = Color(0xFF2563EB);
+  static const Color _acentoRosa = Color(0xFFEC4899);
 
   bool _carregando = true;
   String _nome = '';
@@ -67,18 +75,13 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
   }
 
   Widget _statCard(IconData icone, String numero, String rotulo, Color cor) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,20 +90,22 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: cor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: AppRadius.brMd,
             ),
-            child: Icon(icone, color: cor, size: 26),
+            child: Icon(icone, color: cor, size: 24),
           ),
-          const SizedBox(height: 14),
+          const Spacer(),
           Text(
             numero,
-            style: const TextStyle(
-                fontSize: 30, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: cs.onSurface),
           ),
           const SizedBox(height: 2),
           Text(
             rotulo,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
           ),
         ],
       ),
@@ -109,66 +114,73 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F6F4),
       appBar: AppBar(
         title: const Text('Meu Impacto'),
-        backgroundColor: _verde,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _carregar,
+              color: AppColors.primary,
               child: ListView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
                   Text(
                     'Olá, $_nome 👋',
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Veja o impacto da sua solidariedade:',
-                    style: TextStyle(color: Colors.grey.shade700),
+                    style: TextStyle(color: cs.onSurfaceVariant),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.lg),
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 1.1,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                    childAspectRatio: 1.15,
                     children: [
                       _statCard(Icons.handshake, '$_aceitos',
-                          'Matches realizados', _verde),
+                          'Matches realizados', AppColors.primary),
                       _statCard(Icons.favorite, '$_ongsApoiadas',
-                          'ONGs apoiadas', Colors.pink.shade400),
+                          'ONGs apoiadas', _acentoRosa),
                       _statCard(Icons.send, '$_totalInteresses',
-                          'Interesses enviados', Colors.blue.shade400),
+                          'Interesses enviados', _acentoAzul),
                       _statCard(Icons.hourglass_top, '$_aguardando',
-                          'Aguardando resposta', Colors.orange.shade600),
+                          'Aguardando resposta', AppColors.warning),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.lg),
                   Container(
-                    padding: const EdgeInsets.all(18),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: _verde.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: AppRadius.brLg,
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.volunteer_activism, color: _verde),
-                        const SizedBox(width: 12),
+                        const Icon(Icons.volunteer_activism,
+                            color: AppColors.primary),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Text(
                             _aceitos > 0
                                 ? 'Obrigado por fazer a diferença! Continue conectando com causas.'
                                 : 'Demonstre interesse em uma necessidade e comece a gerar impacto!',
-                            style: const TextStyle(height: 1.4),
+                            style: TextStyle(height: 1.4, color: cs.onSurface),
                           ),
                         ),
                       ],

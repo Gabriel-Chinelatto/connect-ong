@@ -3,10 +3,20 @@ import 'package:flutter/material.dart';
 import '../services/perfil_service.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
+
+import '../config/config_controller.dart';
+import '../pages/login_page.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../utils/page_transition.dart';
+import '../widgets/feedback/app_snackbar.dart';
 
 /// Perfil do doador: edita dados pessoais (nome, telefone, cidade, estado, bio,
 /// foto) e exibe um resumo do impacto (total de matches e ONGs apoiadas).
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + cores do TEMA (dark mode ok)
+/// e botao de sair (logout) movido para ca.
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
 
@@ -105,39 +115,40 @@ class _PerfilScreenState extends State<PerfilScreen> {
       });
       if (!mounted) return;
       setState(() => _salvando = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Perfil atualizado! 💚'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
+      AppSnackbar.sucesso(context, 'Perfil atualizado! 💚');
     } catch (e) {
       if (!mounted) return;
       setState(() => _salvando = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
     }
+  }
+
+  Future<void> _logout() async {
+    await _sessionService.logout();
+    ConfigController.instance.limpar();
+    if (!mounted) return;
+    Navigator.pushReplacement(context, PageTransition.fade(const LoginPage()));
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final iniciais = _nome.text.isNotEmpty ? _nome.text[0].toUpperCase() : '?';
     final foto = _fotoUrl.text.trim();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Perfil'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: cs.onSurface,
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
                 Center(
                   child: CircleAvatar(
@@ -152,32 +163,32 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         : null,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Center(
                   child: Text(_email,
-                      style: TextStyle(color: Colors.grey.shade600)),
+                      style: TextStyle(color: cs.onSurfaceVariant)),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     _statMini('$_matches', 'Matches', Icons.handshake),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: AppSpacing.sm),
                     _statMini('$_ongs', 'ONGs', Icons.favorite),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: AppSpacing.sm),
                     _statMini(_nivel, 'Nível', Icons.star),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.lg),
                 _campo(_nome, 'Nome'),
                 _campo(_telefone, 'Telefone'),
                 _campo(_cidade, 'Cidade'),
                 _campo(_estado, 'Estado'),
                 _campo(_bio, 'Bio', linhas: 3),
                 _campo(_fotoUrl, 'URL da foto (opcional)'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
                 SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
+                  height: 52,
+                  child: FilledButton.icon(
                     onPressed: _salvando ? null : _salvar,
                     icon: _salvando
                         ? const SizedBox(
@@ -187,6 +198,24 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                 color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.save),
                     label: const Text('Salvar'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  onPressed: _logout,
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Sair'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadius.brLg),
                   ),
                 ),
               ],
@@ -195,21 +224,25 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Widget _statMini(String valor, String rotulo, IconData icone) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadius.brLg,
         ),
         child: Column(
           children: [
             Icon(icone, color: AppColors.primary),
             const SizedBox(height: 6),
             Text(valor,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16)),
-            Text(rotulo, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: cs.onSurface)),
+            Text(rotulo,
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12)),
           ],
         ),
       ),
@@ -218,7 +251,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   Widget _campo(TextEditingController c, String label, {int linhas = 1}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: TextField(
         controller: c,
         maxLines: linhas,

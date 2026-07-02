@@ -5,8 +5,15 @@ import 'package:flutter/material.dart';
 import '../models/mensagem.dart';
 import '../services/mensagem_service.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/feedback/app_snackbar.dart';
+
 /// Tela de chat de um match. Atualiza automaticamente a cada 2 segundos
 /// (polling) — confiavel e funciona em qualquer plataforma.
+///
+/// Redesenho (Bloco 21 / Fase 4): design system + cores do TEMA (dark mode ok).
 class ChatScreen extends StatefulWidget {
   final int interesseId;
   final String meuRemetente; // 'DOADOR' neste app
@@ -27,8 +34,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final MensagemService _service = MensagemService();
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
-
-  static const Color _verde = Color(0xFF0A8449);
 
   List<Mensagem> _mensagens = [];
   bool _carregando = true;
@@ -96,12 +101,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await _carregar();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
       }
     } finally {
       if (mounted) setState(() => _enviando = false);
@@ -109,15 +109,18 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _bolha(Mensagem m) {
+    final cs = Theme.of(context).colorScheme;
     final minha = m.remetente == widget.meuRemetente;
     return Align(
       alignment: minha ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 320),
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        margin: const EdgeInsets.symmetric(
+            vertical: 4, horizontal: AppSpacing.md),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: minha ? _verde : Colors.grey.shade200,
+          color: minha ? AppColors.primary : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -128,7 +131,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Text(
           m.conteudo,
           style: TextStyle(
-            color: minha ? Colors.white : Colors.black87,
+            color: minha ? Colors.white : cs.onSurface,
             height: 1.3,
           ),
         ),
@@ -138,11 +141,37 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final inicial =
+        widget.titulo.isNotEmpty ? widget.titulo[0].toUpperCase() : '?';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.titulo),
-        backgroundColor: _verde,
-        foregroundColor: Colors.white,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+              child: Text(
+                inicial,
+                style: const TextStyle(
+                    color: AppColors.primary, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                widget.titulo,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface),
+              ),
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -150,16 +179,18 @@ class _ChatScreenState extends State<ChatScreen> {
             child: _carregando
                 ? const Center(child: CircularProgressIndicator())
                 : _mensagens.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'Nenhuma mensagem ainda.\nDiga olá! 👋',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                          style: TextStyle(
+                              color: cs.onSurfaceVariant, fontSize: 16),
                         ),
                       )
                     : ListView.builder(
                         controller: _scroll,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.md),
                         itemCount: _mensagens.length,
                         itemBuilder: (context, i) => _bolha(_mensagens[i]),
                       ),
@@ -167,7 +198,7 @@ class _ChatScreenState extends State<ChatScreen> {
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               child: Row(
                 children: [
                   Expanded(
@@ -178,21 +209,25 @@ class _ChatScreenState extends State<ChatScreen> {
                       decoration: InputDecoration(
                         hintText: 'Mensagem...',
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: cs.surfaceContainerHighest,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: AppRadius.brXl,
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: AppRadius.brXl,
                           borderSide: BorderSide.none,
                         ),
                       ),
                       onSubmitted: (_) => _enviar(),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: _verde,
+                    backgroundColor: AppColors.primary,
                     child: IconButton(
                       icon: _enviando
                           ? const SizedBox(
