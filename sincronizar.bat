@@ -23,6 +23,12 @@ for %%R in (
   "%USERPROFILE%\Desktop\connect-ong-desktop"
 ) do (
   if exist "%%~R\.git" (
+    REM Guarda o caminho de cada repo (o 1o que existir de cada tipo) para depois
+    REM gerar o settings.local.json automaticamente.
+    if exist "%%~R\.claude\settings.local.json.example" if not defined MOBILE_DIR set "MOBILE_DIR=%%~R"
+    if exist "%%~R\API - Chinelatto - att2" if not defined BACKEND_DIR set "BACKEND_DIR=%%~R"
+    if exist "%%~R\lib\screens\ong" if not defined DESKTOP_DIR set "DESKTOP_DIR=%%~R"
+
     echo --- %%~R
     pushd "%%~R"
 
@@ -60,7 +66,6 @@ for %%R in (
             if "!OK!"=="0" call mvnw.cmd -q -o -DskipTests compile >nul 2>&1 && set "OK=1"
             popd
           ) else (
-            REM repo de tipo desconhecido: nao bloqueia
             set "OK=1"
           )
         )
@@ -76,6 +81,35 @@ for %%R in (
     )
 
     popd
+    echo.
+  )
+)
+
+REM ===== 5) Primeira vez nesta maquina: gera o settings.local.json (config local
+REM do Claude Code) a partir do modelo, com os caminhos REAIS dos repos daqui.
+REM So cria se ainda nao existir (nao sobrescreve o seu).
+if defined MOBILE_DIR (
+  if not exist "!MOBILE_DIR!\.claude\settings.local.json" (
+    echo Gerando .claude\settings.local.json para esta maquina...
+    set "CFG=!MOBILE_DIR!\.claude\settings.local.json"
+    > "!CFG!" echo {
+    >> "!CFG!" echo   "permissions": {
+    >> "!CFG!" echo     "defaultMode": "bypassPermissions",
+    >> "!CFG!" echo     "additionalDirectories": [
+    set "PRIMEIRO=1"
+    if defined BACKEND_DIR (
+      set "P=!BACKEND_DIR:\=\\!"
+      >> "!CFG!" echo       "!P!"
+      set "PRIMEIRO=0"
+    )
+    if defined DESKTOP_DIR (
+      set "P=!DESKTOP_DIR:\=\\!"
+      if "!PRIMEIRO!"=="0" ( >> "!CFG!" echo       ,"!P!" ) else ( >> "!CFG!" echo       "!P!" )
+    )
+    >> "!CFG!" echo     ]
+    >> "!CFG!" echo   }
+    >> "!CFG!" echo }
+    echo   Pronto. Reabra o Claude Code neste repo para ele carregar a config.
     echo.
   )
 )
