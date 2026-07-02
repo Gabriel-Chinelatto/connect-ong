@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../doador/main_shell.dart';
+import '../utils/formatters.dart';
 import '../services/auth_service.dart';
 import '../services/login_service.dart';
 import '../theme/app_colors.dart';
@@ -219,12 +221,16 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
           controller: _nome,
           hint: 'Nome completo',
           icon: Icons.person_outline,
+          maxLength: 80,
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
           controller: _email,
           hint: 'E-mail',
           icon: Icons.email_outlined,
+          keyboardType: TextInputType.emailAddress,
+          maxLength: 120,
         ),
       ],
     );
@@ -242,6 +248,7 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
           hint: 'Senha',
           icon: Icons.lock_outline,
           obscureText: true,
+          maxLength: 60,
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
@@ -249,6 +256,7 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
           hint: 'Confirmar senha',
           icon: Icons.lock_reset_outlined,
           obscureText: true,
+          maxLength: 60,
         ),
       ],
     );
@@ -266,18 +274,29 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
           controller: _cidade,
           hint: 'Cidade',
           icon: Icons.location_city_outlined,
+          maxLength: 60,
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
           controller: _estado,
           hint: 'Estado (UF)',
           icon: Icons.map_outlined,
+          maxLength: 2,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+            UpperCaseTextFormatter(),
+          ],
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
           controller: _telefone,
           hint: 'Telefone (opcional)',
           icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
+          maxLength: 20,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d()\-+ ]')),
+          ],
         ),
       ],
     );

@@ -84,13 +84,22 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> fazerLogin() async {
+    // Validação local antes de gastar um round-trip na API.
+    final email = emailController.text.trim();
+    final senha = senhaController.text.trim();
+    if (email.isEmpty || senha.isEmpty) {
+      AppSnackbar.erro(context, 'Preencha e-mail e senha para entrar.');
+      return;
+    }
+    if (carregando) return; // guarda contra toque duplo
+
     FocusScope.of(context).unfocus();
     setState(() => carregando = true);
 
     try {
       final usuario = await _loginService.fazerLogin(
-        email: emailController.text.trim(),
-        senha: senhaController.text.trim(),
+        email: email,
+        senha: senha,
         tipoSelecionado: 0, // app mobile é exclusivo do doador
       );
 
@@ -276,6 +285,8 @@ class _LoginPageState extends State<LoginPage> {
             controller: emailController,
             hint: 'E-mail',
             icon: Icons.email_outlined,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: AppSpacing.md),
           _campo(
@@ -283,6 +294,8 @@ class _LoginPageState extends State<LoginPage> {
             hint: 'Senha',
             icon: Icons.lock_outline,
             obscure: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => fazerLogin(), // Enter entra
           ),
           const SizedBox(height: AppSpacing.lg),
           AppButton(
@@ -319,10 +332,16 @@ class _LoginPageState extends State<LoginPage> {
     required String hint,
     required IconData icon,
     bool obscure = false,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
   }) {
     return TextField(
       controller: controller,
       obscureText: obscure,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,

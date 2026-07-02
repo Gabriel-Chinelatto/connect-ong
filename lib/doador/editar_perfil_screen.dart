@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/perfil_service.dart';
@@ -9,6 +9,7 @@ import '../services/session_service.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../utils/formatters.dart';
 import '../widgets/feedback/app_snackbar.dart';
 
 /// Edicao dos dados pessoais do doador (nome, telefone, cidade, estado, bio e
@@ -86,6 +87,11 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
 
   Future<void> _salvar() async {
     if (_usuarioId == null) return;
+    // Nome é obrigatório — não deixa salvar em branco por cima do dado real.
+    if (_nome.text.trim().isEmpty) {
+      AppSnackbar.erro(context, 'Informe seu nome.');
+      return;
+    }
     setState(() => _salvando = true);
     try {
       await _perfilService.atualizar(_usuarioId!, {
@@ -175,11 +181,21 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _campo(_nome, 'Nome'),
-                _campo(_telefone, 'Telefone'),
-                _campo(_cidade, 'Cidade'),
-                _campo(_estado, 'Estado'),
-                _campo(_bio, 'Bio', linhas: 3),
+                _campo(_nome, 'Nome', maxLength: 80),
+                _campo(_telefone, 'Telefone',
+                    keyboardType: TextInputType.phone,
+                    maxLength: 20,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d()\-+ ]')),
+                    ]),
+                _campo(_cidade, 'Cidade', maxLength: 60),
+                _campo(_estado, 'Estado (UF)',
+                    maxLength: 2,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+                      UpperCaseTextFormatter(),
+                    ]),
+                _campo(_bio, 'Bio', linhas: 3, maxLength: 200),
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
                   height: 52,
@@ -204,13 +220,26 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     );
   }
 
-  Widget _campo(TextEditingController c, String label, {int linhas = 1}) {
+  Widget _campo(
+    TextEditingController c,
+    String label, {
+    int linhas = 1,
+    int? maxLength,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: TextField(
         controller: c,
         maxLines: linhas,
-        decoration: InputDecoration(labelText: label),
+        maxLength: maxLength,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        decoration: InputDecoration(
+          labelText: label,
+          counterText: '',
+        ),
       ),
     );
   }

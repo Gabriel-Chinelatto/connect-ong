@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../doacao.dart';
 import '../services/doacao_service.dart';
@@ -330,6 +331,9 @@ class _CadastrarDoacaoScreenState
                           'Nome da doação',
                       icon:
                           Icons.favorite,
+                      maxLength: 60,
+                      textInputAction:
+                          TextInputAction.next,
                     ),
 
                     const SizedBox(
@@ -367,6 +371,13 @@ class _CadastrarDoacaoScreenState
                       hint: 'Quantidade',
                       icon:
                           Icons.numbers,
+                      keyboardType:
+                          TextInputType.number,
+                      maxLength: 6,
+                      inputFormatters: [
+                        FilteringTextInputFormatter
+                            .digitsOnly,
+                      ],
                     ),
 
                     const SizedBox(

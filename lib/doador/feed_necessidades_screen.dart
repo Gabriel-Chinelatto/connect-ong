@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/necessidade.dart';
+import '../services/api_service.dart';
 import '../services/necessidade_service.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
@@ -36,7 +37,9 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
 
   List<Necessidade> _necessidades = [];
   final Set<int> _jaInteressado = {}; // ids onde o doador ja clicou
+  final Set<int> _enviandoInteresse = {}; // ids com POST em andamento (anti duplo)
   bool _carregando = true;
+  bool _erroCarga = false;
   int? _doadorId;
 
   String _busca = '';
@@ -51,7 +54,10 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   }
 
   Future<void> _carregar() async {
-    setState(() => _carregando = true);
+    setState(() {
+      _carregando = true;
+      _erroCarga = false;
+    });
     try {
       final usuario = await _sessionService.obterUsuario();
       final lista = await _necessidadeService.listarAbertas();
@@ -71,8 +77,11 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _carregando = false);
-      AppSnackbar.erro(context, 'Erro ao carregar necessidades');
+      // Distingue "sem dados" de "a API caiu": mostra estado de erro com retry.
+      setState(() {
+        _carregando = false;
+        _erroCarga = true;
+      });
     }
   }
 
@@ -81,17 +90,27 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       AppSnackbar.erro(context, 'Você precisa estar logado como doador.');
       return;
     }
+    // Guarda contra toque duplo: marca o id como "enviando" antes do await e
+    // desabilita o botão enquanto o POST não retorna (evita interesse duplicado).
+    if (_enviandoInteresse.contains(n.id) || _jaInteressado.contains(n.id)) {
+      return;
+    }
+    setState(() => _enviandoInteresse.add(n.id));
     try {
       await _interesseService.demonstrarInteresse(
         necessidadeId: n.id,
         doadorId: _doadorId!,
       );
       if (!mounted) return;
-      setState(() => _jaInteressado.add(n.id));
+      setState(() {
+        _enviandoInteresse.remove(n.id);
+        _jaInteressado.add(n.id);
+      });
       AppSnackbar.sucesso(context, 'Interesse enviado! A ONG vai avaliar. 💚');
     } catch (e) {
       if (!mounted) return;
-      AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
+      setState(() => _enviandoInteresse.remove(n.id));
+      AppSnackbar.erro(context, ApiService.mensagemAmigavel(e));
     }
   }
 
@@ -141,6 +160,7 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   Widget _card(Necessidade n) {
     final cs = Theme.of(context).colorScheme;
     final interessado = _jaInteressado.contains(n.id);
+    final enviando = _enviandoInteresse.contains(n.id);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -246,9 +266,17 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                             label: const Text('Enviado'),
                           )
                         : FilledButton.icon(
-                            onPressed: () => _demonstrarInteresse(n),
-                            icon: const Icon(Icons.favorite, size: 18),
-                            label: const Text('Tenho interesse'),
+                            // Desabilita enquanto o POST esta em andamento.
+                            onPressed:
+                                enviando ? null : () => _demonstrarInteresse(n),
+                            icon: enviando
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white))
+                                : const Icon(Icons.favorite, size: 18),
+                            label: Text(enviando ? 'Enviando...' : 'Tenho interesse'),
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -289,12 +317,15 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   }
 
   Widget _vazio(String msg) {
-    // Dentro de um ListView para o pull-to-refresh continuar funcionando.
+    return _vazioWidget(
+        EmptyState(icone: Icons.inbox_outlined, mensagem: msg));
+  }
+
+  // Envolve um EmptyState num ListView para o pull-to-refresh continuar
+  // funcionando (permite puxar para recarregar mesmo sem itens/em erro).
+  Widget _vazioWidget(Widget conteudo) {
     return ListView(
-      children: [
-        const SizedBox(height: 100),
-        EmptyState(icone: Icons.inbox_outlined, mensagem: msg),
-      ],
+      children: [const SizedBox(height: 100), conteudo],
     );
   }
 
@@ -383,15 +414,23 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
               color: AppColors.primary,
               child: _carregando
                   ? const Center(child: CircularProgressIndicator())
-                  : _necessidades.isEmpty
-                      ? _vazio('Nenhuma necessidade aberta no momento.')
-                      : filtradas.isEmpty
-                          ? _vazio('Nenhuma necessidade com esse filtro.')
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              itemCount: filtradas.length,
-                              itemBuilder: (context, i) => _card(filtradas[i]),
-                            ),
+                  : _erroCarga
+                      ? _vazioWidget(const EmptyState(
+                          icone: Icons.cloud_off_outlined,
+                          mensagem: 'Não foi possível carregar',
+                          detalhe: 'Verifique sua conexão e tente novamente.',
+                        ))
+                      : _necessidades.isEmpty
+                          ? _vazio('Nenhuma necessidade aberta no momento.')
+                          : filtradas.isEmpty
+                              ? _vazio('Nenhuma necessidade com esse filtro.')
+                              : ListView.builder(
+                                  padding:
+                                      const EdgeInsets.all(AppSpacing.md),
+                                  itemCount: filtradas.length,
+                                  itemBuilder: (context, i) =>
+                                      _card(filtradas[i]),
+                                ),
             ),
           ),
         ],

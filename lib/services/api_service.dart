@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Infraestrutura central de rede e sessão do app.
@@ -69,4 +73,74 @@ class ApiService {
   static Map<String, String> authHeaders() => {
         if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
       };
+
+  // ---------------------------------------------------------------------------
+  // Camada de rede com TIMEOUT e tradução de erros.
+  //
+  // Todos os serviços devem usar estes wrappers em vez de chamar `http`
+  // diretamente: assim uma rede que "não responde" (ex.: Wi-Fi caindo) falha em
+  // [timeout] segundos em vez de deixar a tela em loading para sempre, e os
+  // erros de rede viram mensagens legíveis em vez de SocketException crua.
+  // ---------------------------------------------------------------------------
+
+  static const Duration timeout = Duration(seconds: 12);
+
+  static Uri _uri(String caminho) => Uri.parse('$baseUrl$caminho');
+
+  static Future<http.Response> get(String caminho, {bool auth = true}) {
+    return _executar(() => http.get(
+          _uri(caminho),
+          headers: auth ? authHeaders() : null,
+        ));
+  }
+
+  static Future<http.Response> post(String caminho, {Object? body}) {
+    return _executar(() => http.post(
+          _uri(caminho),
+          headers: jsonHeaders(),
+          body: body,
+        ));
+  }
+
+  static Future<http.Response> put(String caminho, {Object? body}) {
+    return _executar(() => http.put(
+          _uri(caminho),
+          headers: jsonHeaders(),
+          body: body,
+        ));
+  }
+
+  static Future<http.Response> delete(String caminho) {
+    return _executar(() => http.delete(
+          _uri(caminho),
+          headers: authHeaders(),
+        ));
+  }
+
+  // Aplica o timeout e converte falhas de rede em Exception com mensagem
+  // amigável (as demais respostas HTTP seguem para o serviço tratar o status).
+  static Future<http.Response> _executar(
+      Future<http.Response> Function() acao) async {
+    try {
+      return await acao().timeout(timeout);
+    } on TimeoutException {
+      throw Exception('O servidor demorou a responder. Tente novamente.');
+    } on SocketException {
+      throw Exception('Sem conexão. Verifique sua internet.');
+    } on http.ClientException {
+      throw Exception('Não foi possível conectar ao servidor.');
+    }
+  }
+
+  /// Converte qualquer erro capturado em uma mensagem amigável para o usuário.
+  /// Usar em catches de UI no lugar de expor `e.toString()` cru.
+  static String mensagemAmigavel(Object erro) {
+    if (erro is TimeoutException) {
+      return 'O servidor demorou a responder. Tente novamente.';
+    }
+    if (erro is SocketException || erro is http.ClientException) {
+      return 'Sem conexão. Verifique sua internet.';
+    }
+    return erro.toString().replaceFirst('Exception: ', '');
+  }
 }

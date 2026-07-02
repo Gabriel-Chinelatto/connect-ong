@@ -37,18 +37,26 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
   }
 
   Future<void> _doar() async {
+    if (_enviando) return; // guarda contra toque duplo
     final valor =
         double.tryParse(_valor.text.replaceAll(',', '.').trim()) ?? 0;
-    if (valor <= 0) {
-      AppSnackbar.erro(context, 'Informe um valor válido.');
+    if (valor < 1) {
+      AppSnackbar.erro(context, 'O valor mínimo da doação é R\$ 1,00.');
       return;
     }
+    if (valor > 100000) {
+      AppSnackbar.erro(context, 'Valor muito alto. Confira o valor digitado.');
+      return;
+    }
+    // Marca "enviando" ANTES do primeiro await (fecha a janela de toque duplo).
+    setState(() => _enviando = true);
     final u = await _sessionService.obterUsuario();
     if (u == null) {
-      if (mounted) AppSnackbar.erro(context, 'Você precisa estar logado.');
+      if (!mounted) return;
+      setState(() => _enviando = false);
+      AppSnackbar.erro(context, 'Você precisa estar logado.');
       return;
     }
-    setState(() => _enviando = true);
     try {
       final resp = await _service.doar(
         ongId: widget.ongId,
@@ -113,6 +121,10 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
         TextField(
           controller: _valor,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          // Aceita só dígitos e um separador decimal (até 2 casas).
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d{0,6}[,.]?\d{0,2}')),
+          ],
           decoration: const InputDecoration(
             labelText: 'Valor (R\$)',
             prefixIcon: Icon(Icons.attach_money),
