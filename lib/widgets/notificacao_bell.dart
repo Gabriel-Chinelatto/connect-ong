@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import '../doador/notificacoes_screen.dart';
 import '../services/notificacao_service.dart';
 import '../services/session_service.dart';
+import '../theme/app_colors.dart';
 
 /// Sino de notificacoes com contador de nao-lidas.
+///
+/// Sem [cor] explicita, usa a cor de conteudo do TEMA (funciona no claro e no
+/// escuro). Passe [cor] apenas quando o sino estiver sobre um fundo especial
+/// (ex.: gradiente verde).
 class NotificacaoBell extends StatefulWidget {
-  final Color cor;
+  final Color? cor;
 
-  const NotificacaoBell({super.key, this.cor = Colors.white});
+  const NotificacaoBell({super.key, this.cor});
 
   @override
   State<NotificacaoBell> createState() => _NotificacaoBellState();
@@ -50,7 +55,10 @@ class _NotificacaoBellState extends State<NotificacaoBell> {
       children: [
         IconButton(
           tooltip: 'Notificações',
-          icon: Icon(Icons.notifications_outlined, color: widget.cor),
+          icon: Icon(
+            Icons.notifications_outlined,
+            color: widget.cor ?? Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: _abrir,
         ),
         if (_naoLidas > 0)
@@ -60,7 +68,7 @@ class _NotificacaoBellState extends State<NotificacaoBell> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: const BoxDecoration(
-                color: Colors.red,
+                color: AppColors.error,
                 shape: BoxShape.circle,
               ),
               constraints: const BoxConstraints(minWidth: 18, minHeight: 18),

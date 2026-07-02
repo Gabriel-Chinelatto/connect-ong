@@ -1,65 +1,34 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
+import '../../theme/app_radius.dart';
+
 /// Helper para exibir snackbars padronizados de feedback ao usuario.
 ///
-/// Oferece [sucesso] (verde) e [erro] (vermelho), ambos no estilo flutuante e
-/// arredondado da marca.
+/// Oferece [sucesso] (verde da marca) e [erro] (vermelho semantico), ambos no
+/// estilo flutuante e arredondado da marca. Usa as cores do design system
+/// (AppColors) para manter contraste correto tambem no tema escuro.
 class AppSnackbar {
+  AppSnackbar._();
 
-  static void sucesso(
-    BuildContext context,
-    String mensagem,
-  ) {
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-
-      SnackBar(
-
-        content: Text(
-          mensagem,
-        ),
-
-        backgroundColor:
-            Colors.green,
-
-        behavior:
-            SnackBarBehavior.floating,
-
-        shape: RoundedRectangleBorder(
-
-          borderRadius:
-              BorderRadius.circular(16),
-        ),
-      ),
-    );
+  static void sucesso(BuildContext context, String mensagem) {
+    _mostrar(context, mensagem, AppColors.success);
   }
 
-  static void erro(
-    BuildContext context,
-    String mensagem,
-  ) {
+  static void erro(BuildContext context, String mensagem) {
+    _mostrar(context, mensagem, AppColors.error);
+  }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-
+  static void _mostrar(BuildContext context, String mensagem, Color cor) {
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-
         content: Text(
           mensagem,
+          style: const TextStyle(color: Colors.white),
         ),
-
-        backgroundColor:
-            Colors.redAccent,
-
-        behavior:
-            SnackBarBehavior.floating,
-
-        shape: RoundedRectangleBorder(
-
-          borderRadius:
-              BorderRadius.circular(16),
-        ),
+        backgroundColor: cor,
+        behavior: SnackBarBehavior.floating,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.brMd),
       ),
     );
   }

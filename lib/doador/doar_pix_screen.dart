@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../services/doacao_financeira_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/feedback/app_snackbar.dart';
 
 /// Doacao financeira via PIX para uma ONG especifica (recebida no construtor).
 /// Informa o valor, registra a doacao e exibe o comprovante retornado pela API.
@@ -39,12 +40,12 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
     final valor =
         double.tryParse(_valor.text.replaceAll(',', '.').trim()) ?? 0;
     if (valor <= 0) {
-      _snack('Informe um valor válido.', Colors.red);
+      AppSnackbar.erro(context, 'Informe um valor válido.');
       return;
     }
     final u = await _sessionService.obterUsuario();
     if (u == null) {
-      _snack('Você precisa estar logado.', Colors.red);
+      if (mounted) AppSnackbar.erro(context, 'Você precisa estar logado.');
       return;
     }
     setState(() => _enviando = true);
@@ -62,14 +63,8 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _enviando = false);
-      _snack(e.toString().replaceFirst('Exception: ', ''), Colors.red);
+      AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
     }
-  }
-
-  void _snack(String msg, Color cor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: cor),
-    );
   }
 
   @override
@@ -142,7 +137,9 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
         Text(
           'Doação simulada para fins de demonstração (sem cobrança real).',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -179,7 +176,8 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(codigo,
@@ -191,7 +189,7 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
                   child: TextButton.icon(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: codigo));
-                      _snack('Código copiado!', AppColors.primary);
+                      AppSnackbar.sucesso(context, 'Código copiado!');
                     },
                     icon: const Icon(Icons.copy, size: 18),
                     label: const Text('Copiar código'),
@@ -216,7 +214,9 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade600)),
+          Text(label,
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
           Flexible(
             child: Text(valor,
                 textAlign: TextAlign.right,
