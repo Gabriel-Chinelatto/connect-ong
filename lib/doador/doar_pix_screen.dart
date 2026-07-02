@@ -80,8 +80,11 @@ class _DoarPixScreenState extends State<DoarPixScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Doar para ${widget.ongNome}'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(

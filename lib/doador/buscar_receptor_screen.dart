@@ -464,6 +464,7 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                         color: AppColors.primary,
                       ),
                       suffixIcon: IconButton(
+                        tooltip: 'Buscar',
                         onPressed: _buscarOng,
                         icon: const Icon(
                           Icons.arrow_forward,

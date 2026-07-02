@@ -229,6 +229,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     radius: 24,
                     backgroundColor: AppColors.primary,
                     child: IconButton(
+                      tooltip: 'Enviar mensagem',
                       icon: _enviando
                           ? const SizedBox(
                               width: 18,

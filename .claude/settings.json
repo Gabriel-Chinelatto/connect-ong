@@ -1,9 +1,9 @@
 {
-  "includeCoAuthoredBy": false,
   "attribution": {
     "commit": "",
     "pr": ""
   },
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "Bash(ls:*)",
@@ -51,6 +51,9 @@
       "Read",
       "Glob",
       "Grep"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\01gabriel.MAQCHINELATTO\\IdeaProjects\\connect-ong-api\\API - Chinelatto - att2\\API - Chinelatto\\API - Chinelatto\\src\\main\\java\\com\\example\\connectong_api\\config"
     ]
   }
 }

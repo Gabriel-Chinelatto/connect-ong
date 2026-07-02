@@ -530,23 +530,28 @@ class _InicioTabState extends State<InicioTab> {
     required double largura,
     required Widget child,
     required VoidCallback onTap,
+    String? semantica,
   }) {
     final cs = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: largura,
-      child: Material(
-        color: cs.surface,
-        borderRadius: AppRadius.brLg,
-        child: InkWell(
+    return Semantics(
+      button: true,
+      label: semantica,
+      child: SizedBox(
+        width: largura,
+        child: Material(
+          color: cs.surface,
           borderRadius: AppRadius.brLg,
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              borderRadius: AppRadius.brLg,
-              border: Border.all(color: cs.outlineVariant),
+          child: InkWell(
+            borderRadius: AppRadius.brLg,
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                borderRadius: AppRadius.brLg,
+                border: Border.all(color: cs.outlineVariant),
+              ),
+              child: child,
             ),
-            child: child,
           ),
         ),
       ),
@@ -643,31 +648,39 @@ class _InicioTabState extends State<InicioTab> {
 
   Widget _atalho(IconData icone, String rotulo, VoidCallback onTap) {
     final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadius.brLg,
-      child: SizedBox(
-        width: 76,
-        child: Column(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icone, color: AppColors.primary, size: 26),
+    // Semantics anuncia como botão para leitores de tela (TalkBack/VoiceOver).
+    return Semantics(
+      button: true,
+      label: rotulo,
+      child: Tooltip(
+        message: rotulo,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadius.brLg,
+          child: SizedBox(
+            width: 76,
+            child: Column(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icone, color: AppColors.primary, size: 26),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  rotulo,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              rotulo,
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-            ),
-          ],
+          ),
         ),
       ),
     );
