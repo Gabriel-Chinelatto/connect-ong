@@ -13,6 +13,7 @@
 - [Connect ONG tech guidelines](connect-ong-tech-guidelines.md) — mandatory backend/frontend/DB standards, fixed stack
 - [Git workflow preferences](git-workflow-preferences.md) — **auto-commit + auto-push** em cada checkpoint útil (restore point), sem pedir; no Claude co-authorship; mobile/desktop=main, backend=master
 - [Preferência de idioma](preferencia-idioma.md) — **TODAS as comunicações e artefatos do projeto em PORTUGUÊS** (respostas, commits, comentários, docs, UI)
+- [Preferência de memória p/ Opus](preferencia-memoria-opus.md) — escrever memórias autoexplicativas (porquê + arquivo/commit/rota concretos, sem taquigrafia) p/ outro modelo entender sem o contexto da sessão
 - [Permissões do projeto](permissoes-projeto.md) — usuário NÃO quer prompts de permissão neste projeto; settings.local.json com defaultMode=bypassPermissions
 - [Preferência de gráficos](preferencia-graficos.md) — usar SVG (flutter_svg) / imagens free para itens visuais; autorar SVGs originais nas cores da marca
 - [Notebook FECITEC](connect-ong-notebook-fecitec.md) — **2ª máquina (user `gabri`) que vai p/ a FECITEC**: caminhos dos 3 repos, JDK Corretto 21, Maven fixo, Android SDK, scripts em INICIAR-FECITEC; **RISCO = depende do MySQL remoto da escola** (testar login no evento)
