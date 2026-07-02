@@ -38,4 +38,14 @@ Remodelação profissional do app MOBILE (doador) = Bloco 21 do [[connect-ong-ro
 - Verificação: `flutter analyze` limpo, `flutter test` 8/8, backend `mvnw test` 19/19.
 - **BLOQUEIO**: `flutter build windows` falha — **Modo de Desenvolvedor do Windows desativado** (symlinks p/ plugins). Usuário precisa ativar (`start ms-settings:developers`).
 
-**Pendências do diagnóstico ainda NÃO feitas:** cadastro de doador multi-passo estilo Instagram (não existe signup; precisa endpoint no backend — ver [[connect-ong-deferred]]); imagens/fotos nos cards de necessidades/campanhas/ONGs; busca na aba Início; remoção dos imports diretos de google_fonts (8 telas, redundantes); regra única de transição (fade vs MaterialPageRoute).
+**FASE 7 (2026-07-02, sessão "façamos tudo que falta") — BLOCO 21 CONCLUÍDO:**
+- **Cadastro de doador FEITO**: backend `POST /usuarios/registro` público (BCrypt igual ao login, tipo fixo DOADOR, 201 {id,nome,email,tipo}, erros {erro}, 4 testes MockMvc — commit backend `75a4f4d`, 23 testes) + mobile `pages/cadastro_doador_page.dart` multi-passo (identidade→senha→localização, barra de progresso, auto-login e pushAndRemoveUntil p/ MainShell); link do login ligado.
+- **Capas por categoria FEITO**: `widgets/cards/capa_categoria.dart` (gradiente na cor da categoria + ícone marca d'água + selo URGENTE sólido) nos cards do feed; cor por categoria centralizada em `Categorias.cor` (CategoriaInfo ganhou `cor`).
+- **Busca na Início FEITO**: barra fake que leva à aba Explorar (padrão iFood/Instagram).
+- **GoogleFonts inline removido** (95 usos, 13 telas) → fonte Lexend/dislexia vale em todo o app (commit `0242ccb`).
+- **Correções da auditoria/feedback do usuário**: abas do shell com `automaticallyImplyLeading: false` (na web o portal fica embaixo da pilha e gerava seta que "saía do app"); logout SÓ pelo botão Sair com AlertDialog de confirmação; **`utils/escala.dart` (fatorFonte)** aplicado em TODAS alturas fixas/aspect ratios (carrosséis do Início, grids Impacto/Conquistas/Mural, chips do feed) — corrige os "erros de pixel" (overflow) com fonte grande.
+- Verificação final: analyze limpo, flutter test 8/8, build web release ok, backend 23/23.
+- **Build Windows**: Modo Desenvolvedor OK (chave=1), mas falta **Visual Studio "Desktop development with C++"** (flutter doctor) — instalação de vários GB pendente de decisão do usuário; alternativa = validar desktop no notebook FECITEC.
+- Auditoria por subagentes morreu por limite de sessão; auditoria final foi feita inline (contrato mobile↔API conferido: /categorias idêntico nos dois lados, registro bate campo a campo).
+
+**Backlog pós-Bloco 21 (menor):** upload de imagens reais p/ cards (capa por categoria é o fallback); "Esqueceu a senha?"; onboarding pós-cadastro; regra única de transição fade vs MaterialPageRoute; portal web institucional ainda com cores próprias (fora do escopo mobile).
