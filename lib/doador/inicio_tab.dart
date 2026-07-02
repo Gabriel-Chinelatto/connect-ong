@@ -122,6 +122,8 @@ class _InicioTabState extends State<InicioTab> {
                 AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
             children: [
               _topo(),
+              const SizedBox(height: AppSpacing.md),
+              _barraBusca(),
               const SizedBox(height: AppSpacing.lg),
               _cardImpacto(),
               const SizedBox(height: AppSpacing.lg),
@@ -172,6 +174,33 @@ class _InicioTabState extends State<InicioTab> {
         ),
         const NotificacaoBell(),
       ],
+    );
+  }
+
+  // ---- Barra de busca (leva a aba Explorar, onde a busca de verdade mora) ----
+  Widget _barraBusca() {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => widget.onIrParaAba(1),
+      borderRadius: AppRadius.brXl,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: 14),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: AppRadius.brXl,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search, color: cs.onSurfaceVariant),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Buscar necessidades, ONGs, categorias...',
+              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -341,10 +370,18 @@ class _InicioTabState extends State<InicioTab> {
         children: [
           Row(
             children: [
-              if (n.urgente) ...[
-                _chip('URGENTE', AppColors.error),
-                const SizedBox(width: AppSpacing.xs),
-              ],
+              // Avatar da categoria (icone + cor de acento).
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: Categorias.cor(n.categoria).withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Categorias.icone(n.categoria),
+                    size: 15, color: Categorias.cor(n.categoria)),
+              ),
+              const SizedBox(width: AppSpacing.xs),
               Flexible(
                 child: Text(
                   Categorias.rotulo(n.categoria),
@@ -353,6 +390,8 @@ class _InicioTabState extends State<InicioTab> {
                   style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
                 ),
               ),
+              const Spacer(),
+              if (n.urgente) _chip('URGENTE', AppColors.error),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),

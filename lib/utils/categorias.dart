@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// Uma categoria canonica de doacao/necessidade.
 ///
 /// [valor] e o que trafega e fica armazenado no backend (sem acento, no
 /// plural — igual ao seed e ao GET /categorias da API). [rotulo] e o texto
-/// exibido ao usuario (com acento).
+/// exibido ao usuario (com acento). [cor] e o acento visual da categoria
+/// (capas, chips e avatares).
 class CategoriaInfo {
   final String valor;
   final String rotulo;
   final IconData icone;
+  final Color cor;
 
-  const CategoriaInfo(this.valor, this.rotulo, this.icone);
+  const CategoriaInfo(this.valor, this.rotulo, this.icone, this.cor);
 }
 
 /// Fonte unica de verdade das categorias no mobile (espelha o backend).
@@ -22,12 +26,18 @@ class Categorias {
   Categorias._();
 
   static const List<CategoriaInfo> todas = [
-    CategoriaInfo('Alimentos', 'Alimentos', Icons.restaurant_outlined),
-    CategoriaInfo('Roupas', 'Roupas', Icons.checkroom_outlined),
-    CategoriaInfo('Higiene', 'Higiene', Icons.clean_hands_outlined),
-    CategoriaInfo('Brinquedos', 'Brinquedos', Icons.toys_outlined),
-    CategoriaInfo('Educacao', 'Educação', Icons.school_outlined),
-    CategoriaInfo('Saude', 'Saúde', Icons.health_and_safety_outlined),
+    CategoriaInfo('Alimentos', 'Alimentos', Icons.restaurant_outlined,
+        AppColors.primary),
+    CategoriaInfo(
+        'Roupas', 'Roupas', Icons.checkroom_outlined, AppColors.info),
+    CategoriaInfo('Higiene', 'Higiene', Icons.clean_hands_outlined,
+        Color(0xFF7C3AED)), // roxo de acento
+    CategoriaInfo('Brinquedos', 'Brinquedos', Icons.toys_outlined,
+        Color(0xFFDB2777)), // rosa de acento
+    CategoriaInfo(
+        'Educacao', 'Educação', Icons.school_outlined, AppColors.warning),
+    CategoriaInfo('Saude', 'Saúde', Icons.health_and_safety_outlined,
+        AppColors.error),
   ];
 
   /// Mapeia um valor qualquer para o canonico ("alimento" → "Alimentos").
@@ -47,6 +57,9 @@ class Categorias {
   /// Icone da categoria (fallback generico para valores desconhecidos).
   static IconData icone(String valor) =>
       _busca(valor)?.icone ?? Icons.category_outlined;
+
+  /// Cor de acento da categoria (fallback: verde da marca).
+  static Color cor(String valor) => _busca(valor)?.cor ?? AppColors.primary;
 
   static CategoriaInfo? _busca(String valor) {
     final v = normalizar(valor);

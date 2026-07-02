@@ -64,4 +64,40 @@ class AuthService {
           'Erro ao realizar login',
     );
   }
+
+  /// Cadastro público de doador: `POST /usuarios/registro`.
+  ///
+  /// Em sucesso (201) retorna os dados básicos do usuário criado; em falha
+  /// lança [Exception] com a mensagem de `erro` do backend (email duplicado,
+  /// senha curta, etc.). Depois do registro o app faz o login normal.
+  Future<Map<String, dynamic>> registrar({
+    required String nome,
+    required String email,
+    required String senha,
+    String? telefone,
+    String? cidade,
+    String? estado,
+  }) async {
+    final url = Uri.parse('$baseUrl/usuarios/registro');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nome': nome,
+        'email': email,
+        'senha': senha,
+        if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
+        if (cidade != null && cidade.isNotEmpty) 'cidade': cidade,
+        if (estado != null && estado.isNotEmpty) 'estado': estado,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    }
+
+    final body = jsonDecode(utf8.decode(response.bodyBytes));
+    throw Exception(body['erro'] ?? 'Erro ao criar a conta');
+  }
 }

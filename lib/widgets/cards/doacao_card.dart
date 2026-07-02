@@ -24,30 +24,10 @@ class DoacaoCard extends StatelessWidget {
     this.onExcluir,
   });
 
-  // Cor de acento por categoria (sobre o valor canonico normalizado).
-  Color _corCategoria() {
-    switch (Categorias.normalizar(doacao.categoria)) {
-      case 'Alimentos':
-        return AppColors.primary;
-      case 'Roupas':
-        return AppColors.info;
-      case 'Higiene':
-        return const Color(0xFF7C3AED); // roxo de acento
-      case 'Educacao':
-        return AppColors.warning;
-      case 'Brinquedos':
-        return const Color(0xFFDB2777); // rosa de acento
-      case 'Saude':
-        return AppColors.error;
-      default:
-        return AppColors.primary;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final cor = _corCategoria();
+    final cor = Categorias.cor(doacao.categoria);
     final icone = Categorias.icone(doacao.categoria);
 
     return Container(

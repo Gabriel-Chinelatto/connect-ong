@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/categorias.dart';
+import '../widgets/cards/capa_categoria.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
 
@@ -142,7 +143,7 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      clipBehavior: Clip.antiAlias, // recorta a capa nos cantos arredondados
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: AppRadius.brLg,
@@ -151,11 +152,18 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
+          // Capa visual por categoria (estilo marketplace); o selo URGENTE
+          // fica sobre a capa.
+          CapaCategoria(
+            categoria: n.categoria,
+            selo: n.urgente ? _badgeUrgente() : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   n.titulo,
                   style: TextStyle(
                     fontSize: 17,
@@ -163,117 +171,117 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                     color: cs.onSurface,
                   ),
                 ),
-              ),
-              if (n.urgente) ...[
-                const SizedBox(width: AppSpacing.sm),
-                _badgeUrgente(),
-              ],
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          // ONG + verificada + nota
-          Row(
-            children: [
-              const Icon(Icons.handshake, size: 16, color: AppColors.primary),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  n.ongNome ?? 'ONG',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.w600),
-                ),
-              ),
-              if (n.ongVerificada) ...[
-                const SizedBox(width: 4),
-                const Icon(Icons.verified, size: 15, color: AppColors.primary),
-              ],
-              if (n.ongTotalAvaliacoes > 0) ...[
-                const SizedBox(width: AppSpacing.sm),
-                const Icon(Icons.star_rounded, size: 15, color: AppColors.ouro),
-                const SizedBox(width: 2),
-                Text(
-                  n.ongNotaMedia.toStringAsFixed(1),
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            n.descricao,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: cs.onSurfaceVariant, height: 1.4),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              _chipCategoria(n.categoria),
-              const Spacer(),
-              interessado
-                  ? FilledButton.tonalIcon(
-                      onPressed: null,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Enviado'),
-                    )
-                  : FilledButton.icon(
-                      onPressed: () => _demonstrarInteresse(n),
-                      icon: const Icon(Icons.favorite, size: 18),
-                      label: const Text('Tenho interesse'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
+                const SizedBox(height: AppSpacing.sm),
+                // ONG + verificada + nota
+                Row(
+                  children: [
+                    const Icon(Icons.handshake,
+                        size: 16, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        n.ongNome ?? 'ONG',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
-            ],
+                    if (n.ongVerificada) ...[
+                      const SizedBox(width: 4),
+                      const Icon(Icons.verified,
+                          size: 15, color: AppColors.primary),
+                    ],
+                    if (n.ongTotalAvaliacoes > 0) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      const Icon(Icons.star_rounded,
+                          size: 15, color: AppColors.ouro),
+                      const SizedBox(width: 2),
+                      Text(
+                        n.ongNotaMedia.toStringAsFixed(1),
+                        style: TextStyle(
+                            fontSize: 12, color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  n.descricao,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: cs.onSurfaceVariant, height: 1.4),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    if ((n.ongCidade ?? '').isNotEmpty)
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.location_on_outlined,
+                                size: 15, color: cs.onSurfaceVariant),
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                n.ongCidade!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: cs.onSurfaceVariant),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    interessado
+                        ? FilledButton.tonalIcon(
+                            onPressed: null,
+                            icon: const Icon(Icons.check, size: 18),
+                            label: const Text('Enviado'),
+                          )
+                        : FilledButton.icon(
+                            onPressed: () => _demonstrarInteresse(n),
+                            icon: const Icon(Icons.favorite, size: 18),
+                            label: const Text('Tenho interesse'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
+  // Selo solido (fundo vermelho, texto branco) para ficar legivel SOBRE a
+  // capa colorida da categoria.
   Widget _badgeUrgente() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.12),
+      decoration: const BoxDecoration(
+        color: AppColors.error,
         borderRadius: AppRadius.brSm,
       ),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.priority_high, size: 13, color: AppColors.error),
+          Icon(Icons.priority_high, size: 13, color: Colors.white),
           SizedBox(width: 2),
-          Text('Urgente',
+          Text('URGENTE',
               style: TextStyle(
-                  color: AppColors.error,
+                  color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 11)),
-        ],
-      ),
-    );
-  }
-
-  Widget _chipCategoria(String categoria) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: AppRadius.brSm,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Categorias.icone(categoria),
-              size: 14, color: cs.onSurfaceVariant),
-          const SizedBox(width: 4),
-          Text(
-            Categorias.rotulo(categoria),
-            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
-          ),
         ],
       ),
     );

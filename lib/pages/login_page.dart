@@ -17,6 +17,7 @@ import '../widgets/feedback/app_snackbar.dart';
 
 import '../utils/page_transition.dart';
 import '../web/portal_institucional_screen.dart';
+import 'cadastro_doador_page.dart';
 
 /// Tela de login do doador (porta de entrada do app mobile).
 ///
@@ -291,9 +292,9 @@ class _LoginPageState extends State<LoginPage> {
           ),
           const SizedBox(height: AppSpacing.sm),
           TextButton(
-            onPressed: () => AppSnackbar.sucesso(
+            onPressed: () => Navigator.push(
               context,
-              'Cadastro de doador chega em breve!',
+              PageTransition.fade(const CadastroDoadorPage()),
             ),
             child: const Text('Não tem conta? Cadastre-se'),
           ),
