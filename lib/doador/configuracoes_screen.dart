@@ -142,6 +142,17 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
             onTap: _abrirAlterarSenha,
           ),
 
+          _secao('Apresentação', Icons.storefront_outlined),
+          _switch(
+            'Modo Feira',
+            'Mostra as credenciais de demonstração na tela de login',
+            ConfigController.instance.modoFeira,
+            (v) {
+              ConfigController.instance.definirModoFeira(v);
+              setState(() {});
+            },
+          ),
+
           _secao('Termos e Privacidade', Icons.gavel_outlined),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),

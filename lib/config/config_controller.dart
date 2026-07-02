@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/preferencia.dart';
 import '../services/preferencia_service.dart';
@@ -15,6 +16,38 @@ class ConfigController extends ChangeNotifier {
   int? _usuarioId;
 
   Preferencia get prefs => _prefs;
+
+  // ----- Modo Feira (preferencia LOCAL do aparelho) -----
+  // Flag persistida no SharedPreferences (nao vai para o backend). Quando
+  // ligada, a tela de login exibe as credenciais de demonstracao (util para
+  // apresentacoes, ex.: FECITEC). Padrao: ligada.
+  static const String _modoFeiraKey = 'modo_feira';
+  bool _modoFeira = true;
+
+  bool get modoFeira => _modoFeira;
+
+  /// Carrega a flag do Modo Feira do armazenamento local (chamar no startup).
+  Future<void> carregarModoFeira() async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      _modoFeira = sp.getBool(_modoFeiraKey) ?? true;
+      notifyListeners();
+    } catch (_) {
+      // mantem o padrao (ligado) se falhar ao ler
+    }
+  }
+
+  /// Liga/desliga o Modo Feira e persiste localmente (aplica na hora).
+  Future<void> definirModoFeira(bool valor) async {
+    _modoFeira = valor;
+    notifyListeners();
+    try {
+      final sp = await SharedPreferences.getInstance();
+      await sp.setBool(_modoFeiraKey, valor);
+    } catch (_) {
+      // mantem aplicado em memoria mesmo se o salvar falhar
+    }
+  }
 
   // ----- Derivacoes para o tema -----
   ThemeMode get themeMode {

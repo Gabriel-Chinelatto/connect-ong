@@ -21,6 +21,9 @@ void main() async {
   // Carrega o token JWT salvo para reenviá-lo nas requisições autenticadas.
   await ApiService.carregarToken();
 
+  // Carrega a preferência local "Modo Feira" (credenciais demo no login).
+  await ConfigController.instance.carregarModoFeira();
+
   runApp(
     const MyApp(),
   );

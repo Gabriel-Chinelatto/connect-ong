@@ -39,6 +39,10 @@ class _LoginPageState extends State<LoginPage> {
 
   final LoginService _loginService = LoginService();
 
+  // Credenciais de demonstração exibidas no "Modo Feira" (ex.: FECITEC).
+  static const String _demoEmail = 'demo.joao@connectong.com';
+  static const String _demoSenha = 'demo123';
+
   bool carregando = false;
 
   // Números reais da plataforma (prova social). Opcional: se a API não
@@ -122,6 +126,13 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // Preenche o formulário com as credenciais demo (Modo Feira).
+  void _preencherDemo() {
+    emailController.text = _demoEmail;
+    senhaController.text = _demoSenha;
+    AppSnackbar.sucesso(context, 'Credenciais de demonstração preenchidas.');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,6 +157,10 @@ class _LoginPageState extends State<LoginPage> {
                     _heroi(),
                     const SizedBox(height: AppSpacing.xl),
                     _cardFormulario(),
+                    if (ConfigController.instance.modoFeira) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _cardModoFeira(),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
@@ -323,6 +338,92 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // ---- Card "Modo Feira": credenciais de demonstração (só quando ligado) ----
+  // Discreto, abaixo do formulário. Mostra e-mail/senha demo legíveis e um
+  // botão que preenche os campos. Controlado pela flag local em Configurações.
+  Widget _cardModoFeira() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.92),
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: AppColors.primaryLight, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.storefront_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Modo Feira — acesso de demonstração',
+                  style: const TextStyle(
+                    color: AppColors.primaryDark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _linhaCredencial('E-mail', _demoEmail),
+          const SizedBox(height: AppSpacing.xs),
+          _linhaCredencial('Senha', _demoSenha),
+          const SizedBox(height: AppSpacing.sm),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: _preencherDemo,
+              icon: const Icon(Icons.auto_fix_high, size: 18),
+              label: const Text('Preencher'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Linha "rótulo: valor" com o valor selecionável (texto legível/copiável).
+  Widget _linhaCredencial(String rotulo, String valor) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 56,
+          child: Text(
+            rotulo,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: SelectableText(
+            valor,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
