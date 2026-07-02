@@ -6,10 +6,18 @@ import '../services/interesse_service.dart';
 import '../services/session_service.dart';
 import '../services/perfil_service.dart';
 
-/// Feed das necessidades abertas das ONGs, com filtros (busca, categoria,
-/// urgentes) e priorizacao pela cidade do doador. Hero feature: ao demonstrar
-/// interesse numa necessidade, cria um interesse que a ONG pode aceitar (match),
-/// habilitando o chat.
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/feedback/app_snackbar.dart';
+
+/// Feed das necessidades abertas das ONGs (aba Explorar), com filtros (busca,
+/// categoria, urgentes) e priorizacao pela cidade do doador. Hero feature: ao
+/// demonstrar interesse numa necessidade, cria um interesse que a ONG pode
+/// aceitar (match), habilitando o chat.
+///
+/// Redesenho (Bloco 21 / Fase 4): consome o design system e usa cores do TEMA
+/// (colorScheme), ficando correto no claro e no escuro.
 class FeedNecessidadesScreen extends StatefulWidget {
   const FeedNecessidadesScreen({super.key});
 
@@ -21,8 +29,6 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   final NecessidadeService _necessidadeService = NecessidadeService();
   final InteresseService _interesseService = InteresseService();
   final SessionService _sessionService = SessionService();
-
-  static const Color _verde = Color(0xFF0A8449);
 
   List<Necessidade> _necessidades = [];
   final Set<int> _jaInteressado = {}; // ids onde o doador ja clicou
@@ -62,13 +68,13 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _carregando = false);
-      _snack('Erro ao carregar necessidades', Colors.red.shade400);
+      AppSnackbar.erro(context, 'Erro ao carregar necessidades');
     }
   }
 
   Future<void> _demonstrarInteresse(Necessidade n) async {
     if (_doadorId == null) {
-      _snack('Você precisa estar logado como doador.', Colors.red.shade400);
+      AppSnackbar.erro(context, 'Você precisa estar logado como doador.');
       return;
     }
     try {
@@ -78,22 +84,11 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       );
       if (!mounted) return;
       setState(() => _jaInteressado.add(n.id));
-      _snack('Interesse enviado! A ONG vai avaliar. 💚', _verde);
+      AppSnackbar.sucesso(context, 'Interesse enviado! A ONG vai avaliar. 💚');
     } catch (e) {
       if (!mounted) return;
-      _snack(e.toString().replaceFirst('Exception: ', ''),
-          Colors.orange.shade700);
+      AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
     }
-  }
-
-  void _snack(String msg, Color cor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: cor,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   List<String> get _categorias {
@@ -136,131 +131,155 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   }
 
   Widget _card(Necessidade n) {
+    final cs = Theme.of(context).colorScheme;
     final interessado = _jaInteressado.contains(n.id);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    n.titulo,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  n.titulo,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
                   ),
                 ),
-                if (n.urgente)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.priority_high,
-                            size: 14, color: Colors.red.shade700),
-                        const SizedBox(width: 2),
-                        Text('Urgente',
-                            style: TextStyle(
-                                color: Colors.red.shade700,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12)),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(Icons.handshake, size: 16, color: _verde),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    n.ongNome ?? 'ONG',
-                    style: const TextStyle(
-                        color: _verde, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                if (n.ongVerificada) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.verified, size: 16, color: Colors.blue),
-                ],
-              ],
-            ),
-            if (n.ongTotalAvaliacoes > 0) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.star, size: 14, color: Colors.amber),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${n.ongNotaMedia} (${n.ongTotalAvaliacoes})',
-                    style:
-                        TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ],
               ),
+              if (n.urgente) ...[
+                const SizedBox(width: AppSpacing.sm),
+                _badgeUrgente(),
+              ],
             ],
-            const SizedBox(height: 10),
-            Text(n.descricao,
-                style: TextStyle(color: Colors.grey.shade700, height: 1.4)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(n.categoria,
-                      style: TextStyle(
-                          color: Colors.grey.shade700, fontSize: 12)),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // ONG + verificada + nota
+          Row(
+            children: [
+              const Icon(Icons.handshake, size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  n.ongNome ?? 'ONG',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      color: AppColors.primary, fontWeight: FontWeight.w600),
                 ),
-                const Spacer(),
-                ElevatedButton.icon(
-                  onPressed: interessado ? null : () => _demonstrarInteresse(n),
-                  icon: Icon(interessado ? Icons.check : Icons.favorite,
-                      size: 18),
-                  label: Text(interessado ? 'Interesse enviado' : 'Tenho interesse'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _verde,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey.shade400,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
+              ),
+              if (n.ongVerificada) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.verified, size: 15, color: AppColors.primary),
+              ],
+              if (n.ongTotalAvaliacoes > 0) ...[
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(Icons.star_rounded, size: 15, color: AppColors.ouro),
+                const SizedBox(width: 2),
+                Text(
+                  n.ongNotaMedia.toStringAsFixed(1),
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                 ),
               ],
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            n.descricao,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: cs.onSurfaceVariant, height: 1.4),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              _chipCategoria(n.categoria),
+              const Spacer(),
+              interessado
+                  ? FilledButton.tonalIcon(
+                      onPressed: null,
+                      icon: const Icon(Icons.check, size: 18),
+                      label: const Text('Enviado'),
+                    )
+                  : FilledButton.icon(
+                      onPressed: () => _demonstrarInteresse(n),
+                      icon: const Icon(Icons.favorite, size: 18),
+                      label: const Text('Tenho interesse'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _badgeUrgente() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.12),
+        borderRadius: AppRadius.brSm,
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.priority_high, size: 13, color: AppColors.error),
+          SizedBox(width: 2),
+          Text('Urgente',
+              style: TextStyle(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _chipCategoria(String categoria) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: AppRadius.brSm,
+      ),
+      child: Text(
+        categoria,
+        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
       ),
     );
   }
 
   Widget _vazio(String msg) {
+    final cs = Theme.of(context).colorScheme;
     return ListView(
       children: [
-        const SizedBox(height: 120),
+        const SizedBox(height: 100),
+        Icon(Icons.inbox_outlined, size: 56, color: cs.outline),
+        const SizedBox(height: AppSpacing.md),
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(msg,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Colors.grey)),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
+            ),
           ),
         ),
       ],
@@ -268,8 +287,10 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   }
 
   Widget _barraFiltros() {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
       child: Column(
         children: [
           TextField(
@@ -278,33 +299,39 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
               hintText: 'Buscar por título, ONG ou categoria...',
               prefixIcon: const Icon(Icons.search),
               filled: true,
-              fillColor: Colors.grey.shade100,
+              fillColor: cs.surfaceContainerHighest,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: AppRadius.brXl,
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: AppRadius.brXl,
                 borderSide: BorderSide.none,
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           SizedBox(
-            height: 38,
+            height: 40,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
                 FilterChip(
                   label: const Text('Urgentes'),
                   selected: _soUrgentes,
-                  selectedColor: Colors.red.shade100,
+                  selectedColor: AppColors.error.withValues(alpha: 0.15),
+                  checkmarkColor: AppColors.error,
                   onSelected: (v) => setState(() => _soUrgentes = v),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 ..._categorias.map((c) {
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
                     child: FilterChip(
                       label: Text(c),
                       selected: _categoria == c,
-                      selectedColor: _verde.withValues(alpha: 0.2),
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      checkmarkColor: AppColors.primary,
                       onSelected: (v) =>
                           setState(() => _categoria = v ? c : null),
                     ),
@@ -323,9 +350,12 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
     final filtradas = _filtradas;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Necessidades das ONGs'),
-        backgroundColor: _verde,
-        foregroundColor: Colors.white,
+        title: const Text('Explorar'),
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
       body: Column(
         children: [
@@ -333,6 +363,7 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _carregar,
+              color: AppColors.primary,
               child: _carregando
                   ? const Center(child: CircularProgressIndicator())
                   : _necessidades.isEmpty
@@ -340,7 +371,7 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                       : filtradas.isEmpty
                           ? _vazio('Nenhuma necessidade com esse filtro.')
                           : ListView.builder(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(AppSpacing.md),
                               itemCount: filtradas.length,
                               itemBuilder: (context, i) => _card(filtradas[i]),
                             ),
