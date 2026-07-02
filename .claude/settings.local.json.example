@@ -1,0 +1,10 @@
+{
+  "__comentario__": "MODELO. Copie este arquivo para 'settings.local.json' (na mesma pasta) e ajuste os caminhos ao SEU usuario/maquina. O settings.local.json NAO vai para o git (e machine-specific); este .example VAI, para servir de referencia nos dois PCs. Troque SEU_USUARIO pelo usuario do Windows da maquina (ex.: 01gabriel.MAQCHINELATTO neste PC; gabri no notebook).",
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "C:\\Users\\SEU_USUARIO\\IdeaProjects\\connect-ong-api",
+      "C:\\Users\\SEU_USUARIO\\connect_ong - Desktop"
+    ]
+  }
+}
