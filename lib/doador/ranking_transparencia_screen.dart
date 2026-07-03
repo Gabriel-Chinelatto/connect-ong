@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
+import '../widgets/common/chip_foguinho.dart';
 import '../widgets/feedback/empty_state.dart';
 import 'perfil_publico_ong_screen.dart';
 
@@ -187,6 +188,12 @@ class _RankingTransparenciaScreenState
                     style: TextStyle(
                         fontSize: 12, color: cs.onSurfaceVariant),
                   ),
+                  // Streak 🔥 do atual #1 do ranking (diasNoTopo só vem
+                  // preenchido para a primeira colocada).
+                  if (r.diasNoTopo != null) ...[
+                    const SizedBox(height: 6),
+                    ChipFoguinho(dias: r.diasNoTopo!, compacto: true),
+                  ],
                 ],
               ),
             ),

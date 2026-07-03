@@ -4,9 +4,16 @@ import '../models/notificacao.dart';
 import '../services/notificacao_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import 'main_shell.dart';
 
 /// Lista as notificacoes do doador (mensagens, prestacoes, matches, etc.) e
 /// permite marcar todas como lidas.
+///
+/// Tocar numa notificacao de PRESTACAO leva a aba Matches → Concluídas (onde
+/// vive o botao "Ver prestação de contas"). DECISÃO: o payload da API
+/// (NotificacaoResponseDTO) NÃO traz referência ao interesse/prestação — só
+/// id, titulo, mensagem, tipo, lida e dataCriacao —, então não dá para abrir
+/// a prestação exata; a aba Concluídas é o caminho mais próximo.
 ///
 /// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class NotificacoesScreen extends StatefulWidget {
@@ -67,6 +74,17 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
       default:
         return Icons.notifications;
     }
+  }
+
+  // Notificacao de PRESTACAO → aba Matches / sub-aba Concluídas. Fecha esta
+  // tela (que foi empurrada por cima do shell) e pede a troca de aba pelo
+  // hook global; se o shell nao estiver montado, nao faz nada.
+  void _aoTocar(Notificacao n) {
+    if (n.tipo != 'PRESTACAO') return;
+    final irParaAba = MainShell.irParaAbaGlobal;
+    if (irParaAba == null) return;
+    Navigator.of(context).pop();
+    irParaAba(2, 2); // aba 2 = Matches; sub-aba 2 = Concluídas
   }
 
   @override
@@ -133,6 +151,10 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
                               ? null
                               : const Icon(Icons.circle,
                                   size: 10, color: AppColors.primary),
+                          onTap: n.tipo == 'PRESTACAO' &&
+                                  MainShell.irParaAbaGlobal != null
+                              ? () => _aoTocar(n)
+                              : null,
                         ),
                       );
                     },

@@ -23,6 +23,7 @@ import '../utils/frases_home.dart';
 import '../utils/page_transition.dart';
 import '../widgets/cards/capa_categoria.dart';
 import '../widgets/cards/carrossel_campanhas.dart';
+import '../widgets/common/chip_foguinho.dart';
 import '../widgets/notificacao_bell.dart';
 
 import 'buscar_receptor_screen.dart';
@@ -509,6 +510,12 @@ class _InicioTabState extends State<InicioTab> {
           Row(
             children: [
               _selo(o.nivel),
+              // Foguinho 🔥 no card da ONG que é a atual #1 do ranking.
+              if (o.diasNoTopo != null) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                    child: ChipFoguinho(dias: o.diasNoTopo!, compacto: true)),
+              ],
               const Spacer(),
               if (o.verificada)
                 const Icon(Icons.verified, size: 16, color: AppColors.primary),

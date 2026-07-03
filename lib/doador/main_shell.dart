@@ -18,6 +18,13 @@ import 'perfil_screen.dart';
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
+  /// Hook GLOBAL para telas empurradas por cima do shell (ex.: Notificações)
+  /// pedirem a troca de aba — [aba] do shell e, opcionalmente, a sub-aba dos
+  /// Matches (0=Ativas, 1=Aguardando, 2=Concluídas). Fica null quando o shell
+  /// não está montado (ex.: portal web antes do login); quem chama deve
+  /// tolerar isso (no-op).
+  static void Function(int aba, [int? subAbaMatches])? irParaAbaGlobal;
+
   @override
   State<MainShell> createState() => _MainShellState();
 }
@@ -33,7 +40,16 @@ class _MainShellState extends State<MainShell> {
   final MatchesAbaController _abaMatches = MatchesAbaController();
 
   @override
+  void initState() {
+    super.initState();
+    MainShell.irParaAbaGlobal = _irParaAba;
+  }
+
+  @override
   void dispose() {
+    if (MainShell.irParaAbaGlobal == _irParaAba) {
+      MainShell.irParaAbaGlobal = null;
+    }
     _abaMatches.dispose();
     super.dispose();
   }

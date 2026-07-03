@@ -31,13 +31,14 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
   final _cidade = TextEditingController();
   final _estado = TextEditingController();
   final _bio = TextEditingController();
-  final _fotoUrl = TextEditingController();
 
   int? _usuarioId;
   bool _carregando = true;
   bool _salvando = false;
+  bool _abrindoGaleria = false; // guard anti-duplo-toque no seletor
 
-  // Foto escolhida da galeria (base64) e seus bytes decodificados p/ exibir.
+  // Foto de perfil SEMPRE por arquivo (galeria → base64). Campo de URL foi
+  // removido de vez: o backend recebe/devolve apenas fotoBase64.
   String _fotoBase64 = '';
   Uint8List? _fotoBytes;
 
@@ -54,7 +55,6 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     _cidade.dispose();
     _estado.dispose();
     _bio.dispose();
-    _fotoUrl.dispose();
     super.dispose();
   }
 
@@ -74,7 +74,6 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
         _cidade.text = perfil['cidade'] ?? '';
         _estado.text = perfil['estado'] ?? '';
         _bio.text = perfil['bio'] ?? '';
-        _fotoUrl.text = perfil['fotoUrl'] ?? '';
         _fotoBase64 = perfil['fotoBase64'] ?? '';
         _fotoBytes =
             _fotoBase64.isNotEmpty ? base64Decode(_fotoBase64) : null;
@@ -100,7 +99,6 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
         'cidade': _cidade.text.trim(),
         'estado': _estado.text.trim(),
         'bio': _bio.text.trim(),
-        'fotoUrl': _fotoUrl.text.trim(),
         'fotoBase64': _fotoBase64,
       });
       if (!mounted) return;
@@ -114,28 +112,38 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     }
   }
 
-  // Abre a galeria, escolhe uma imagem (reduzida) e a guarda como base64.
+  // Abre a galeria e guarda a imagem escolhida como base64, com preview
+  // circular imediato. O resize nativo do image_picker (800x800, qualidade
+  // 80) garante arquivo < 2MB — dentro do limite (~2.8MB) do PUT do perfil.
   Future<void> _escolherFoto() async {
-    final XFile? img = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 70,
-    );
-    if (img == null) return;
-    final bytes = await img.readAsBytes();
-    if (!mounted) return;
-    setState(() {
-      _fotoBytes = bytes;
-      _fotoBase64 = base64Encode(bytes);
-    });
+    if (_abrindoGaleria) return; // anti-duplo-toque
+    _abrindoGaleria = true;
+    try {
+      final XFile? img = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+      if (img == null) return;
+      final bytes = await img.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _fotoBytes = bytes;
+        _fotoBase64 = base64Encode(bytes);
+      });
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.erro(context, 'Não foi possível abrir a galeria.');
+      }
+    } finally {
+      _abrindoGaleria = false;
+    }
   }
 
-  // Imagem do avatar: prioriza a foto da galeria (base64); depois a URL antiga.
+  // Imagem do avatar: a foto escolhida/salva (base64) ou nada (mostra inicial).
   ImageProvider? _avatarImagem() {
     if (_fotoBytes != null) return MemoryImage(_fotoBytes!);
-    final url = _fotoUrl.text.trim();
-    if (url.isNotEmpty) return NetworkImage(url);
     return null;
   }
 
@@ -179,7 +187,7 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                       TextButton.icon(
                         onPressed: _escolherFoto,
                         icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                        label: const Text('Trocar foto'),
+                        label: const Text('Alterar foto'),
                       ),
                     ],
                   ),

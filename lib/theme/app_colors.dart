@@ -43,6 +43,13 @@ class AppColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF2563EB);
 
+  // ---- Streak (foguinho do #1 do ranking) ----
+  /// Laranja "fogo" do chip de streak ("Há N dias em 1º lugar").
+  static const Color fogo = Color(0xFFFF6D00);
+
+  /// Tom mais escuro do fogo (gradiente do chip de streak).
+  static const Color fogoEscuro = Color(0xFFE65100);
+
   // ---- Medalhas (transparencia / ranking) ----
   // Centralizadas aqui para eliminar a duplicacao de magic numbers que existia
   // nas telas de ranking e perfil publico.

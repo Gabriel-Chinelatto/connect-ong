@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../services/perfil_service.dart';
 import '../services/interesse_service.dart';
+import '../services/perfil_publico_service.dart';
 import '../services/session_service.dart';
 
 import '../config/config_controller.dart';
@@ -22,6 +23,7 @@ import 'editar_perfil_screen.dart';
 import 'favoritos_screen.dart';
 import 'minhas_doacoes_screen.dart';
 import 'notificacoes_screen.dart';
+import 'perfil_publico_doador_screen.dart';
 
 /// Aba PERFIL do shell do doador — hub da conta (estilo perfil de app de
 /// mercado): avatar + resumo de impacto no topo e, abaixo, o menu com TODAS as
@@ -44,11 +46,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   String _nome = '';
   String _email = '';
-  String _fotoUrl = '';
   Uint8List? _fotoBytes;
 
   int _matches = 0;
   int _ongs = 0;
+
+  int? _usuarioId;
+
+  // Reputação do doador (avaliações que as ONGs fizeram dele). Best-effort:
+  // se o endpoint público falhar, o hub apenas não mostra as estrelas.
+  double _notaMedia = 0;
+  int _totalAvaliacoes = 0;
 
   @override
   void initState() {
@@ -64,17 +72,29 @@ class _PerfilScreenState extends State<PerfilScreen> {
         if (mounted) setState(() => _carregando = false);
         return;
       }
+      _usuarioId = u.id;
       final perfil = await _perfilService.obter(u.id);
       final matches = await _interesseService.meusMatches(u.id);
       final aceitos = matches.where((m) => m.status == 'ACEITO').toList();
+
+      // Nota média do doador (perfil público) — falha sem quebrar o hub.
+      double nota = 0;
+      int totalAval = 0;
+      try {
+        final publico = await PerfilPublicoService().buscarDoador(u.id);
+        nota = publico.notaMediaDoador;
+        totalAval = publico.totalAvaliacoesDoador;
+      } catch (_) {}
+
       if (!mounted) return;
       setState(() {
         _nome = perfil['nome'] ?? '';
         _email = perfil['email'] ?? '';
-        _fotoUrl = perfil['fotoUrl'] ?? '';
         final fotoBase64 = perfil['fotoBase64'] ?? '';
         _fotoBytes =
             fotoBase64.isNotEmpty ? base64Decode(fotoBase64) : null;
+        _notaMedia = nota;
+        _totalAvaliacoes = totalAval;
         _matches = aceitos.length;
         _ongs = aceitos
             .map((m) => m.ongNome)
@@ -94,9 +114,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return 'Iniciante';
   }
 
+  // Foto de perfil SEMPRE por arquivo (fotoBase64); sem foto, mostra inicial.
   ImageProvider? _avatarImagem() {
     if (_fotoBytes != null) return MemoryImage(_fotoBytes!);
-    if (_fotoUrl.trim().isNotEmpty) return NetworkImage(_fotoUrl.trim());
     return null;
   }
 
@@ -179,6 +199,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   _secao('Minha conta', [
                     _item(Icons.edit_outlined, 'Editar perfil',
                         () => _abrir(const EditarPerfilScreen())),
+                    if (_usuarioId != null)
+                      _item(Icons.badge_outlined, 'Ver meu perfil público',
+                          () => _abrir(PerfilPublicoDoadorScreen(
+                              usuarioId: _usuarioId!))),
                     _item(Icons.volunteer_activism_outlined, 'Minhas doações',
                         () => _abrir(const MinhasDoacoesScreen())),
                     _item(Icons.favorite_outline, 'Favoritos',
@@ -258,6 +282,29 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
               ),
+              // Nota média que as ONGs deram a este doador (quando existe).
+              if (_totalAvaliacoes > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(
+                    children: [
+                      for (int i = 0; i < 5; i++)
+                        Icon(
+                          i < _notaMedia.round().clamp(0, 5)
+                              ? Icons.star
+                              : Icons.star_border,
+                          size: 14,
+                          color: AppColors.ouro,
+                        ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_notaMedia.toStringAsFixed(1)} ($_totalAvaliacoes)',
+                        style: TextStyle(
+                            color: cs.onSurfaceVariant, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),

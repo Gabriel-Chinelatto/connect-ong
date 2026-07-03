@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/perfil_publico_ong.dart';
 import '../services/denuncia_service.dart';
@@ -7,13 +10,20 @@ import '../services/perfil_publico_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../utils/app_links.dart';
+import '../widgets/common/chip_foguinho.dart';
+import '../widgets/common/visualizador_imagem.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
 
-/// Pagina publica de uma ONG: avatar, selo de verificacao, nota, sobre,
-/// contato, campanhas, necessidades, avaliacoes e prestacoes de contas.
+/// Pagina publica de uma ONG: capa (quando cadastrada), avatar, selo de
+/// verificacao, nota, streak de 1º lugar, sobre, contato (com endereço +
+/// "Abrir no Maps"), fotos do local, campanhas, necessidades, avaliacoes e
+/// prestacoes de contas.
 ///
 /// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
+/// Perfil rico (feira 2026-07): capa/endereço/fotosLocal/streak — todos os
+/// campos novos são opcionais e degradam graciosamente quando null.
 class PerfilPublicoOngScreen extends StatefulWidget {
   final int ongId;
   final String ongNome;
@@ -34,6 +44,10 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   bool _carregando = true;
   bool _erro = false;
 
+  // Imagens decodificadas UMA vez ao carregar (evita decode a cada frame).
+  Uint8List? _capaBytes;
+  List<Uint8List> _fotosLocalBytes = [];
+
   @override
   void initState() {
     super.initState();
@@ -47,9 +61,26 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     });
     try {
       final p = await _service.buscar(widget.ongId);
+
+      // Decodifica capa e fotos do local; base64 inválido é só ignorado.
+      Uint8List? capa;
+      if ((p.capaBase64 ?? '').isNotEmpty) {
+        try {
+          capa = base64Decode(p.capaBase64!);
+        } catch (_) {}
+      }
+      final fotos = <Uint8List>[];
+      for (final f in p.fotosLocal) {
+        try {
+          fotos.add(base64Decode(f));
+        } catch (_) {}
+      }
+
       if (!mounted) return;
       setState(() {
         _perfil = p;
+        _capaBytes = capa;
+        _fotosLocalBytes = fotos;
         _carregando = false;
       });
     } catch (_) {
@@ -61,18 +92,33 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     }
   }
 
+  // Compartilhar = LINK público do perfil (o app web abre /#/ong/<id>).
   void _compartilhar() {
     final p = _perfil;
     if (p == null) return;
-    final texto = StringBuffer()
-      ..writeln(p.nome + (p.verificada ? ' (ONG Verificada)' : ''))
-      ..writeln('Cidade: ${p.cidade}')
-      ..writeln(p.descricao)
-      ..writeln(
-          'Avaliacao: ${p.notaMedia.toStringAsFixed(1)} (${p.totalAvaliacoes} avaliacoes)')
-      ..writeln('Conheca no Connect ONG.');
-    Clipboard.setData(ClipboardData(text: texto.toString()));
-    AppSnackbar.sucesso(context, 'Perfil copiado para compartilhar!');
+    Clipboard.setData(ClipboardData(text: linkPerfilOng(p.id)));
+    AppSnackbar.sucesso(context, 'Link copiado!');
+  }
+
+  // Abre o endereço da ONG no Google Maps (busca por endereço + cidade).
+  Future<void> _abrirNoMaps(PerfilPublicoOng p) async {
+    final consulta = [
+      if ((p.endereco ?? '').trim().isNotEmpty) p.endereco!.trim(),
+      if (p.cidade.trim().isNotEmpty) p.cidade.trim(),
+    ].join(', ');
+    if (consulta.isEmpty) return;
+    final uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(consulta)}');
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        AppSnackbar.erro(context, 'Não foi possível abrir o Maps.');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.erro(context, 'Não foi possível abrir o Maps.');
+      }
+    }
   }
 
   // Abre o dialog de denuncia da ONG.
@@ -184,7 +230,9 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.ongNome),
+        // Usa o nome carregado da API quando o chamador só tinha um
+        // placeholder (ex.: link compartilhado /#/ong/<id> na web).
+        title: Text(_perfil?.nome ?? widget.ongNome),
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -214,9 +262,13 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                     physics: const BouncingScrollPhysics(),
                     children: [
                       _cabecalho(_perfil!),
+                      if (_perfil!.diasNoTopo == null &&
+                          (_perfil!.ultimoReinadoDias ?? 0) > 0)
+                        _linhaUltimoReinado(_perfil!.ultimoReinadoDias!),
                       _statsRow(_perfil!),
                       _secaoSobre(_perfil!),
                       _secaoContato(_perfil!),
+                      if (_fotosLocalBytes.isNotEmpty) _secaoFotosLocal(),
                       if (_perfil!.campanhas.isNotEmpty)
                         _secaoCampanhas(_perfil!),
                       if (_perfil!.necessidades.isNotEmpty)
@@ -241,18 +293,35 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     );
   }
 
-  // ---------- Cabecalho com avatar de inicial + selo + nota ----------
+  // ---------- Cabecalho: capa (se houver) ou gradiente verde ----------
+  //
+  // Com capa cadastrada, ela vira o fundo (cover) com um gradiente escuro
+  // por cima para o nome/selo continuarem legíveis. Sem capa, mantém o
+  // header verde original.
   Widget _cabecalho(PerfilPublicoOng p) {
     final inicial = p.nome.isNotEmpty ? p.nome[0].toUpperCase() : '?';
+    final temCapa = _capaBytes != null;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        image: temCapa
+            ? DecorationImage(
+                image: MemoryImage(_capaBytes!),
+                fit: BoxFit.cover,
+                // Escurece a CAPA (não o conteúdo) para o texto branco do
+                // header continuar legível sobre qualquer foto.
+                colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.45), BlendMode.darken),
+              )
+            : null,
+        gradient: temCapa
+            ? null
+            : const LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
       ),
       child: Column(
         children: [
@@ -309,6 +378,34 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
           _estrelas(p.notaMedia, p.totalAvaliacoes),
           const SizedBox(height: 10),
           _pillTransparencia(p.nivelTransparencia, p.transparenciaScore),
+          // Streak 🔥: presente apenas quando a ONG é a ATUAL #1 do ranking.
+          if (p.diasNoTopo != null) ...[
+            const SizedBox(height: 10),
+            ChipFoguinho(dias: p.diasNoTopo!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Linha discreta para ONGs que JÁ foram #1 e saíram do topo.
+  Widget _linhaUltimoReinado(int dias) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('🔥', style: TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              'Já ficou $dias ${dias == 1 ? "dia" : "dias"} em 1º lugar no '
+              'ranking de transparência',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+          ),
         ],
       ),
     );
@@ -473,11 +570,63 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             ],
           ),
         );
+    final temEndereco = (p.endereco ?? '').trim().isNotEmpty;
     return _secao('Contato', Icons.contact_mail_outlined, [
       linha(Icons.email_outlined, p.email),
       linha(Icons.phone_outlined, p.telefone),
       if (p.cnpj != null && p.cnpj!.isNotEmpty)
         linha(Icons.badge_outlined, 'CNPJ: ${p.cnpj}'),
+      if (temEndereco) ...[
+        linha(Icons.place_outlined, p.endereco!.trim()),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => _abrirNoMaps(p),
+            icon: const Icon(Icons.map_outlined, size: 18),
+            label: const Text('Abrir no Maps'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+          ),
+        ),
+      ],
+    ]);
+  }
+
+  // ---------- Fotos do local (galeria horizontal + tela cheia) ----------
+  Widget _secaoFotosLocal() {
+    return _secao('Fotos do local', Icons.photo_library_outlined, [
+      SizedBox(
+        height: 110,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: _fotosLocalBytes.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 10),
+          itemBuilder: (_, i) {
+            final bytes = _fotosLocalBytes[i];
+            return Semantics(
+              button: true,
+              label: 'Foto ${i + 1} do local, toque para ampliar',
+              child: InkWell(
+                borderRadius: AppRadius.brMd,
+                onTap: () => VisualizadorImagem.abrir(
+                  context,
+                  bytes,
+                  titulo: 'Foto do local',
+                ),
+                child: ClipRRect(
+                  borderRadius: AppRadius.brMd,
+                  child: Image.memory(
+                    bytes,
+                    width: 140,
+                    height: 110,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     ]);
   }
 

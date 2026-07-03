@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../models/prestacao.dart';
@@ -5,9 +8,14 @@ import '../services/prestacao_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/formatters.dart';
+import '../utils/tempo.dart';
+import '../widgets/common/visualizador_imagem.dart';
 
-/// Exibe as prestacoes de contas de uma ONG referentes a um match (interesseId),
-/// mostrando como a doacao foi aplicada, com texto e foto comprovante.
+/// Exibe as prestacoes de contas de uma ONG referentes a um match
+/// (interesseId): titulo, relato, ONG, necessidade, data, valor utilizado em
+/// R$ (quando informado) e o carrossel das fotos comprovante (tap → tela
+/// cheia). Campos ausentes em prestacoes antigas sao simplesmente omitidos.
 ///
 /// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
 class PrestacoesScreen extends StatefulWidget {
@@ -30,6 +38,10 @@ class _PrestacoesScreenState extends State<PrestacoesScreen> {
   List<Prestacao> _itens = [];
   bool _carregando = true;
 
+  // Fotos (base64) decodificadas UMA vez por prestacao, na carga — evita
+  // decodificar a cada rebuild da lista.
+  final Map<int, List<Uint8List>> _fotosPorPrestacao = {};
+
   @override
   void initState() {
     super.initState();
@@ -40,9 +52,24 @@ class _PrestacoesScreenState extends State<PrestacoesScreen> {
     setState(() => _carregando = true);
     try {
       final lista = await _service.listar(widget.interesseId);
+      final fotos = <int, List<Uint8List>>{};
+      for (final p in lista) {
+        final decodificadas = <Uint8List>[];
+        for (final f in p.fotos) {
+          try {
+            decodificadas.add(base64Decode(f));
+          } catch (_) {
+            // base64 corrompido: ignora só esta foto.
+          }
+        }
+        fotos[p.id] = decodificadas;
+      }
       if (!mounted) return;
       setState(() {
         _itens = lista;
+        _fotosPorPrestacao
+          ..clear()
+          ..addAll(fotos);
         _carregando = false;
       });
     } catch (e) {
@@ -52,7 +79,8 @@ class _PrestacoesScreenState extends State<PrestacoesScreen> {
 
   Widget _card(Prestacao p) {
     final cs = Theme.of(context).colorScheme;
-    final temFoto = (p.fotoUrl ?? '').trim().isNotEmpty;
+    final temFotoLegado = (p.fotoUrl ?? '').trim().isNotEmpty;
+    final fotos = _fotosPorPrestacao[p.id] ?? const <Uint8List>[];
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
@@ -64,7 +92,8 @@ class _PrestacoesScreenState extends State<PrestacoesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (temFoto)
+          // Legado: prestacoes antigas com foto unica por URL.
+          if (fotos.isEmpty && temFotoLegado)
             Image.network(
               p.fotoUrl!.trim(),
               height: 180,
@@ -93,16 +122,99 @@ class _PrestacoesScreenState extends State<PrestacoesScreen> {
                     ),
                   ],
                 ),
+                // ONG · necessidade (quando o backend informa).
+                if ((p.ongNome ?? '').isNotEmpty ||
+                    (p.necessidadeTitulo ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    [
+                      if ((p.ongNome ?? '').isNotEmpty) p.ongNome!,
+                      if ((p.necessidadeTitulo ?? '').isNotEmpty)
+                        p.necessidadeTitulo!,
+                    ].join(' · '),
+                    style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
                 if (p.descricao.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.sm),
                   Text(p.descricao,
                       style:
                           TextStyle(color: cs.onSurfaceVariant, height: 1.4)),
                 ],
-                if (p.dataCriacao != null) ...[
+                // Valor utilizado em R$ (quando a ONG informou).
+                if (p.valorUtilizado != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.10),
+                      borderRadius: AppRadius.brSm,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.payments_outlined,
+                            size: 16, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Valor utilizado: '
+                            '${formatarReais(p.valorUtilizado!)}',
+                            style: const TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // Carrossel das fotos comprovante (tap → tela cheia).
+                if (fotos.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    height: 110,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: fotos.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(width: AppSpacing.sm),
+                      itemBuilder: (_, i) => Semantics(
+                        button: true,
+                        label:
+                            'Foto ${i + 1} da prestação, toque para ampliar',
+                        child: InkWell(
+                          borderRadius: AppRadius.brMd,
+                          onTap: () => VisualizadorImagem.abrir(
+                            context,
+                            fotos[i],
+                            titulo: p.titulo,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: AppRadius.brMd,
+                            child: Image.memory(
+                              fotos[i],
+                              width: 140,
+                              height: 110,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (dataCurtaDeIso(p.dataCriacao).isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    p.dataCriacao!.split('T').first,
+                    dataCurtaDeIso(p.dataCriacao),
                     style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
                   ),
                 ],

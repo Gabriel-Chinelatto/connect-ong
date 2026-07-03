@@ -19,6 +19,7 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.3
   image_picker: ^1.1.2
+  url_launcher: ^6.3.2
 
   # Biblioteca para fazer requisições HTTP para sua API
 

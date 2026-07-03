@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/mensagem.dart';
 import '../services/mensagem_service.dart';
@@ -8,6 +11,8 @@ import '../services/mensagem_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/tempo.dart';
+import '../widgets/common/visualizador_imagem.dart';
 import '../widgets/feedback/app_snackbar.dart';
 
 /// Mapa CODIGO -> emoji das reacoes. O backend guarda o codigo (ex.: 'LIKE'),
@@ -61,9 +66,21 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _enviando = false;
   Timer? _timer;
 
-  // Presenca do OUTRO participante (best-effort, sem spinner/erro).
+  // Anexo de imagem PENDENTE (escolhido, ainda nao enviado) + guard do picker.
+  Uint8List? _anexoBytes;
+  String? _anexoBase64;
+  bool _abrindoGaleria = false;
+
+  // Cache dos anexos recebidos ja decodificados (por id da mensagem) — o
+  // polling de 2s reconstroi a lista o tempo todo; sem cache, cada rebuild
+  // decodificaria base64 de novo.
+  final Map<int, Uint8List> _cacheAnexos = {};
+
+  // Presenca do OUTRO participante (best-effort, sem spinner/erro). Usa os
+  // campos NOVOS do backend: `online` calculado no servidor e
+  // `ultimoVistoEpoch` em millis UTC (a prova de fuso).
   bool _online = false;
-  String? _ultimoVisto;
+  int? _ultimoVistoEpoch;
   bool _digitando = false;
 
   // Throttle do heartbeat de digitacao: no maximo 1 envio a cada 2s.
@@ -115,7 +132,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!mounted) return;
     setState(() {
       _online = (status['online'] ?? false) as bool;
-      _ultimoVisto = status['ultimoVisto'] as String?;
+      _ultimoVistoEpoch = (status['ultimoVistoEpoch'] as num?)?.toInt();
       _digitando = (status['digitando'] ?? false) as bool;
     });
   }
@@ -147,15 +164,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _enviar() async {
     final texto = _controller.text.trim();
-    if (texto.isEmpty) return;
+    final anexo = _anexoBase64;
+    // Pode enviar SO texto, SO imagem, ou os dois — mas nunca nada.
+    if (texto.isEmpty && (anexo == null || anexo.isEmpty)) return;
+    if (_enviando) return; // guard anti-duplo-toque
     setState(() => _enviando = true);
     try {
       await _service.enviar(
         interesseId: widget.interesseId,
         remetente: widget.meuRemetente,
         conteudo: texto,
+        anexoBase64: anexo,
       );
       _controller.clear();
+      if (mounted) {
+        setState(() {
+          _anexoBytes = null;
+          _anexoBase64 = null;
+        });
+      }
       await _carregar();
     } catch (e) {
       if (mounted) {
@@ -163,6 +190,48 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } finally {
       if (mounted) setState(() => _enviando = false);
+    }
+  }
+
+  // Escolhe uma imagem da galeria para anexar (com resize nativo 800x800
+  // qualidade 80 — mesmo limite da foto de perfil, garante < 2MB).
+  Future<void> _escolherAnexo() async {
+    if (_abrindoGaleria) return; // anti-duplo-toque
+    _abrindoGaleria = true;
+    try {
+      final XFile? img = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+      if (img == null) return;
+      final bytes = await img.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _anexoBytes = bytes;
+        _anexoBase64 = base64Encode(bytes);
+      });
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.erro(context, 'Não foi possível abrir a galeria.');
+      }
+    } finally {
+      _abrindoGaleria = false;
+    }
+  }
+
+  // Bytes do anexo de uma mensagem recebida/enviada (decodifica 1x e cacheia).
+  Uint8List? _bytesDoAnexo(Mensagem m) {
+    if (!m.temImagem) return null;
+    final emCache = _cacheAnexos[m.id];
+    if (emCache != null) return emCache;
+    try {
+      final bytes = base64Decode(m.anexoBase64!);
+      _cacheAnexos[m.id] = bytes;
+      return bytes;
+    } catch (_) {
+      return null; // base64 corrompido: mostra so o texto
     }
   }
 
@@ -217,17 +286,14 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Texto de presenca exibido abaixo do nome na AppBar. String vazia quando
+  // Texto de presenca exibido abaixo do nome na AppBar (4 faixas: online /
+  // hoje / ontem / mais antigo — ver utils/tempo.dart). String vazia quando
   // nao ha nada relevante a mostrar.
   String _textoPresenca() {
-    if (_online) return 'online';
-    if (_ultimoVisto != null) {
-      final dt = DateTime.parse(_ultimoVisto!).toLocal();
-      final hh = dt.hour.toString().padLeft(2, '0');
-      final mm = dt.minute.toString().padLeft(2, '0');
-      return 'visto por último às $hh:$mm';
-    }
-    return '';
+    return textoVistoPorUltimo(
+      online: _online,
+      ultimoVisto: dataLocalDeEpoch(_ultimoVistoEpoch),
+    );
   }
 
   Widget _bolha(Mensagem m) {
@@ -261,13 +327,39 @@ class _ChatScreenState extends State<ChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    m.conteudo,
-                    style: TextStyle(
-                      color: minha ? Colors.white : cs.onSurface,
-                      height: 1.3,
+                  // Anexo de imagem (arredondado, ~60% da largura da tela,
+                  // tap → tela cheia).
+                  if (_bytesDoAnexo(m) != null) ...[
+                    GestureDetector(
+                      onTap: () => VisualizadorImagem.abrir(
+                          context, _bytesDoAnexo(m)!),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth:
+                                MediaQuery.of(context).size.width * 0.6,
+                            maxHeight: 260,
+                          ),
+                          child: Image.memory(
+                            _bytesDoAnexo(m)!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) =>
+                                const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    if (m.conteudo.isNotEmpty) const SizedBox(height: 6),
+                  ],
+                  if (m.conteudo.isNotEmpty)
+                    Text(
+                      m.conteudo,
+                      style: TextStyle(
+                        color: minha ? Colors.white : cs.onSurface,
+                        height: 1.3,
+                      ),
+                    ),
                   // Check de "visto" apenas nas MINHAS mensagens.
                   if (minha)
                     Padding(
@@ -402,12 +494,59 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemBuilder: (context, i) => _bolha(_mensagens[i]),
                       ),
           ),
+          // Preview do anexo pendente (escolhido e ainda nao enviado), com
+          // botao para remover antes de enviar.
+          if (_anexoBytes != null)
+            Container(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.xs, AppSpacing.md, 0),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ClipRRect(
+                    borderRadius: AppRadius.brMd,
+                    child: Image.memory(
+                      _anexoBytes!,
+                      width: 88,
+                      height: 88,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: -8,
+                    right: -8,
+                    child: IconButton(
+                      tooltip: 'Remover anexo',
+                      visualDensity: VisualDensity.compact,
+                      style: IconButton.styleFrom(
+                        backgroundColor: cs.surfaceContainerHighest,
+                      ),
+                      icon: Icon(Icons.close,
+                          size: 16, color: cs.onSurface),
+                      onPressed: _enviando
+                          ? null
+                          : () => setState(() {
+                                _anexoBytes = null;
+                                _anexoBase64 = null;
+                              }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           SafeArea(
             top: false,
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: Row(
                 children: [
+                  IconButton(
+                    tooltip: 'Anexar imagem',
+                    onPressed: _enviando ? null : _escolherAnexo,
+                    icon: Icon(Icons.image_outlined,
+                        color: AppColors.primary),
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _controller,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 
 import 'doador/main_shell.dart';
+import 'doador/perfil_publico_ong_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/session_service.dart';
 import 'services/api_service.dart';
@@ -68,15 +69,53 @@ class MyApp extends StatelessWidget {
               child: child!,
             );
           },
-          // Na web, a entrada e o portal institucional publico; no mobile
-          // (app do doador), segue direto para o fluxo de login/sessao.
-          home: kIsWeb
-              ? const PortalInstitucionalScreen()
-              : const SplashDecider(),
+          // Na web, a entrada e o portal institucional publico (com suporte a
+          // links compartilhados /#/ong/<id>); no mobile (app do doador),
+          // segue direto para o fluxo de login/sessao.
+          home: kIsWeb ? const EntradaWeb() : const SplashDecider(),
         );
       },
     );
   }
+}
+
+/// Entrada da versão WEB: mostra o portal institucional e, se a URL de
+/// arranque for um LINK COMPARTILHADO de perfil de ONG (fragmento `/ong/<id>`,
+/// como os copiados pelo botão Compartilhar — ver `utils/app_links.dart`),
+/// abre o [PerfilPublicoOngScreen] por cima do portal após o primeiro frame.
+class EntradaWeb extends StatefulWidget {
+  const EntradaWeb({super.key});
+
+  @override
+  State<EntradaWeb> createState() => _EntradaWebState();
+}
+
+class _EntradaWebState extends State<EntradaWeb> {
+  @override
+  void initState() {
+    super.initState();
+    // Navegar só depois do primeiro frame (o Navigator precisa existir).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _abrirLinkProfundo());
+  }
+
+  void _abrirLinkProfundo() {
+    if (!mounted) return;
+    // Ex.: http://localhost:5100/#/ong/12 → fragment == "/ong/12".
+    final m = RegExp(r'^/ong/(\d+)$').firstMatch(Uri.base.fragment);
+    if (m == null) return;
+    final ongId = int.tryParse(m.group(1)!);
+    if (ongId == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        // O nome real é carregado pela própria tela (placeholder até lá).
+        builder: (_) => PerfilPublicoOngScreen(ongId: ongId, ongNome: 'ONG'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => const PortalInstitucionalScreen();
 }
 
 /// Decide a rota inicial no mobile: se não há sessão salva, vai para o login;

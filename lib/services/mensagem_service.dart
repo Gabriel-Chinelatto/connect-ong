@@ -25,11 +25,13 @@ class MensagemService {
     return data.map((json) => Mensagem.fromJson(json)).toList();
   }
 
-  // Envia uma mensagem no chat do match.
+  // Envia uma mensagem no chat do match. [anexoBase64] (imagem da galeria) e
+  // opcional; o backend aceita conteudo vazio SE houver anexo.
   Future<void> enviar({
     required int interesseId,
     required String remetente,
     required String conteudo,
+    String? anexoBase64,
   }) async {
     final response = await http.post(
       Uri.parse('${ApiService.baseUrl}/mensagens'),
@@ -38,6 +40,10 @@ class MensagemService {
         'interesseId': interesseId,
         'remetente': remetente,
         'conteudo': conteudo,
+        if (anexoBase64 != null && anexoBase64.isNotEmpty) ...{
+          'anexoBase64': anexoBase64,
+          'anexoTipo': 'imagem',
+        },
       }),
     ).timeout(ApiService.timeout);
 
@@ -79,9 +85,12 @@ class MensagemService {
     }
   }
 
-  // Presenca do OUTRO participante (online, ultimoVisto, digitando). Chamar
-  // tambem registra a MINHA presenca (heartbeat). Best-effort: NUNCA quebra o
-  // chat — em qualquer erro/timeout ou status != 200 devolve um default seguro.
+  // Presenca do OUTRO participante. Campos novos e confiaveis (usar estes):
+  // `online` (boolean calculado NO SERVIDOR, janela de 2 min) e
+  // `ultimoVistoEpoch` (millis UTC, a prova de fuso). O campo antigo
+  // `ultimoVisto` (LocalDateTime) fica so por compatibilidade. Chamar tambem
+  // registra a MINHA presenca (heartbeat). Best-effort: NUNCA quebra o chat —
+  // em qualquer erro/timeout ou status != 200 devolve um default seguro.
   Future<Map<String, dynamic>> status(int interesseId) async {
     try {
       final response = await http.get(
@@ -97,7 +106,12 @@ class MensagemService {
     } catch (_) {
       // ignorado: presenca e best-effort.
     }
-    return {'online': false, 'ultimoVisto': null, 'digitando': false};
+    return {
+      'online': false,
+      'ultimoVisto': null,
+      'ultimoVistoEpoch': null,
+      'digitando': false,
+    };
   }
 
   // Sinaliza que o usuario esta digitando. Best-effort: erros sao ignorados.

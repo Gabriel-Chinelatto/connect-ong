@@ -16,6 +16,20 @@ class PerfilPublicoOng {
   final int totalPrestacoes;
   final int transparenciaScore;
   final String nivelTransparencia;
+
+  // Perfil rico (feira): capa em base64, endereço e fotos do local. Todos
+  // opcionais — contas antigas sem esses dados degradam graciosamente.
+  final String? capaBase64;
+  final String? endereco;
+  final List<String> fotosLocal;
+
+  /// Streak: dias consecutivos como #1 do ranking de transparência.
+  /// Presente SÓ quando a ONG é a ATUAL primeira colocada.
+  final int? diasNoTopo;
+
+  /// Se a ONG já foi #1 e saiu: duração (em dias) do último reinado.
+  final int? ultimoReinadoDias;
+
   final List<NecessidadeResumo> necessidades;
   final List<CampanhaResumo> campanhas;
   final List<AvaliacaoResumo> avaliacoes;
@@ -37,6 +51,11 @@ class PerfilPublicoOng {
     required this.totalPrestacoes,
     required this.transparenciaScore,
     required this.nivelTransparencia,
+    this.capaBase64,
+    this.endereco,
+    this.fotosLocal = const [],
+    this.diasNoTopo,
+    this.ultimoReinadoDias,
     required this.necessidades,
     required this.campanhas,
     required this.avaliacoes,
@@ -68,6 +87,16 @@ class PerfilPublicoOng {
       totalPrestacoes: (j['totalPrestacoes'] ?? 0) as int,
       transparenciaScore: (j['transparenciaScore'] ?? 0) as int,
       nivelTransparencia: j['nivelTransparencia'] ?? 'BRONZE',
+      capaBase64: j['capaBase64'] as String?,
+      endereco: j['endereco'] as String?,
+      fotosLocal: (j['fotosLocal'] is List)
+          ? (j['fotosLocal'] as List)
+              .whereType<String>()
+              .where((f) => f.isNotEmpty)
+              .toList()
+          : const <String>[],
+      diasNoTopo: (j['diasNoTopo'] as num?)?.toInt(),
+      ultimoReinadoDias: (j['ultimoReinadoDias'] as num?)?.toInt(),
       necessidades: lista('necessidades', NecessidadeResumo.fromJson),
       campanhas: lista('campanhas', CampanhaResumo.fromJson),
       avaliacoes: lista('avaliacoes', AvaliacaoResumo.fromJson),

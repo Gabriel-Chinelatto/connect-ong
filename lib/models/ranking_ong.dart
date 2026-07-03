@@ -9,6 +9,10 @@ class RankingOng {
   final int score;
   final String nivel;
 
+  /// Streak: dias consecutivos no topo do ranking. O backend preenche SÓ
+  /// para o item #1 atual (mínimo 1); null para as demais posições.
+  final int? diasNoTopo;
+
   const RankingOng({
     required this.ongId,
     required this.nome,
@@ -17,6 +21,7 @@ class RankingOng {
     required this.notaMedia,
     required this.score,
     required this.nivel,
+    this.diasNoTopo,
   });
 
   factory RankingOng.fromJson(Map<String, dynamic> j) => RankingOng(
@@ -27,5 +32,6 @@ class RankingOng {
         notaMedia: ((j['notaMedia'] ?? 0) as num).toDouble(),
         score: (j['score'] ?? 0) as int,
         nivel: j['nivel'] ?? 'BRONZE',
+        diasNoTopo: (j['diasNoTopo'] as num?)?.toInt(),
       );
 }
