@@ -110,4 +110,63 @@ class AuthService {
     }
     throw Exception(msgErro);
   }
+
+  /// Passo 1 do "esqueci a senha": `POST /auth/esqueci-senha`.
+  ///
+  /// Pede ao backend um código de redefinição para o [email]. Em sucesso (200)
+  /// retorna `{"mensagem": ...}` e, quando o servidor está em modo
+  /// demonstração, também `{"codigoDemo": "123456"}` (em produção o código
+  /// iria por e-mail). Em falha lança [Exception] com a mensagem do backend.
+  Future<Map<String, dynamic>> esqueciSenha({required String email}) async {
+    final response = await ApiService.post(
+      '/auth/esqueci-senha',
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
+    }
+    throw Exception(_extrairErro(response));
+  }
+
+  /// Passo 2 do "esqueci a senha": `POST /auth/redefinir-senha`.
+  ///
+  /// Envia o [codigo] recebido + a [novaSenha]. Em sucesso (200) retorna
+  /// `{"mensagem": ...}`; em falha (ex.: 400 "Código inválido ou expirado.")
+  /// lança [Exception] com a mensagem do backend.
+  Future<Map<String, dynamic>> redefinirSenha({
+    required String email,
+    required String codigo,
+    required String novaSenha,
+  }) async {
+    final response = await ApiService.post(
+      '/auth/redefinir-senha',
+      body: jsonEncode({
+        'email': email,
+        'codigo': codigo,
+        'novaSenha': novaSenha,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
+    }
+    throw Exception(_extrairErro(response));
+  }
+
+  // Extrai a mensagem de `erro` do corpo da resposta (padrão do backend),
+  // com fallback para o código HTTP quando o corpo não é o esperado.
+  String _extrairErro(http.Response response) {
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      if (body is Map && body['erro'] != null) {
+        return body['erro'].toString();
+      }
+    } catch (_) {
+      // corpo não-JSON: cai no fallback abaixo
+    }
+    return 'Erro (HTTP ${response.statusCode})';
+  }
 }

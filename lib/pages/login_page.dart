@@ -18,6 +18,7 @@ import '../widgets/feedback/app_snackbar.dart';
 import '../utils/page_transition.dart';
 import '../web/portal_institucional_screen.dart';
 import 'cadastro_doador_page.dart';
+import 'esqueci_senha_page.dart';
 
 /// Tela de login do doador (porta de entrada do app mobile).
 ///
@@ -312,7 +313,25 @@ class _LoginPageState extends State<LoginPage> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => fazerLogin(), // Enter entra
           ),
-          const SizedBox(height: AppSpacing.lg),
+          // Link de recuperação de senha (fluxo em 2 passos).
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                PageTransition.fade(
+                  EsqueciSenhaPage(emailInicial: emailController.text.trim()),
+                ),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+              ),
+              child: const Text('Esqueceu a senha?'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           AppButton(
             texto: 'ENTRAR',
             carregando: carregando,
