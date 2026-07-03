@@ -2,12 +2,28 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../models/doacao_financeira.dart';
 import 'api_service.dart';
 
 /// Servico de doacao financeira (PIX simulado): envia o valor doado pelo
-/// doador a uma ONG (POST /doacoes-financeiras) e retorna o comprovante da
-/// transacao.
+/// doador a uma ONG (POST /doacoes-financeiras), retorna o comprovante da
+/// transacao e lista o historico do proprio doador
+/// (GET /doacoes-financeiras?doadorId=).
 class DoacaoFinanceiraService {
+  /// Historico de doacoes PIX do PROPRIO doador (o backend valida ownership:
+  /// so o usuario autenticado pode ver as doacoes do seu doadorId).
+  Future<List<DoacaoFinanceira>> listarPorDoador(int doadorId) async {
+    final response =
+        await ApiService.get('/doacoes-financeiras?doadorId=$doadorId');
+
+    if (response.statusCode != 200) {
+      throw Exception('Erro ao carregar suas doações PIX');
+    }
+
+    final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+    return data.map((json) => DoacaoFinanceira.fromJson(json)).toList();
+  }
+
   // Faz a doacao (PIX simulado) e retorna o comprovante.
   Future<Map<String, dynamic>> doar({
     required int ongId,
