@@ -458,7 +458,11 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                     style: TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       hintText: "Buscar ONG por nome ou cidade",
-                      hintStyle: TextStyle(color: Colors.grey),
+                      hintStyle:
+                          const TextStyle(color: AppColors.textTertiary),
+                      // O container ao redor ja e branco: sem preenchimento do
+                      // tema (que no modo escuro pintaria o campo de cinza).
+                      filled: false,
                       border: InputBorder.none,
                       prefixIcon: const Icon(
                         Icons.search,

@@ -143,6 +143,7 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (idx) {
                   return IconButton(
+                    tooltip: '${idx + 1} ${idx == 0 ? "estrela" : "estrelas"}',
                     icon: Icon(
                       idx < nota ? Icons.star_rounded : Icons.star_border_rounded,
                       color: AppColors.ouro,

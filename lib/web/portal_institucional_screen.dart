@@ -4,6 +4,8 @@ import '../pages/login_page.dart';
 import '../screens/legal/documentos_legais_screen.dart';
 import '../services/estatistica_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 
 /// Portal institucional publico (face web do Connect ONG).
 /// Apresenta missao, estatisticas publicas (transparencia), ODS, como
@@ -44,7 +46,8 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7F5),
+      // Portal público sempre claro, nas cores do design system.
+      backgroundColor: AppColors.background,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -70,7 +73,8 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
       width: double.infinity,
       color: cor,
       padding: padding ??
-          const EdgeInsets.symmetric(horizontal: 24, vertical: 56),
+          const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: 56),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1100),
@@ -89,7 +93,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
           style: TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF1B2B22),
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 10),
@@ -98,7 +102,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
             height: 1.5,
           ),
         ),
@@ -115,10 +119,11 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, Color(0xFF066537)],
+          colors: [AppColors.primary, AppColors.primaryDark],
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg, vertical: 80),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
@@ -128,7 +133,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: AppRadius.brXl,
                 ),
                 child: const Icon(Icons.volunteer_activism,
                     color: Colors.white, size: 48),
@@ -168,8 +173,8 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                       foregroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 18),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.brMd),
                       textStyle: TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 16),
                     ),
@@ -183,8 +188,8 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                       side: const BorderSide(color: Colors.white70),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 18),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.brMd),
                       textStyle: TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 16),
                     ),
@@ -240,8 +245,8 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
       width: 240,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F7F5),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadius.brLg,
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
       ),
       child: Column(
@@ -259,7 +264,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
           Text(
             rotulo,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.black54),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -406,9 +411,9 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
     return Container(
       width: 220,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F7F5),
-        borderRadius: BorderRadius.circular(22),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadius.brLg,
       ),
       child: Column(
         children: [
@@ -475,9 +480,9 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
           ...faq.map((e) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadius.brLg,
                   ),
                   child: Theme(
                     data: Theme.of(context)
@@ -499,7 +504,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                           child: Text(
                             e[1],
                             style: TextStyle(
-                                color: Colors.black54, height: 1.5),
+                                color: AppColors.textSecondary, height: 1.5),
                           ),
                         ),
                       ],
@@ -548,8 +553,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
         foregroundColor: AppColors.primary,
         side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
         padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 18),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.brMd),
         textStyle:
             TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       );
@@ -558,8 +562,10 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
   Widget _rodape() {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF0E1A14),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 44),
+      // Rodapé escuro no tom de texto da marca (design system).
+      color: AppColors.textPrimary,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg, vertical: 44),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1100),
@@ -611,7 +617,8 @@ class _AppBarTopo extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg, vertical: AppSpacing.md),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1100),
@@ -628,7 +635,7 @@ class _AppBarTopo extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1B2B22)),
+                        color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -639,8 +646,8 @@ class _AppBarTopo extends StatelessWidget {
                   foregroundColor: Colors.white,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.brMd),
                   textStyle: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 child: const Text('Entrar'),
@@ -667,7 +674,7 @@ class _CardValor extends StatelessWidget {
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: AppRadius.brLg,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -683,7 +690,7 @@ class _CardValor extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: AppRadius.brMd,
             ),
             child: Icon(icone, color: AppColors.primary, size: 26),
           ),
@@ -697,7 +704,7 @@ class _CardValor extends StatelessWidget {
           Text(
             texto,
             style:
-                TextStyle(color: Colors.black54, height: 1.55),
+                TextStyle(color: AppColors.textSecondary, height: 1.55),
           ),
         ],
       ),
@@ -717,9 +724,9 @@ class _CardPasso extends StatelessWidget {
     return Container(
       width: 300,
       padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F7F5),
-        borderRadius: BorderRadius.circular(22),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: AppRadius.brLg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -745,7 +752,7 @@ class _CardPasso extends StatelessWidget {
           Text(
             texto,
             style:
-                TextStyle(color: Colors.black54, height: 1.55),
+                TextStyle(color: AppColors.textSecondary, height: 1.55),
           ),
         ],
       ),
@@ -768,7 +775,7 @@ class _CardOds extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: cor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadius.brLg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
