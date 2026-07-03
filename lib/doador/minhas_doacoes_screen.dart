@@ -307,8 +307,11 @@ class _MinhasDoacoesScreenState extends State<MinhasDoacoesScreen> {
             runSpacing: AppSpacing.sm,
             children: [
               _chipResumo(Icons.pix, '$_totalPixFormatado doados via PIX'),
-              _chipResumo(Icons.handshake_outlined,
-                  '${_itensDoados.length} itens doados'),
+              _chipResumo(
+                  Icons.handshake_outlined,
+                  _itensDoados.length == 1
+                      ? '1 item doado'
+                      : '${_itensDoados.length} itens doados'),
             ],
           ),
         ],
