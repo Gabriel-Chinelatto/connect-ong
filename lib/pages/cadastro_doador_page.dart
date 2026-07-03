@@ -1,7 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../doador/main_shell.dart';
+import '../screens/legal/documentos_legais_screen.dart';
 import '../utils/formatters.dart';
 import '../services/auth_service.dart';
 import '../services/login_service.dart';
@@ -43,6 +45,16 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
   int _passo = 0;
   bool _criando = false;
 
+  // Consentimento LGPD (obrigatório no último passo).
+  bool _aceitouTermos = false;
+
+  // Recognizers dos links "Política de Privacidade" / "Termos de Uso"
+  // (criados uma vez e descartados no dispose, como manda o RichText).
+  late final TapGestureRecognizer _tapPrivacidade = TapGestureRecognizer()
+    ..onTap = () => _abrirDocumento(DocumentoLegal.privacidade);
+  late final TapGestureRecognizer _tapTermos = TapGestureRecognizer()
+    ..onTap = () => _abrirDocumento(DocumentoLegal.termos);
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -53,7 +65,16 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
     _cidade.dispose();
     _estado.dispose();
     _telefone.dispose();
+    _tapPrivacidade.dispose();
+    _tapTermos.dispose();
     super.dispose();
+  }
+
+  void _abrirDocumento(DocumentoLegal tipo) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DocumentosLegaisScreen(tipo: tipo)),
+    );
   }
 
   bool get _emailValido =>
@@ -75,7 +96,12 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
         }
         return null;
       default:
-        return null; // passo 3 é todo opcional
+        // Passo 3: campos opcionais, mas o consentimento LGPD é obrigatório.
+        if (!_aceitouTermos) {
+          return 'Para criar a conta, aceite a Política de Privacidade e os '
+              'Termos de Uso.';
+        }
+        return null;
     }
   }
 
@@ -297,6 +323,59 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[\d()\-+ ]')),
           ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _consentimentoLgpd(),
+      ],
+    );
+  }
+
+  // ---- Consentimento LGPD (obrigatório): checkbox + links tocáveis para a
+  // Política de Privacidade e os Termos de Uso (mesmo padrão do desktop). ----
+  Widget _consentimentoLgpd() {
+    final cs = Theme.of(context).colorScheme;
+    const estiloLink = TextStyle(
+      color: AppColors.primary,
+      fontWeight: FontWeight.w600,
+      decoration: TextDecoration.underline,
+      decorationColor: AppColors.primary,
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: _aceitouTermos,
+          activeColor: AppColors.primary,
+          onChanged: _criando
+              ? null
+              : (v) => setState(() => _aceitouTermos = v ?? false),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.md),
+            child: Text.rich(
+              TextSpan(
+                text: 'Li e aceito a ',
+                style: TextStyle(
+                    fontSize: 13, color: cs.onSurfaceVariant, height: 1.5),
+                children: [
+                  TextSpan(
+                    text: 'Política de Privacidade',
+                    style: estiloLink,
+                    recognizer: _tapPrivacidade,
+                  ),
+                  const TextSpan(text: ' e os '),
+                  TextSpan(
+                    text: 'Termos de Uso',
+                    style: estiloLink,
+                    recognizer: _tapTermos,
+                  ),
+                  const TextSpan(text: '.'),
+                ],
+              ),
+            ),
+          ),
         ),
       ],
     );
