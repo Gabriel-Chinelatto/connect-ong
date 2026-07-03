@@ -28,7 +28,20 @@ class _MainShellState extends State<MainShell> {
 
   int _indice = 0;
 
-  void _irParaAba(int aba) {
+  // Controller para outras abas pedirem uma sub-aba específica dos Matches
+  // (0=Ativas, 1=Aguardando, 2=Concluídas) — ex.: cards do Meu Impacto.
+  final MatchesAbaController _abaMatches = MatchesAbaController();
+
+  @override
+  void dispose() {
+    _abaMatches.dispose();
+    super.dispose();
+  }
+
+  /// Troca a aba ativa; [subAbaMatches] (opcional) também posiciona a tela de
+  /// Matches na sub-aba pedida.
+  void _irParaAba(int aba, [int? subAbaMatches]) {
+    if (subAbaMatches != null) _abaMatches.irPara(subAbaMatches);
     setState(() => _indice = aba);
   }
 
@@ -47,8 +60,8 @@ class _MainShellState extends State<MainShell> {
     final abas = <Widget>[
       InicioTab(onIrParaAba: _irParaAba),
       const FeedNecessidadesScreen(),
-      const MeusMatchesScreen(),
-      const DashboardImpactoScreen(),
+      MeusMatchesScreen(abaController: _abaMatches),
+      DashboardImpactoScreen(onIrParaAba: _irParaAba),
       const PerfilScreen(),
     ];
 

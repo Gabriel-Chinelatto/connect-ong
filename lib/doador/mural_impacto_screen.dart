@@ -5,7 +5,6 @@ import '../services/estatistica_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
-import '../utils/escala.dart';
 import '../widgets/feedback/empty_state.dart';
 
 /// Mural de Impacto: vitrine pública dos números coletivos da plataforma
@@ -191,17 +190,32 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
           Icons.receipt_long_outlined, _stats.totalPrestacoes, 'Prestacoes'),
       _ItemStat(Icons.pix, _stats.totalDoacoesFinanceiras, 'Doacoes PIX'),
     ];
+    // Linhas flexíveis (IntrinsicHeight) em vez de grade com razão de aspecto
+    // fixa: a altura acompanha o conteúdo e não estoura com fonte grande nem
+    // em telas estreitas.
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        // Cards mais altos quando a fonte aumenta.
-        childAspectRatio: 1.5 / fatorFonte(context),
-        children: [for (final i in itens) _cardStat(i)],
+      child: Column(
+        children: [
+          for (var i = 0; i < itens.length; i += 2)
+            Padding(
+              padding: EdgeInsets.only(top: i == 0 ? 0 : 14),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _cardStat(itens[i])),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: i + 1 < itens.length
+                          ? _cardStat(itens[i + 1])
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -217,7 +231,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
@@ -227,13 +241,15 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
             ),
             child: Icon(i.icon, color: AppColors.primary, size: 22),
           ),
-          const Spacer(),
+          const SizedBox(height: AppSpacing.sm),
           _contador(i.valor,
               style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
                   color: cs.onSurface)),
           Text(i.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                   fontSize: 12, color: cs.onSurfaceVariant)),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/interesse.dart';
 import '../services/interesse_service.dart';
+import '../services/prestacao_service.dart';
 import '../services/session_service.dart';
 import '../services/avaliacao_service.dart';
 
@@ -14,30 +15,74 @@ import '../widgets/feedback/empty_state.dart';
 import 'chat_screen.dart';
 import 'prestacoes_screen.dart';
 
-/// Lista os interesses do doador e seu status (aguardando/aceito/recusado).
-/// Quando o interesse esta ACEITO (match), libera o acesso ao chat com a ONG e
-/// as prestacoes de contas.
-///
-/// Redesenho (Bloco 21 / Fase 4): design system + cores do TEMA (dark mode ok).
+/// Controlador mínimo para o shell (ou outra aba, ex.: Meu Impacto) pedir que
+/// a tela de Matches mude para uma sub-aba: 0=Ativas, 1=Aguardando,
+/// 2=Concluídas. Sempre notifica, mesmo repetindo a mesma sub-aba.
+class MatchesAbaController extends ChangeNotifier {
+  int _aba = 0;
+  int get aba => _aba;
+
+  void irPara(int aba) {
+    _aba = aba;
+    notifyListeners();
+  }
+}
+
+/// Matches do doador em 3 ABAS:
+/// - ATIVAS (ACEITO): conversas em andamento; se houver mais de uma conversa
+///   ativa com a MESMA ONG, elas são agrupadas num card expansível da ONG,
+///   cada conversa intitulada pelo assunto (título da necessidade);
+/// - AGUARDANDO (PENDENTE, e também os recusados, para histórico);
+/// - CONCLUÍDAS (CONCLUIDO): histórico estilo "pedidos anteriores", agrupado
+///   por data de conclusão, com acesso à prestação de contas.
 class MeusMatchesScreen extends StatefulWidget {
-  const MeusMatchesScreen({super.key});
+  /// Quando presente, o shell usa este controller para abrir uma sub-aba
+  /// específica (ex.: cards clicáveis do Meu Impacto).
+  final MatchesAbaController? abaController;
+
+  const MeusMatchesScreen({super.key, this.abaController});
 
   @override
   State<MeusMatchesScreen> createState() => _MeusMatchesScreenState();
 }
 
-class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
+class _MeusMatchesScreenState extends State<MeusMatchesScreen>
+    with SingleTickerProviderStateMixin {
   final InteresseService _interesseService = InteresseService();
   final SessionService _sessionService = SessionService();
+
+  late final TabController _tabs;
 
   List<Interesse> _matches = [];
   bool _carregando = true;
   bool _erro = false;
 
+  /// interesseId → a ONG já publicou prestação de contas? (null = ainda
+  /// verificando). Preenchido só para os CONCLUÍDOS.
+  final Map<int, bool> _temPrestacao = {};
+
   @override
   void initState() {
     super.initState();
+    _tabs = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.abaController?.aba ?? 0,
+    );
+    widget.abaController?.addListener(_aoPedirSubAba);
     _carregar();
+  }
+
+  @override
+  void dispose() {
+    widget.abaController?.removeListener(_aoPedirSubAba);
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  void _aoPedirSubAba() {
+    if (!mounted) return;
+    _tabs.animateTo(widget.abaController!.aba);
   }
 
   Future<void> _carregar() async {
@@ -58,6 +103,7 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
         _matches = lista;
         _carregando = false;
       });
+      _verificarPrestacoes(lista);
     } catch (e) {
       // Distingue "sem matches" de "a API caiu".
       if (!mounted) return;
@@ -68,6 +114,40 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
     }
   }
 
+  // Para cada match CONCLUÍDO, verifica (em paralelo, com fallback) se a ONG
+  // já publicou prestação de contas — decide entre o botão "Ver prestação de
+  // contas" e o aviso "Prestação ainda não publicada".
+  Future<void> _verificarPrestacoes(List<Interesse> lista) async {
+    final concluidos = lista.where((i) => i.status == 'CONCLUIDO');
+    await Future.wait(concluidos.map((i) async {
+      try {
+        final prestacoes = await PrestacaoService().listar(i.id);
+        if (!mounted) return;
+        setState(() => _temPrestacao[i.id] = prestacoes.isNotEmpty);
+      } catch (_) {
+        // Na dúvida, mostra o botão (a tela de prestações lida com o vazio).
+        if (!mounted) return;
+        setState(() => _temPrestacao[i.id] = true);
+      }
+    }));
+  }
+
+  // ---- Listas derivadas por aba ----
+  List<Interesse> get _ativas =>
+      _matches.where((i) => i.status == 'ACEITO').toList();
+
+  List<Interesse> get _aguardando => _matches
+      .where((i) => i.status == 'PENDENTE' || i.status == 'RECUSADO')
+      .toList();
+
+  List<Interesse> get _concluidas {
+    final lista = _matches.where((i) => i.status == 'CONCLUIDO').toList()
+      // Mais recentes primeiro (datas ISO ordenam lexicograficamente).
+      ..sort((a, b) =>
+          (b.dataConclusao ?? '').compareTo(a.dataConclusao ?? ''));
+    return lista;
+  }
+
   // Cor e rotulo por status do interesse (cores semanticas do tema).
   (Color, String, IconData) _estilo(String status) {
     switch (status) {
@@ -75,6 +155,8 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
         return (AppColors.success, 'Aceito', Icons.check_circle);
       case 'RECUSADO':
         return (AppColors.error, 'Recusado', Icons.cancel);
+      case 'CONCLUIDO':
+        return (AppColors.primary, 'Concluída', Icons.verified);
       default:
         return (AppColors.warning, 'Aguardando', Icons.hourglass_top);
     }
@@ -105,7 +187,7 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
         builder: (_) => ChatScreen(
           interesseId: i.id,
           meuRemetente: 'DOADOR',
-          titulo: i.ongNome ?? 'Conversa',
+          titulo: i.necessidadeTitulo ?? i.ongNome ?? 'Conversa',
         ),
       ),
     );
@@ -196,6 +278,325 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
     comentarioC.dispose();
   }
 
+  // =================== BUILD ===================
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        // Aba do shell: nunca mostra seta de voltar.
+        automaticallyImplyLeading: false,
+        title: const Text('Meus Matches'),
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        bottom: TabBar(
+          controller: _tabs,
+          tabs: const [
+            Tab(text: 'Ativas'),
+            Tab(text: 'Aguardando'),
+            Tab(text: 'Concluídas'),
+          ],
+        ),
+      ),
+      body: _carregando
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabs,
+              children: [
+                _abaCom(_listaAtivas()),
+                _abaCom(_listaAguardando()),
+                _abaCom(_listaConcluidas()),
+              ],
+            ),
+    );
+  }
+
+  // Cada aba tem o próprio pull-to-refresh.
+  Widget _abaCom(Widget conteudo) {
+    return RefreshIndicator(
+      onRefresh: _carregar,
+      color: AppColors.primary,
+      child: conteudo,
+    );
+  }
+
+  Widget _erroWidget() {
+    return ListView(
+      children: [
+        const SizedBox(height: 100),
+        EmptyState(
+          icone: Icons.cloud_off_outlined,
+          mensagem: 'Não foi possível carregar',
+          detalhe: 'Verifique sua conexão e tente novamente.',
+          acaoRotulo: 'Tentar de novo',
+          onAcao: _carregar,
+        ),
+      ],
+    );
+  }
+
+  Widget _vazio(IconData icone, String mensagem, String detalhe) {
+    // Dentro de um ListView para o pull-to-refresh continuar funcionando.
+    return ListView(
+      children: [
+        const SizedBox(height: 100),
+        EmptyState(icone: icone, mensagem: mensagem, detalhe: detalhe),
+      ],
+    );
+  }
+
+  // =================== ABA 1: ATIVAS ===================
+  Widget _listaAtivas() {
+    if (_erro) return _erroWidget();
+    final ativas = _ativas;
+    if (ativas.isEmpty) {
+      return _vazio(Icons.handshake_outlined, 'Nenhuma conversa ativa',
+          'Vá ao Explorar e encontre uma causa para apoiar!');
+    }
+
+    // Agrupa por ONG preservando a ordem de chegada.
+    final grupos = <String, List<Interesse>>{};
+    for (final i in ativas) {
+      final chave = i.ongId?.toString() ?? i.ongNome ?? '?';
+      grupos.putIfAbsent(chave, () => []).add(i);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      children: [
+        for (final grupo in grupos.values)
+          if (grupo.length == 1)
+            _card(grupo.first) // 1 conversa só: card direto, sem agrupamento
+          else
+            _cardGrupoOng(grupo),
+      ],
+    );
+  }
+
+  /// Várias conversas ativas com a MESMA ONG: um card da ONG que expande
+  /// listando as conversas, cada uma intitulada pelo assunto (necessidade).
+  Widget _cardGrupoOng(List<Interesse> grupo) {
+    final cs = Theme.of(context).colorScheme;
+    final ongNome = grupo.first.ongNome ?? 'ONG';
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        // Remove as linhas divisórias padrão do ExpansionTile.
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          leading: CircleAvatar(
+            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+            child: const Icon(Icons.storefront_outlined,
+                color: AppColors.primary),
+          ),
+          title: Text(
+            ongNome,
+            style: TextStyle(
+                fontWeight: FontWeight.w700, color: cs.onSurface),
+          ),
+          subtitle: Text(
+            '${grupo.length} conversas ativas',
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+          ),
+          childrenPadding:
+              const EdgeInsets.only(bottom: AppSpacing.sm),
+          children: [
+            for (final i in grupo) _conversaDoGrupo(i),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Uma conversa dentro do grupo da ONG: assunto = título da necessidade.
+  Widget _conversaDoGrupo(Interesse i) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => _abrirChat(i),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.chat_bubble_outline,
+                    size: 16, color: AppColors.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    i.necessidadeTitulo ?? 'Conversa',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, color: cs.onSurface),
+                  ),
+                ),
+              ],
+            ),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: 6,
+              children: [
+                _acao(Icons.chat_bubble_outline, 'Conversar',
+                    () => _abrirChat(i)),
+                _acao(Icons.receipt_long, 'Prestação',
+                    () => _abrirPrestacoes(i)),
+                _acao(Icons.star_outline, 'Avaliar', () => _abrirAvaliar(i)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =================== ABA 2: AGUARDANDO ===================
+  Widget _listaAguardando() {
+    if (_erro) return _erroWidget();
+    final aguardando = _aguardando;
+    if (aguardando.isEmpty) {
+      return _vazio(Icons.hourglass_empty, 'Nada aguardando resposta',
+          'Demonstre interesse em uma necessidade no Explorar.');
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      itemCount: aguardando.length,
+      itemBuilder: (context, i) => _card(aguardando[i]),
+    );
+  }
+
+  // =================== ABA 3: CONCLUÍDAS ===================
+  Widget _listaConcluidas() {
+    if (_erro) return _erroWidget();
+    final concluidas = _concluidas;
+    if (concluidas.isEmpty) {
+      return _vazio(
+          Icons.verified_outlined,
+          'Nenhuma doação concluída ainda',
+          'Quando uma ONG concluir uma doação sua, ela aparece aqui como histórico.');
+    }
+
+    // Histórico estilo iFood: agrupado por data de conclusão (desc).
+    final porData = <String, List<Interesse>>{};
+    for (final i in concluidas) {
+      porData.putIfAbsent(_dataCurta(i.dataConclusao), () => []).add(i);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      children: [
+        for (final entrada in porData.entries) ...[
+          Padding(
+            padding: const EdgeInsets.only(
+                bottom: AppSpacing.sm, top: AppSpacing.xs),
+            child: Text(
+              entrada.key,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          for (final i in entrada.value) _cardConcluida(i),
+        ],
+      ],
+    );
+  }
+
+  Widget _cardConcluida(Interesse i) {
+    final cs = Theme.of(context).colorScheme;
+    final tem = _temPrestacao[i.id];
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: AppRadius.brLg,
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                child: const Icon(Icons.verified, color: AppColors.primary),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      i.necessidadeTitulo ?? 'Doação',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: cs.onSurface),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      i.ongNome ?? 'ONG',
+                      style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Concluída em ${_dataCurta(i.dataConclusao)}',
+                      style: TextStyle(
+                          color: cs.onSurfaceVariant, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _badgeStatus(AppColors.primary, 'Concluída'),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          if (tem == false)
+            Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.sm),
+              child: Text(
+                'Prestação ainda não publicada',
+                style: TextStyle(
+                    color: cs.onSurfaceVariant,
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic),
+              ),
+            )
+          else
+            _acao(Icons.receipt_long, 'Ver prestação de contas',
+                () => _abrirPrestacoes(i)),
+        ],
+      ),
+    );
+  }
+
+  // "2026-07-03T10:20:00" → "03/07/2026"; sem data → "data não informada".
+  String _dataCurta(String? iso) {
+    if (iso == null || iso.isEmpty) return 'data não informada';
+    final soData = iso.split('T').first;
+    final partes = soData.split('-');
+    if (partes.length != 3) return soData;
+    return '${partes[2]}/${partes[1]}/${partes[0]}';
+  }
+
+  // =================== Card padrão (Ativas com 1 conversa / Aguardando) ===================
   Widget _card(Interesse i) {
     final cs = Theme.of(context).colorScheme;
     final (cor, rotulo, icone) = _estilo(i.status);
@@ -280,67 +681,6 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen> {
         rotulo,
         style: TextStyle(
             color: cor, fontWeight: FontWeight.w700, fontSize: 12),
-      ),
-    );
-  }
-
-  // Estado de erro (API caiu): diferente de "sem matches", com retry.
-  Widget _erroWidget() {
-    return ListView(
-      children: [
-        const SizedBox(height: 100),
-        EmptyState(
-          icone: Icons.cloud_off_outlined,
-          mensagem: 'Não foi possível carregar',
-          detalhe: 'Verifique sua conexão e tente novamente.',
-          acaoRotulo: 'Tentar de novo',
-          onAcao: _carregar,
-        ),
-      ],
-    );
-  }
-
-  Widget _vazio() {
-    // Dentro de um ListView para o pull-to-refresh continuar funcionando.
-    return ListView(
-      children: const [
-        SizedBox(height: 100),
-        EmptyState(
-          icone: Icons.handshake_outlined,
-          mensagem: 'Você ainda não tem matches.',
-          detalhe: 'Vá ao Explorar e encontre uma causa para apoiar!',
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // Aba do shell: nunca mostra seta de voltar.
-        automaticallyImplyLeading: false,
-        title: const Text('Meus Matches'),
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _carregar,
-        color: AppColors.primary,
-        child: _carregando
-            ? const Center(child: CircularProgressIndicator())
-            : _erro
-                ? _erroWidget()
-                : _matches.isEmpty
-                    ? _vazio()
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        itemCount: _matches.length,
-                        itemBuilder: (context, i) => _card(_matches[i]),
-                      ),
       ),
     );
   }

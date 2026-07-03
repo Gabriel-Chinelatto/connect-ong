@@ -7,15 +7,23 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
-import '../utils/escala.dart';
 import '../widgets/feedback/empty_state.dart';
 
 /// Painel de impacto do doador: mostra em numeros a participacao dele.
 /// Calculado a partir dos interesses/matches que o app ja carrega.
 ///
-/// Redesenho (Bloco 21 / Fase 4): design system + cores do TEMA (dark mode ok).
+/// Os cards de estatística são CLICÁVEIS e navegam para a área correspondente
+/// via [onIrParaAba] (aba do shell + sub-aba dos Matches, quando aplicável).
+///
+/// Layout dos cards em linhas flexíveis (IntrinsicHeight), em vez de grade com
+/// razão de aspecto fixa: a altura acompanha o conteúdo e não estoura com
+/// fonte grande (corrige overflow real de 9.7px reportado em screenshots).
 class DashboardImpactoScreen extends StatefulWidget {
-  const DashboardImpactoScreen({super.key});
+  /// Navega no shell: [aba] é o índice da aba (1=Explorar, 2=Matches) e
+  /// [subAbaMatches] a sub-aba dos Matches (0=Ativas, 1=Aguardando).
+  final void Function(int aba, [int? subAbaMatches]) onIrParaAba;
+
+  const DashboardImpactoScreen({super.key, required this.onIrParaAba});
 
   @override
   State<DashboardImpactoScreen> createState() =>
@@ -59,7 +67,10 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
       final List<Interesse> matches =
           await _interesseService.meusMatches(usuario.id);
 
-      final aceitos = matches.where((m) => m.status == 'ACEITO').toList();
+      // ACEITO e CONCLUIDO contam como match realizado.
+      final aceitos = matches
+          .where((m) => m.status == 'ACEITO' || m.status == 'CONCLUIDO')
+          .toList();
       final ongs = aceitos
           .map((m) => m.ongNome)
           .where((nome) => nome != null)
@@ -83,39 +94,76 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
     }
   }
 
-  Widget _statCard(IconData icone, String numero, String rotulo, Color cor) {
+  // Card de estatística CLICÁVEL: navega para a área correspondente do app.
+  Widget _statCard(IconData icone, String numero, String rotulo, Color cor,
+      VoidCallback onTap) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
+    return Semantics(
+      button: true,
+      label: '$numero $rotulo',
+      child: Material(
         color: cs.surface,
         borderRadius: AppRadius.brLg,
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadius.brLg,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: cor.withValues(alpha: 0.12),
-              borderRadius: AppRadius.brMd,
+              borderRadius: AppRadius.brLg,
+              border: Border.all(color: cs.outlineVariant),
             ),
-            child: Icon(icone, color: cor, size: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: cor.withValues(alpha: 0.12),
+                        borderRadius: AppRadius.brMd,
+                      ),
+                      child: Icon(icone, color: cor, size: 24),
+                    ),
+                    const Spacer(),
+                    Icon(Icons.chevron_right,
+                        size: 20, color: cs.onSurfaceVariant),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  numero,
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: cs.onSurface),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  rotulo,
+                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                ),
+              ],
+            ),
           ),
-          const Spacer(),
-          Text(
-            numero,
-            style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: cs.onSurface),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            rotulo,
-            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-          ),
+        ),
+      ),
+    );
+  }
+
+  // Linha com 2 cards de mesma altura (a do conteúdo mais alto) — cresce com
+  // a fonte em vez de estourar.
+  Widget _linhaStats(Widget a, Widget b) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: a),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(child: b),
         ],
       ),
     );
@@ -172,24 +220,22 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
                     style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
-                    // Cards ficam mais altos quando a fonte aumenta.
-                    childAspectRatio: 1.15 / fatorFonte(context),
-                    children: [
-                      _statCard(Icons.handshake, '$_aceitos',
-                          'Matches realizados', AppColors.primary),
-                      _statCard(Icons.favorite, '$_ongsApoiadas',
-                          'ONGs apoiadas', _acentoRosa),
-                      _statCard(Icons.send, '$_totalInteresses',
-                          'Interesses enviados', _acentoAzul),
-                      _statCard(Icons.hourglass_top, '$_aguardando',
-                          'Aguardando resposta', AppColors.warning),
-                    ],
+                  _linhaStats(
+                    _statCard(Icons.handshake, '$_aceitos',
+                        'Matches realizados', AppColors.primary,
+                        () => widget.onIrParaAba(2, 0)), // Matches → Ativas
+                    _statCard(Icons.favorite, '$_ongsApoiadas',
+                        'ONGs apoiadas', _acentoRosa,
+                        () => widget.onIrParaAba(1)), // Explorar
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _linhaStats(
+                    _statCard(Icons.send, '$_totalInteresses',
+                        'Interesses enviados', _acentoAzul,
+                        () => widget.onIrParaAba(2, 1)), // Matches → Aguardando
+                    _statCard(Icons.hourglass_top, '$_aguardando',
+                        'Aguardando resposta', AppColors.warning,
+                        () => widget.onIrParaAba(2, 1)), // Matches → Aguardando
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Container(
