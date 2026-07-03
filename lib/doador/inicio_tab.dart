@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../models/campanha.dart';
@@ -8,15 +11,18 @@ import '../models/usuario_logado.dart';
 import '../services/campanha_service.dart';
 import '../services/interesse_service.dart';
 import '../services/necessidade_service.dart';
+import '../services/perfil_service.dart';
 import '../services/ranking_service.dart';
 import '../services/session_service.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
-import '../utils/categorias.dart';
 import '../utils/escala.dart';
+import '../utils/frases_home.dart';
 import '../utils/page_transition.dart';
+import '../widgets/cards/capa_categoria.dart';
+import '../widgets/cards/carrossel_campanhas.dart';
 import '../widgets/notificacao_bell.dart';
 
 import 'buscar_receptor_screen.dart';
@@ -45,6 +51,7 @@ class InicioTab extends StatefulWidget {
 
 class _InicioTabState extends State<InicioTab> {
   UsuarioLogado? _usuario;
+  Uint8List? _fotoBytes; // foto de perfil (fotoBase64 do backend), se houver
   List<Campanha> _campanhas = [];
   List<Necessidade> _urgentes = [];
   List<RankingOng> _ongsDestaque = [];
@@ -67,15 +74,18 @@ class _InicioTabState extends State<InicioTab> {
     final fRanking =
         _seguro(() => RankingService().listar(limite: 8), <RankingOng>[]);
     final fMatches = _contarMatches(user?.id);
+    final fFoto = _carregarFoto(user?.id);
 
     final campanhas = await fCampanhas;
     final necessidades = await fNecessidades;
     final ranking = await fRanking;
     final matches = await fMatches;
+    final foto = await fFoto;
 
     if (!mounted) return;
     setState(() {
       _usuario = user;
+      _fotoBytes = foto;
       _campanhas = campanhas;
       // "Urgentes": as marcadas como urgente; se não houver, mostra as
       // primeiras abertas para a seção não ficar vazia.
@@ -92,6 +102,21 @@ class _InicioTabState extends State<InicioTab> {
       return await acao();
     } catch (_) {
       return fallback;
+    }
+  }
+
+  /// Busca a foto de perfil (campo fotoBase64 do GET /usuarios/{id}/perfil).
+  /// Qualquer falha (backend antigo, sem foto, rede) degrada para null e o
+  /// avatar mostra a inicial do nome.
+  Future<Uint8List?> _carregarFoto(int? usuarioId) async {
+    if (usuarioId == null) return null;
+    try {
+      final perfil = await PerfilService().obter(usuarioId);
+      final b64 = (perfil['fotoBase64'] ?? '').toString();
+      if (b64.isEmpty) return null;
+      return base64Decode(b64);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -154,26 +179,54 @@ class _InicioTabState extends State<InicioTab> {
     );
   }
 
-  // ---- Topo: saudação + sino de notificações ----
+  // ---- Topo: avatar + saudação + frase motivacional + sino ----
   Widget _topo() {
     final cs = Theme.of(context).colorScheme;
+    final inicial =
+        _primeiroNome.isNotEmpty ? _primeiroNome[0].toUpperCase() : '?';
     return Row(
       children: [
+        // Avatar: foto de perfil (fotoBase64) ou inicial em círculo verde.
+        Semantics(
+          label: 'Foto de perfil',
+          child: CircleAvatar(
+            radius: 24,
+            backgroundColor: AppColors.primary,
+            foregroundImage:
+                _fotoBytes != null ? MemoryImage(_fotoBytes!) : null,
+            child: Text(
+              inicial,
+              style: const TextStyle(
+                color: AppColors.onPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Olá, $_primeiroNome 👋',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: cs.onSurface,
                 ),
               ),
+              const SizedBox(height: 2),
+              // Frase motivacional sorteada a cada entrada no app (estável
+              // durante a sessão).
               Text(
-                'Veja onde você pode ajudar hoje.',
-                style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                FrasesHome.daSessao,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -200,9 +253,15 @@ class _InicioTabState extends State<InicioTab> {
           children: [
             Icon(Icons.search, color: cs.onSurfaceVariant),
             const SizedBox(width: AppSpacing.sm),
-            Text(
-              'Buscar necessidades, ONGs, categorias...',
-              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+            // Expanded + ellipsis: o texto encolhe em vez de estourar a
+            // largura quando a fonte é grande (bug real de overflow de 3.6px).
+            Expanded(
+              child: Text(
+                'Buscar necessidades, ONGs, categorias...',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+              ),
             ),
           ],
         ),
@@ -269,7 +328,8 @@ class _InicioTabState extends State<InicioTab> {
     );
   }
 
-  // ---- Seção: Campanhas (carrossel) ----
+  // ---- Seção: Campanhas (carrossel VIVO: auto-avanço 5s + capa + barra
+  // animada; ver CarrosselCampanhas) ----
   Widget _secaoCampanhas() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,64 +340,12 @@ class _InicioTabState extends State<InicioTab> {
         if (_campanhas.isEmpty)
           _vazio('Nenhuma campanha ativa no momento.')
         else
-          SizedBox(
-            height: _altura(176),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _campanhas.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(width: AppSpacing.md),
-              itemBuilder: (_, i) => _cardCampanha(_campanhas[i]),
-            ),
+          CarrosselCampanhas(
+            campanhas: _campanhas,
+            altura: _altura(216),
+            onTap: (_) => _abrir(const CampanhasScreen()),
           ),
       ],
-    );
-  }
-
-  Widget _cardCampanha(Campanha c) {
-    final cs = Theme.of(context).colorScheme;
-    final double prog = (c.progresso.clamp(0, 100)) / 100;
-    return _cartaoBase(
-      largura: 264,
-      onTap: () => _abrir(const CampanhasScreen()),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            c.titulo,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                fontWeight: FontWeight.w700, color: cs.onSurface, fontSize: 15),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            c.ongNome ?? 'ONG',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
-          ),
-          const Spacer(),
-          ClipRRect(
-            borderRadius: AppRadius.brSm,
-            child: LinearProgressIndicator(
-              value: prog,
-              minHeight: 8,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'R\$ ${c.valorArrecadado.toStringAsFixed(0)} de R\$ ${c.metaValor.toStringAsFixed(0)}',
-            style: TextStyle(
-                color: cs.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
     );
   }
 
@@ -353,7 +361,7 @@ class _InicioTabState extends State<InicioTab> {
           _vazio('Nenhuma necessidade aberta agora.')
         else
           SizedBox(
-            height: _altura(150),
+            height: _altura(184),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _urgentes.length,
@@ -366,64 +374,100 @@ class _InicioTabState extends State<InicioTab> {
     );
   }
 
+  // Card de necessidade com a CAPA ilustrativa da categoria (gradiente +
+  // ícone em marca d'água) e o selo URGENTE sobre a capa.
   Widget _cardUrgente(Necessidade n) {
     final cs = Theme.of(context).colorScheme;
-    return _cartaoBase(
-      largura: 230,
-      onTap: () => widget.onIrParaAba(1),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Semantics(
+      button: true,
+      label: 'Necessidade ${n.titulo}',
+      child: SizedBox(
+        width: 230,
+        child: Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: AppRadius.brLg,
+            border: Border.all(color: cs.outlineVariant),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => widget.onIrParaAba(1),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CapaCategoria(
+                    categoria: n.categoria,
+                    altura: 64,
+                    selo: n.urgente ? _seloUrgente() : null,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              n.titulo,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.onSurface,
+                                  fontSize: 15),
+                            ),
+                          ),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_outlined,
+                                  size: 14, color: cs.onSurfaceVariant),
+                              const SizedBox(width: 2),
+                              Expanded(
+                                child: Text(
+                                  n.ongNome ?? 'ONG',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      color: cs.onSurfaceVariant,
+                                      fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Selo sólido (fundo vermelho, texto branco) legível SOBRE a capa colorida.
+  Widget _seloUrgente() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: const BoxDecoration(
+        color: AppColors.error,
+        borderRadius: AppRadius.brSm,
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              // Avatar da categoria (icone + cor de acento).
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: Categorias.cor(n.categoria).withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Categorias.icone(n.categoria),
-                    size: 15, color: Categorias.cor(n.categoria)),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Flexible(
-                child: Text(
-                  Categorias.rotulo(n.categoria),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
-                ),
-              ),
-              const Spacer(),
-              if (n.urgente) _chip('URGENTE', AppColors.error),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            n.titulo,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                fontWeight: FontWeight.w700, color: cs.onSurface, fontSize: 15),
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              Icon(Icons.location_on_outlined,
-                  size: 14, color: cs.onSurfaceVariant),
-              const SizedBox(width: 2),
-              Expanded(
-                child: Text(
-                  n.ongNome ?? 'ONG',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
-                ),
-              ),
-            ],
-          ),
+          Icon(Icons.priority_high, size: 13, color: Colors.white),
+          SizedBox(width: 2),
+          Text('URGENTE',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11)),
         ],
       ),
     );
@@ -554,21 +598,6 @@ class _InicioTabState extends State<InicioTab> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _chip(String texto, Color cor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: cor.withValues(alpha: 0.12),
-        borderRadius: AppRadius.brSm,
-      ),
-      child: Text(
-        texto,
-        style: TextStyle(
-            color: cor, fontSize: 10, fontWeight: FontWeight.w700),
       ),
     );
   }
