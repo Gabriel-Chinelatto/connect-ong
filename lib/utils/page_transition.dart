@@ -9,11 +9,11 @@ class PageTransition {
   /// Cria uma rota que combina fade com um leve deslize horizontal,
   /// dando uma entrada suave a [page].
 
-  static Route fade(
+  static Route<T> fade<T>(
     Widget page,
   ) {
 
-    return PageRouteBuilder(
+    return PageRouteBuilder<T>(
 
       transitionDuration:
           const Duration(

@@ -7,13 +7,20 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/categorias.dart';
+import '../utils/page_transition.dart';
+import '../widgets/cards/capa_categoria.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
 
-/// Lista as campanhas ativas das ONGs que o doador pode apoiar, com opcao de
-/// favoritar cada campanha (persistido por usuario via FavoritoService).
+import 'doar_pix_screen.dart';
+
+/// Lista as campanhas ativas das ONGs que o doador pode apoiar, com capa
+/// ilustrativa por categoria, AUTO-FILTRO de categorias (chips gerados das
+/// categorias que existem nas campanhas carregadas) e favoritos.
 ///
-/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
+/// "Contribuir" abre o fluxo PIX simulado completo ([DoarPixScreen] com a
+/// campanha), substituindo o antigo dialog de valor.
 class CampanhasScreen extends StatefulWidget {
   const CampanhasScreen({super.key});
 
@@ -26,9 +33,11 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
   final FavoritoService _favService = FavoritoService();
   List<Campanha> _campanhas = [];
   bool _carregando = true;
-  String? _meuNome;
   int? _usuarioId;
   Set<int> _favCampanhas = {};
+
+  /// Categoria selecionada no filtro (null = "Todas").
+  String? _filtroCategoria;
 
   @override
   void initState() {
@@ -40,7 +49,6 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
   Future<void> _carregarUsuario() async {
     final u = await SessionService().obterUsuario();
     if (!mounted) return;
-    _meuNome = u?.nome;
     _usuarioId = u?.id;
     if (_usuarioId == null) return;
     try {
@@ -86,74 +94,41 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
     }
   }
 
+  // Categoria "visual" da campanha (fallback amigável quando o backend não
+  // informa categoria).
+  String _categoriaDe(Campanha c) {
+    final cat = c.categoria?.trim() ?? '';
+    return cat.isEmpty ? 'Doações' : Categorias.normalizar(cat);
+  }
+
+  /// Categorias que EXISTEM nas campanhas carregadas, na ordem canônica
+  /// (as desconhecidas vão para o fim, em ordem alfabética).
+  List<String> get _categoriasExistentes {
+    final presentes = _campanhas.map(_categoriaDe).toSet();
+    final ordenadas = <String>[
+      for (final c in Categorias.todas)
+        if (presentes.remove(c.valor)) c.valor,
+    ];
+    ordenadas.addAll(presentes.toList()..sort());
+    return ordenadas;
+  }
+
+  List<Campanha> get _filtradas => _filtroCategoria == null
+      ? _campanhas
+      : _campanhas.where((c) => _categoriaDe(c) == _filtroCategoria).toList();
+
   Future<void> _contribuir(Campanha c) async {
-    final controller = TextEditingController();
-    final valor = await showDialog<double>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Contribuir com "${c.titulo}"'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Valor (R\$)',
-                prefixIcon: Icon(Icons.attach_money),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [10, 25, 50, 100]
-                  .map((v) => ActionChip(
-                        label: Text('R\$ $v'),
-                        onPressed: () => controller.text = v.toString(),
-                      ))
-                  .toList(),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final v = double.tryParse(controller.text.replaceAll(',', '.'));
-              Navigator.pop(ctx, v);
-            },
-            child: const Text('Contribuir'),
-          ),
-        ],
-      ),
+    // Fluxo PIX completo (valor → código → aguardando → comprovante).
+    final concluiu = await Navigator.push<bool>(
+      context,
+      PageTransition.fade(DoarPixScreen(
+        ongId: c.ongId,
+        ongNome: c.ongNome ?? 'ONG',
+        campanha: c,
+      )),
     );
-
-    // Descarta o controller apos o dialogo fechar (evita vazamento).
-    controller.dispose();
-
-    if (valor == null || valor <= 0) return;
-    try {
-      final atualizada = await _service.contribuir(
-        campanhaId: c.id,
-        valor: valor,
-        doadorNome: _meuNome,
-      );
-      if (!mounted) return;
-      AppSnackbar.sucesso(
-        context,
-        atualizada.encerrada
-            ? 'Obrigado! A campanha atingiu a meta! 🎉'
-            : 'Obrigado pela contribuição de R\$ ${valor.toStringAsFixed(2)}!',
-      );
-      _carregar();
-    } catch (e) {
-      if (!mounted) return;
-      AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
-    }
+    // Recarrega para refletir o novo progresso da campanha.
+    if (concluiu == true && mounted) _carregar();
   }
 
   @override
@@ -171,16 +146,77 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _campanhas.isEmpty
               ? _vazio()
-              : RefreshIndicator(
-                  onRefresh: _carregar,
-                  color: AppColors.primary,
-                  child: ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    itemCount: _campanhas.length,
-                    itemBuilder: (_, i) => _card(_campanhas[i]),
-                  ),
+              : Column(
+                  children: [
+                    _filtroChips(),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _carregar,
+                        color: AppColors.primary,
+                        child: _filtradas.isEmpty
+                            ? ListView(children: const [
+                                SizedBox(height: 80),
+                                EmptyState(
+                                  icone: Icons.filter_alt_off_outlined,
+                                  mensagem:
+                                      'Nenhuma campanha nesta categoria',
+                                  detalhe:
+                                      'Toque em "Todas" para ver as demais.',
+                                ),
+                              ])
+                            : ListView.builder(
+                                physics: const BouncingScrollPhysics(
+                                    parent: AlwaysScrollableScrollPhysics()),
+                                padding: const EdgeInsets.fromLTRB(
+                                    AppSpacing.md, 0, AppSpacing.md,
+                                    AppSpacing.md),
+                                itemCount: _filtradas.length,
+                                itemBuilder: (_, i) => _card(_filtradas[i]),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
+    );
+  }
+
+  // Chips horizontais de categoria ("Todas" + categorias existentes).
+  Widget _filtroChips() {
+    final categorias = _categoriasExistentes;
+    if (categorias.length <= 1) return const SizedBox(height: AppSpacing.sm);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.sm),
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: ChoiceChip(
+              label: const Text('Todas'),
+              selected: _filtroCategoria == null,
+              onSelected: (_) => setState(() => _filtroCategoria = null),
+            ),
+          ),
+          for (final cat in categorias)
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.sm),
+              child: ChoiceChip(
+                avatar: Icon(
+                  Categorias.icone(cat),
+                  size: 16,
+                  color: _filtroCategoria == cat
+                      ? AppColors.primary
+                      : Categorias.cor(cat),
+                ),
+                label: Text(Categorias.rotulo(cat)),
+                selected: _filtroCategoria == cat,
+                onSelected: (sel) =>
+                    setState(() => _filtroCategoria = sel ? cat : null),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -193,121 +229,139 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
 
   Widget _card(Campanha c) {
     final cs = Theme.of(context).colorScheme;
+    final categoria = _categoriaDe(c);
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: AppRadius.brLg,
         border: Border.all(color: cs.outlineVariant),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              if (c.destaque)
-                Container(
-                  margin: const EdgeInsets.only(right: AppSpacing.sm),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.ouro.withValues(alpha: 0.2),
-                    borderRadius: AppRadius.brSm,
+          // Capa ilustrativa por categoria (gradiente + ícone marca d'água).
+          CapaCategoria(
+            categoria: categoria,
+            altura: 92,
+            selo: c.destaque ? _seloDestaque() : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        c.titulo,
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface),
+                      ),
+                    ),
+                    if (_usuarioId != null)
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: _favCampanhas.contains(c.id)
+                            ? 'Remover dos favoritos'
+                            : 'Favoritar',
+                        onPressed: () => _toggleFavorito(c),
+                        icon: Icon(
+                          _favCampanhas.contains(c.id)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: AppColors.error,
+                        ),
+                      ),
+                  ],
+                ),
+                if (c.ongNome != null) ...[
+                  const SizedBox(height: 2),
+                  Text(c.ongNome!,
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.primary)),
+                ],
+                const SizedBox(height: 10),
+                Text(c.descricao,
+                    style: TextStyle(
+                        fontSize: 14, color: cs.onSurfaceVariant, height: 1.4)),
+                const SizedBox(height: AppSpacing.md),
+                ClipRRect(
+                  borderRadius: AppRadius.brSm,
+                  child: LinearProgressIndicator(
+                    value: c.progresso / 100,
+                    minHeight: 10,
+                    backgroundColor: cs.surfaceContainerHighest,
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star, size: 14, color: AppColors.ouro),
-                      const SizedBox(width: 4),
-                      Text('Destaque',
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                          'R\$ ${c.valorArrecadado.toStringAsFixed(0)} de '
+                          'R\$ ${c.metaValor.toStringAsFixed(0)}',
                           style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.ouro)),
-                    ],
+                              color: cs.onSurface)),
+                    ),
+                    Text('${c.progresso}%',
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary)),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _contribuir(c),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.brMd),
+                    ),
+                    icon: const Icon(Icons.pix),
+                    label: const Text('Contribuir'),
                   ),
                 ),
-              Expanded(
-                child: Text(
-                  c.titulo,
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface),
-                ),
-              ),
-              if (_usuarioId != null)
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  tooltip: _favCampanhas.contains(c.id)
-                      ? 'Remover dos favoritos'
-                      : 'Favoritar',
-                  onPressed: () => _toggleFavorito(c),
-                  icon: Icon(
-                    _favCampanhas.contains(c.id)
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                    color: AppColors.error,
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
-          if (c.ongNome != null) ...[
-            const SizedBox(height: 2),
-            Text(c.ongNome!,
-                style:
-                    TextStyle(fontSize: 13, color: AppColors.primary)),
-          ],
-          const SizedBox(height: 10),
-          Text(c.descricao,
+        ],
+      ),
+    );
+  }
+
+  Widget _seloDestaque() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.onPrimary,
+        borderRadius: AppRadius.brSm,
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star, size: 12, color: AppColors.ouro),
+          SizedBox(width: 3),
+          Text('Destaque',
               style: TextStyle(
-                  fontSize: 14, color: cs.onSurfaceVariant, height: 1.4)),
-          const SizedBox(height: AppSpacing.md),
-          ClipRRect(
-            borderRadius: AppRadius.brSm,
-            child: LinearProgressIndicator(
-              value: c.progresso / 100,
-              minHeight: 10,
-              backgroundColor: cs.surfaceContainerHighest,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('R\$ ${c.valorArrecadado.toStringAsFixed(0)} de '
-                  'R\$ ${c.metaValor.toStringAsFixed(0)}',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface)),
-              Text('${c.progresso}%',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary)),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _contribuir(c),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.brMd),
-              ),
-              icon: const Icon(Icons.favorite),
-              label: const Text('Contribuir'),
-            ),
-          ),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary)),
         ],
       ),
     );
