@@ -5,6 +5,7 @@ import '../services/atividade_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/tempo.dart';
 import '../widgets/feedback/empty_state.dart';
 
 /// Feed global de atividades recentes da plataforma (Timeline).
@@ -63,18 +64,9 @@ class _TimelineAtividadesScreenState extends State<TimelineAtividadesScreen> {
     }
   }
 
-  /// Converte a dataCriacao ISO em um tempo relativo amigavel.
-  /// Retorna vazio se a data for nula ou invalida.
-  String _tempoRelativo(String? dataIso) {
-    if (dataIso == null) return '';
-    final data = DateTime.tryParse(dataIso);
-    if (data == null) return '';
-    final diff = DateTime.now().difference(data);
-    if (diff.isNegative || diff.inMinutes < 1) return 'agora';
-    if (diff.inMinutes < 60) return 'há ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'há ${diff.inHours} h';
-    return 'há ${diff.inDays} d';
-  }
+  /// Converte a dataCriacao ISO em um tempo relativo amigavel (helper
+  /// compartilhado em utils/tempo.dart). Vazio se a data for nula/invalida.
+  String _tempoRelativo(String? dataIso) => tempoRelativo(dataIso);
 
   @override
   Widget build(BuildContext context) {

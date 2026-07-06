@@ -66,6 +66,26 @@ const List<String> _meses = [
 String mesAnoPorExtenso(DateTime data) =>
     '${_meses[data.month - 1]} de ${data.year}';
 
+/// Tempo relativo curto para datas ISO vindas do backend: "agora",
+/// "há 5 min", "há 3 h", "há 1 dia", "há 12 dias".
+///
+/// Usado no feed do Explorar / detalhe da necessidade ("Postado há X") e na
+/// timeline de atividades. Datas ausentes/invalidas degradam para string
+/// vazia — o chamador simplesmente não mostra a linha (o campo `dataCriacao`
+/// pode não existir ainda em backends antigos). [agora] existe para os
+/// testes serem determinísticos.
+String tempoRelativo(String? dataIso, {DateTime? agora}) {
+  if (dataIso == null || dataIso.isEmpty) return '';
+  final data = DateTime.tryParse(dataIso);
+  if (data == null) return '';
+  final diff = (agora ?? DateTime.now()).difference(data);
+  if (diff.isNegative || diff.inMinutes < 1) return 'agora';
+  if (diff.inMinutes < 60) return 'há ${diff.inMinutes} min';
+  if (diff.inHours < 24) return 'há ${diff.inHours} h';
+  if (diff.inDays == 1) return 'há 1 dia';
+  return 'há ${diff.inDays} dias';
+}
+
 /// "2026-07-03T10:20:00" → "03/07/2026". Datas ausentes/inesperadas degradam
 /// para string vazia (contas antigas sem o campo).
 String dataCurtaDeIso(String? iso) {

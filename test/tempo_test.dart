@@ -95,6 +95,32 @@ void main() {
     });
   });
 
+  group('tempoRelativo — "Postado há X" do feed/detalhe', () {
+    final agora = DateTime(2026, 7, 3, 15, 0);
+
+    test('null/vazio/inválida → vazio (backend sem dataCriacao)', () {
+      expect(tempoRelativo(null, agora: agora), '');
+      expect(tempoRelativo('', agora: agora), '');
+      expect(tempoRelativo('não-é-data', agora: agora), '');
+    });
+
+    test('menos de 1 min (ou relógio adiantado) → "agora"', () {
+      expect(tempoRelativo('2026-07-03T14:59:30', agora: agora), 'agora');
+      expect(tempoRelativo('2026-07-03T16:00:00', agora: agora), 'agora');
+    });
+
+    test('minutos e horas', () {
+      expect(tempoRelativo('2026-07-03T14:15:00', agora: agora), 'há 45 min');
+      expect(tempoRelativo('2026-07-03T12:00:00', agora: agora), 'há 3 h');
+    });
+
+    test('dias, com singular em 1 dia', () {
+      expect(tempoRelativo('2026-07-02T10:00:00', agora: agora), 'há 1 dia');
+      expect(tempoRelativo('2026-06-21T15:00:00', agora: agora),
+          'há 12 dias');
+    });
+  });
+
   group('dataCurtaDeIso', () {
     test('ISO completa → dd/MM/yyyy', () {
       expect(dataCurtaDeIso('2026-07-03T10:20:00'), '03/07/2026');
