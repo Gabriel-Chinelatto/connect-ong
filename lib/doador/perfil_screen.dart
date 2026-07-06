@@ -75,7 +75,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
       _usuarioId = u.id;
       final perfil = await _perfilService.obter(u.id);
       final matches = await _interesseService.meusMatches(u.id);
-      final aceitos = matches.where((m) => m.status == 'ACEITO').toList();
+      // ACEITO e CONCLUIDO contam como match realizado (mesma regra do
+      // dashboard) — sem o CONCLUIDO, os stats zeravam após a conclusão.
+      final aceitos = matches
+          .where((m) => m.status == 'ACEITO' || m.status == 'CONCLUIDO')
+          .toList();
 
       // Nota média do doador (perfil público) — falha sem quebrar o hub.
       double nota = 0;

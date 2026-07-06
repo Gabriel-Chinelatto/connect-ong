@@ -125,7 +125,12 @@ class _InicioTabState extends State<InicioTab> {
     if (doadorId == null) return 0;
     try {
       final lista = await InteresseService().meusMatches(doadorId);
-      return lista.where((i) => i.status == 'ACEITO').length;
+      // ACEITO e CONCLUIDO contam como match realizado (mesma regra do
+      // dashboard de impacto) — sem o CONCLUIDO, o card zerava assim que
+      // a ONG concluía o match.
+      return lista
+          .where((i) => i.status == 'ACEITO' || i.status == 'CONCLUIDO')
+          .length;
     } catch (_) {
       return 0;
     }

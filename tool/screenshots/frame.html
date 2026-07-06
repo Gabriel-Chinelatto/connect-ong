@@ -1,0 +1,14 @@
+<!doctype html>
+<!-- Moldura p/ viewport mobile EXATO (430x932) no Chrome headless do Windows,
+     que tem largura minima de janela ~500px. Copiar p/ build/web apos o build.
+     Uso: http://localhost:PORTA/frame.html?go=<tela>  (tela = fragment do harness) -->
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; background: #1c1c1c; display: flex; justify-content: center; }
+  iframe { width: 430px; height: 932px; border: 0; }
+</style>
+<iframe id="f"></iframe>
+<script>
+  const p = new URLSearchParams(location.search);
+  document.getElementById('f').src = '/index.html#' + (p.get('go') || 'home');
+</script>

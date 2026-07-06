@@ -87,8 +87,10 @@ class _MinhasDoacoesScreenState extends State<MinhasDoacoesScreen> {
       if (!mounted) return;
       setState(() {
         _doacoesPix = futuros[0] as List<DoacaoFinanceira>;
+        // ACEITO e CONCLUIDO contam como item doado — sem o CONCLUIDO, a
+        // doação sumia da lista quando a ONG concluía o match.
         _itensDoados = (futuros[1] as List<Interesse>)
-            .where((m) => m.status == 'ACEITO')
+            .where((m) => m.status == 'ACEITO' || m.status == 'CONCLUIDO')
             .toList();
         ofertas = futuros[2] as List<Doacao>;
       });
@@ -419,9 +421,10 @@ class _MinhasDoacoesScreenState extends State<MinhasDoacoesScreen> {
     );
   }
 
-  // Cartao de um item doado (match ACEITO): item + ONG.
+  // Cartao de um item doado (match ACEITO ou CONCLUIDO): item + ONG.
   Widget _cardItemDoado(Interesse m) {
     final cs = Theme.of(context).colorScheme;
+    final concluido = m.status == 'CONCLUIDO';
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -465,9 +468,9 @@ class _MinhasDoacoesScreenState extends State<MinhasDoacoesScreen> {
               color: AppColors.success.withValues(alpha: 0.12),
               borderRadius: AppRadius.brSm,
             ),
-            child: const Text(
-              'ACEITO',
-              style: TextStyle(
+            child: Text(
+              concluido ? 'CONCLUÍDO' : 'ACEITO',
+              style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: AppColors.success,
