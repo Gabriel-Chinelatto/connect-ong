@@ -18,7 +18,8 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.7.0" apply false
+    // 8.9.1+ exigido pelas libs androidx transitivas (browser 1.9, activity-ktx 1.12)
+    id("com.android.application") version "8.9.1" apply false
     id("org.jetbrains.kotlin.android") version "1.8.22" apply false
 }
 
