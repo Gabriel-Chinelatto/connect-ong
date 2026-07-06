@@ -1,5 +1,7 @@
 # Memory Index
 
+- [Sessão 2026-07-06 (VIVA)](connect-ong-sessao-2026-07-06.md) — **estado em andamento**: 2ª rodada de feedback (13 tópicos: bloqueio WhatsApp, UF/cidades IBGE, detalhe da necessidade, privacidade real, Como chegar…), plano em 3 ondas, contratos do bloqueio, como retomar se a sessão cair
+
 - [Connect ONG architecture](connect-ong-architecture.md) — 3 repos + 3-platform rule (mobile=doador, desktop=ONG admin, web), API, remote MySQL
 - [Connect ONG roadmap](connect-ong-roadmap.md) — MASTER roadmap; **ROADMAP 100% CONCLUÍDO (blocos 0-30, incluindo o 21/MASTER FINISH)**; seções PÓS-ROADMAP 2026-07-02 (chat WhatsApp, ROLE_ADMIN, soft-delete, Modo Feira, sync), **2026-07-03 "faça tudo o que falta"** (esqueci-senha E2E, rate limiting, B2, LGPD, aba Doações) e **2026-07-03 tarde/noite "polimentos + ideias do usuário"** (PIX 2 fases, match CONCLUIDO, Matches 3 abas, home viva, perfil público de DOADOR + avaliação estilo Uber, prestação rica + pendências 10 dias, streak 🔥 Top 1, fotos por arquivo/base64, capa+Maps+link da ONG, chat com anexo, fix do "visto por último"/fuso; backend 82 testes; **verificação visual dessa última rodada AINDA PENDENTE**)
 - [Connect ONG deferred](connect-ong-deferred.md) — BACKLOG: maioria RESOLVIDA (JWT, IDOR, esqueci-senha, rate limiting, B2, doações recebidas, LGPD…); restam itens de infra/decisão do usuário: rotacionar senha MySQL, utf8mb4, validar Docker, hospedar web, upload de imagens, WebSocket
