@@ -5,6 +5,21 @@ import 'package:http/http.dart' as http;
 import '../models/mensagem.dart';
 import 'api_service.dart';
 
+/// Lancada quando o backend responde HTTP 403 ao enviar mensagem: a ONG
+/// bloqueou este doador. Excecao TIPADA para o chamador (ChatScreen)
+/// distinguir bloqueio de outros erros e desabilitar o envio — sem loop de
+/// reenvio da mensagem que falhou.
+class BloqueadoException implements Exception {
+  final String mensagem;
+
+  const BloqueadoException([
+    this.mensagem = 'Você não pode enviar mensagens para esta ONG',
+  ]);
+
+  @override
+  String toString() => mensagem;
+}
+
 /// Servico do chat de um match: lista (GET /mensagens?interesseId=) e envia
 /// (POST /mensagens) mensagens trocadas entre doador e ONG. O chat so existe
 /// apos a ONG aceitar o interesse, por isso toda mensagem referencia o
@@ -12,10 +27,12 @@ import 'api_service.dart';
 class MensagemService {
   // Lista as mensagens de um match (ordenadas por data).
   Future<List<Mensagem>> listar(int interesseId) async {
-    final response = await http.get(
-      Uri.parse('${ApiService.baseUrl}/mensagens?interesseId=$interesseId'),
-      headers: ApiService.authHeaders(),
-    ).timeout(ApiService.timeout);
+    final response = await http
+        .get(
+          Uri.parse('${ApiService.baseUrl}/mensagens?interesseId=$interesseId'),
+          headers: ApiService.authHeaders(),
+        )
+        .timeout(ApiService.timeout);
 
     if (response.statusCode != 200) {
       throw Exception('Erro ao carregar mensagens');
@@ -33,27 +50,36 @@ class MensagemService {
     required String conteudo,
     String? anexoBase64,
   }) async {
-    final response = await http.post(
-      Uri.parse('${ApiService.baseUrl}/mensagens'),
-      headers: ApiService.jsonHeaders(),
-      body: jsonEncode({
-        'interesseId': interesseId,
-        'remetente': remetente,
-        'conteudo': conteudo,
-        if (anexoBase64 != null && anexoBase64.isNotEmpty) ...{
-          'anexoBase64': anexoBase64,
-          'anexoTipo': 'imagem',
-        },
-      }),
-    ).timeout(ApiService.timeout);
+    final response = await http
+        .post(
+          Uri.parse('${ApiService.baseUrl}/mensagens'),
+          headers: ApiService.jsonHeaders(),
+          body: jsonEncode({
+            'interesseId': interesseId,
+            'remetente': remetente,
+            'conteudo': conteudo,
+            if (anexoBase64 != null && anexoBase64.isNotEmpty) ...{
+              'anexoBase64': anexoBase64,
+              'anexoTipo': 'imagem',
+            },
+          }),
+        )
+        .timeout(ApiService.timeout);
+
+    // 403 = a ONG bloqueou este doador (contrato: {"erro": ...}). Excecao
+    // tipada para a tela desabilitar o envio em vez de mostrar erro generico.
+    if (response.statusCode == 403) {
+      throw const BloqueadoException();
+    }
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       String msgErro;
       try {
         final body = jsonDecode(utf8.decode(response.bodyBytes));
-        msgErro = (body is Map && body['erro'] != null)
-            ? body['erro'].toString()
-            : 'Erro (HTTP ${response.statusCode})';
+        msgErro =
+            (body is Map && body['erro'] != null)
+                ? body['erro'].toString()
+                : 'Erro (HTTP ${response.statusCode})';
       } catch (_) {
         msgErro = 'Erro (HTTP ${response.statusCode})';
       }
@@ -65,19 +91,22 @@ class MensagemService {
   // tocar no mesmo codigo remove; codigo diferente troca. `emojiCode` e um
   // CODIGO (ex.: 'LIKE'), nao o caractere.
   Future<void> reagir(int mensagemId, String emojiCode) async {
-    final response = await http.post(
-      Uri.parse('${ApiService.baseUrl}/mensagens/$mensagemId/reacao'),
-      headers: ApiService.jsonHeaders(),
-      body: jsonEncode({'emoji': emojiCode}),
-    ).timeout(ApiService.timeout);
+    final response = await http
+        .post(
+          Uri.parse('${ApiService.baseUrl}/mensagens/$mensagemId/reacao'),
+          headers: ApiService.jsonHeaders(),
+          body: jsonEncode({'emoji': emojiCode}),
+        )
+        .timeout(ApiService.timeout);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       String msgErro;
       try {
         final body = jsonDecode(utf8.decode(response.bodyBytes));
-        msgErro = (body is Map && body['erro'] != null)
-            ? body['erro'].toString()
-            : 'Erro (HTTP ${response.statusCode})';
+        msgErro =
+            (body is Map && body['erro'] != null)
+                ? body['erro'].toString()
+                : 'Erro (HTTP ${response.statusCode})';
       } catch (_) {
         msgErro = 'Erro (HTTP ${response.statusCode})';
       }
@@ -93,11 +122,14 @@ class MensagemService {
   // em qualquer erro/timeout ou status != 200 devolve um default seguro.
   Future<Map<String, dynamic>> status(int interesseId) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '${ApiService.baseUrl}/mensagens/status?interesseId=$interesseId'),
-        headers: ApiService.authHeaders(),
-      ).timeout(ApiService.timeout);
+      final response = await http
+          .get(
+            Uri.parse(
+              '${ApiService.baseUrl}/mensagens/status?interesseId=$interesseId',
+            ),
+            headers: ApiService.authHeaders(),
+          )
+          .timeout(ApiService.timeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(utf8.decode(response.bodyBytes))
@@ -117,11 +149,14 @@ class MensagemService {
   // Sinaliza que o usuario esta digitando. Best-effort: erros sao ignorados.
   Future<void> digitando(int interesseId) async {
     try {
-      await http.post(
-        Uri.parse(
-            '${ApiService.baseUrl}/mensagens/digitando?interesseId=$interesseId'),
-        headers: ApiService.jsonHeaders(),
-      ).timeout(ApiService.timeout);
+      await http
+          .post(
+            Uri.parse(
+              '${ApiService.baseUrl}/mensagens/digitando?interesseId=$interesseId',
+            ),
+            headers: ApiService.jsonHeaders(),
+          )
+          .timeout(ApiService.timeout);
     } catch (_) {
       // ignorado: heartbeat de digitacao e best-effort.
     }

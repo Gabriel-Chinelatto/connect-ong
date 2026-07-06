@@ -41,3 +41,4 @@ flutter:
     - assets/images/abner.jpg
     - assets/images/gabriel.jpg
     - assets/images/impacto_hero.svg
+    - assets/dados/municipios_por_uf.json

@@ -119,32 +119,37 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
   // contas" e o aviso "Prestação ainda não publicada".
   Future<void> _verificarPrestacoes(List<Interesse> lista) async {
     final concluidos = lista.where((i) => i.status == 'CONCLUIDO');
-    await Future.wait(concluidos.map((i) async {
-      try {
-        final prestacoes = await PrestacaoService().listar(i.id);
-        if (!mounted) return;
-        setState(() => _temPrestacao[i.id] = prestacoes.isNotEmpty);
-      } catch (_) {
-        // Na dúvida (falha de rede), deixa null: sem chip de status, mas o
-        // botão "Ver prestação de contas" continua visível (a tela de
-        // prestações lida com o vazio).
-      }
-    }));
+    await Future.wait(
+      concluidos.map((i) async {
+        try {
+          final prestacoes = await PrestacaoService().listar(i.id);
+          if (!mounted) return;
+          setState(() => _temPrestacao[i.id] = prestacoes.isNotEmpty);
+        } catch (_) {
+          // Na dúvida (falha de rede), deixa null: sem chip de status, mas o
+          // botão "Ver prestação de contas" continua visível (a tela de
+          // prestações lida com o vazio).
+        }
+      }),
+    );
   }
 
   // ---- Listas derivadas por aba ----
   List<Interesse> get _ativas =>
       _matches.where((i) => i.status == 'ACEITO').toList();
 
-  List<Interesse> get _aguardando => _matches
-      .where((i) => i.status == 'PENDENTE' || i.status == 'RECUSADO')
-      .toList();
+  List<Interesse> get _aguardando =>
+      _matches
+          .where((i) => i.status == 'PENDENTE' || i.status == 'RECUSADO')
+          .toList();
 
   List<Interesse> get _concluidas {
-    final lista = _matches.where((i) => i.status == 'CONCLUIDO').toList()
-      // Mais recentes primeiro (datas ISO ordenam lexicograficamente).
-      ..sort((a, b) =>
-          (b.dataConclusao ?? '').compareTo(a.dataConclusao ?? ''));
+    final lista =
+        _matches.where((i) => i.status == 'CONCLUIDO').toList()
+          // Mais recentes primeiro (datas ISO ordenam lexicograficamente).
+          ..sort(
+            (a, b) => (b.dataConclusao ?? '').compareTo(a.dataConclusao ?? ''),
+          );
     return lista;
   }
 
@@ -167,14 +172,19 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     return TextButton.icon(
       onPressed: onTap,
       icon: Icon(icone, size: 16, color: AppColors.primary),
-      label: Text(texto,
-          style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w600)),
+      label: Text(
+        texto,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
+        ),
         minimumSize: const Size(0, 40),
       ),
     );
@@ -184,11 +194,16 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          interesseId: i.id,
-          meuRemetente: 'DOADOR',
-          titulo: i.necessidadeTitulo ?? i.ongNome ?? 'Conversa',
-        ),
+        builder:
+            (_) => ChatScreen(
+              interesseId: i.id,
+              meuRemetente: 'DOADOR',
+              titulo: i.necessidadeTitulo ?? i.ongNome ?? 'Conversa',
+              // Cabeçalho tocável do chat (perfil da ONG) + estado bloqueado.
+              ongId: i.ongId,
+              ongNome: i.ongNome,
+              bloqueadoPelaOng: i.bloqueadoPelaOng,
+            ),
       ),
     );
   }
@@ -197,10 +212,11 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PrestacoesScreen(
-          interesseId: i.id,
-          ongNome: i.ongNome ?? 'ONG',
-        ),
+        builder:
+            (_) => PrestacoesScreen(
+              interesseId: i.id,
+              ongNome: i.ongNome ?? 'ONG',
+            ),
       ),
     );
   }
@@ -215,63 +231,75 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
 
     await showDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setStateDialog) => AlertDialog(
-          title: Text('Avaliar ${i.ongNome ?? "ONG"}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (idx) {
-                  return IconButton(
-                    tooltip: '${idx + 1} ${idx == 0 ? "estrela" : "estrelas"}',
-                    icon: Icon(
-                      idx < nota ? Icons.star_rounded : Icons.star_border_rounded,
-                      color: AppColors.ouro,
-                      size: 32,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder:
+                (dialogContext, setStateDialog) => AlertDialog(
+                  title: Text('Avaliar ${i.ongNome ?? "ONG"}'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(5, (idx) {
+                          return IconButton(
+                            tooltip:
+                                '${idx + 1} ${idx == 0 ? "estrela" : "estrelas"}',
+                            icon: Icon(
+                              idx < nota
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: AppColors.ouro,
+                              size: 32,
+                            ),
+                            onPressed:
+                                () => setStateDialog(() => nota = idx + 1),
+                          );
+                        }),
+                      ),
+                      TextField(
+                        controller: comentarioC,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Comentário (opcional)',
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Cancelar'),
                     ),
-                    onPressed: () => setStateDialog(() => nota = idx + 1),
-                  );
-                }),
-              ),
-              TextField(
-                controller: comentarioC,
-                maxLines: 3,
-                decoration:
-                    const InputDecoration(labelText: 'Comentário (opcional)'),
-              ),
-            ],
+                    FilledButton(
+                      onPressed: () async {
+                        try {
+                          await AvaliacaoService().avaliar(
+                            ongId: i.ongId!,
+                            doadorId: u.id,
+                            nota: nota,
+                            comentario: comentarioC.text.trim(),
+                          );
+                          if (!dialogContext.mounted) return;
+                          Navigator.pop(dialogContext);
+                          if (!mounted) return;
+                          AppSnackbar.sucesso(
+                            context,
+                            'Avaliação enviada! Obrigado 💚',
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          AppSnackbar.erro(
+                            context,
+                            e.toString().replaceFirst('Exception: ', ''),
+                          );
+                        }
+                      },
+                      child: const Text('Enviar'),
+                    ),
+                  ],
+                ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                try {
-                  await AvaliacaoService().avaliar(
-                    ongId: i.ongId!,
-                    doadorId: u.id,
-                    nota: nota,
-                    comentario: comentarioC.text.trim(),
-                  );
-                  if (!dialogContext.mounted) return;
-                  Navigator.pop(dialogContext);
-                  if (!mounted) return;
-                  AppSnackbar.sucesso(context, 'Avaliação enviada! Obrigado 💚');
-                } catch (e) {
-                  if (!mounted) return;
-                  AppSnackbar.erro(
-                      context, e.toString().replaceFirst('Exception: ', ''));
-                }
-              },
-              child: const Text('Enviar'),
-            ),
-          ],
-        ),
-      ),
     );
 
     // Descarta o controller apos o dialogo fechar (evita vazamento).
@@ -300,16 +328,17 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
           ],
         ),
       ),
-      body: _carregando
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabs,
-              children: [
-                _abaCom(_listaAtivas()),
-                _abaCom(_listaAguardando()),
-                _abaCom(_listaConcluidas()),
-              ],
-            ),
+      body:
+          _carregando
+              ? const Center(child: CircularProgressIndicator())
+              : TabBarView(
+                controller: _tabs,
+                children: [
+                  _abaCom(_listaAtivas()),
+                  _abaCom(_listaAguardando()),
+                  _abaCom(_listaConcluidas()),
+                ],
+              ),
     );
   }
 
@@ -352,8 +381,11 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     if (_erro) return _erroWidget();
     final ativas = _ativas;
     if (ativas.isEmpty) {
-      return _vazio(Icons.handshake_outlined, 'Nenhuma conversa ativa',
-          'Vá ao Explorar e encontre uma causa para apoiar!');
+      return _vazio(
+        Icons.handshake_outlined,
+        'Nenhuma conversa ativa',
+        'Vá ao Explorar e encontre uma causa para apoiar!',
+      );
     }
 
     // Agrupa por ONG preservando a ordem de chegada.
@@ -394,23 +426,21 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
         child: ExpansionTile(
           leading: CircleAvatar(
             backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-            child: const Icon(Icons.storefront_outlined,
-                color: AppColors.primary),
+            child: const Icon(
+              Icons.storefront_outlined,
+              color: AppColors.primary,
+            ),
           ),
           title: Text(
             ongNome,
-            style: TextStyle(
-                fontWeight: FontWeight.w700, color: cs.onSurface),
+            style: TextStyle(fontWeight: FontWeight.w700, color: cs.onSurface),
           ),
           subtitle: Text(
             '${grupo.length} conversas ativas',
             style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
           ),
-          childrenPadding:
-              const EdgeInsets.only(bottom: AppSpacing.sm),
-          children: [
-            for (final i in grupo) _conversaDoGrupo(i),
-          ],
+          childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          children: [for (final i in grupo) _conversaDoGrupo(i)],
         ),
       ),
     );
@@ -423,14 +453,19 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
       onTap: () => _abrirChat(i),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.chat_bubble_outline,
-                    size: 16, color: AppColors.primary),
+                const Icon(
+                  Icons.chat_bubble_outline,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -438,7 +473,9 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        fontWeight: FontWeight.w600, color: cs.onSurface),
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
               ],
@@ -447,10 +484,16 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
               spacing: AppSpacing.md,
               runSpacing: 6,
               children: [
-                _acao(Icons.chat_bubble_outline, 'Conversar',
-                    () => _abrirChat(i)),
-                _acao(Icons.receipt_long, 'Prestação',
-                    () => _abrirPrestacoes(i)),
+                _acao(
+                  Icons.chat_bubble_outline,
+                  'Conversar',
+                  () => _abrirChat(i),
+                ),
+                _acao(
+                  Icons.receipt_long,
+                  'Prestação',
+                  () => _abrirPrestacoes(i),
+                ),
                 _acao(Icons.star_outline, 'Avaliar', () => _abrirAvaliar(i)),
               ],
             ),
@@ -465,8 +508,11 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     if (_erro) return _erroWidget();
     final aguardando = _aguardando;
     if (aguardando.isEmpty) {
-      return _vazio(Icons.hourglass_empty, 'Nada aguardando resposta',
-          'Demonstre interesse em uma necessidade no Explorar.');
+      return _vazio(
+        Icons.hourglass_empty,
+        'Nada aguardando resposta',
+        'Demonstre interesse em uma necessidade no Explorar.',
+      );
     }
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -481,9 +527,10 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     final concluidas = _concluidas;
     if (concluidas.isEmpty) {
       return _vazio(
-          Icons.verified_outlined,
-          'Nenhuma doação concluída ainda',
-          'Quando uma ONG concluir uma doação sua, ela aparece aqui como histórico.');
+        Icons.verified_outlined,
+        'Nenhuma doação concluída ainda',
+        'Quando uma ONG concluir uma doação sua, ela aparece aqui como histórico.',
+      );
     }
 
     // Histórico estilo iFood: agrupado por data de conclusão (desc).
@@ -498,7 +545,9 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
         for (final entrada in porData.entries) ...[
           Padding(
             padding: const EdgeInsets.only(
-                bottom: AppSpacing.sm, top: AppSpacing.xs),
+              bottom: AppSpacing.sm,
+              top: AppSpacing.xs,
+            ),
             child: Text(
               entrada.key,
               style: TextStyle(
@@ -543,22 +592,26 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                     Text(
                       i.necessidadeTitulo ?? 'Doação',
                       style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: cs.onSurface),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: cs.onSurface,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       i.ongNome ?? 'ONG',
                       style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600),
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Concluída em ${_dataCurta(i.dataConclusao)}',
                       style: TextStyle(
-                          color: cs.onSurfaceVariant, fontSize: 12),
+                        color: cs.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -576,8 +629,11 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
             const SizedBox(height: AppSpacing.xs),
           ],
           if (tem != false)
-            _acao(Icons.receipt_long, 'Ver prestação de contas',
-                () => _abrirPrestacoes(i)),
+            _acao(
+              Icons.receipt_long,
+              'Ver prestação de contas',
+              () => _abrirPrestacoes(i),
+            ),
         ],
       ),
     );
@@ -587,9 +643,10 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
   /// verde suave = publicada; âmbar = aguardando a ONG publicar.
   Widget _chipPrestacao(bool publicada) {
     final cor = publicada ? AppColors.success : AppColors.warning;
-    final texto = publicada
-        ? 'Prestação de contas publicada'
-        : 'Aguardando prestação de contas';
+    final texto =
+        publicada
+            ? 'Prestação de contas publicada'
+            : 'Aguardando prestação de contas';
     return Semantics(
       label: texto,
       child: Container(
@@ -613,7 +670,10 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                    color: cor, fontWeight: FontWeight.w700, fontSize: 12),
+                  color: cor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
               ),
             ),
           ],
@@ -666,16 +726,18 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                       Text(
                         i.necessidadeTitulo ?? 'Necessidade',
                         style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                            color: cs.onSurface),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: cs.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         i.ongNome ?? 'ONG',
                         style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600),
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       if (aceito) ...[
                         const SizedBox(height: AppSpacing.sm),
@@ -683,12 +745,21 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                           spacing: AppSpacing.md,
                           runSpacing: 6,
                           children: [
-                            _acao(Icons.chat_bubble_outline, 'Conversar',
-                                () => _abrirChat(i)),
-                            _acao(Icons.receipt_long, 'Prestação',
-                                () => _abrirPrestacoes(i)),
-                            _acao(Icons.star_outline, 'Avaliar',
-                                () => _abrirAvaliar(i)),
+                            _acao(
+                              Icons.chat_bubble_outline,
+                              'Conversar',
+                              () => _abrirChat(i),
+                            ),
+                            _acao(
+                              Icons.receipt_long,
+                              'Prestação',
+                              () => _abrirPrestacoes(i),
+                            ),
+                            _acao(
+                              Icons.star_outline,
+                              'Avaliar',
+                              () => _abrirAvaliar(i),
+                            ),
                           ],
                         ),
                       ],
@@ -714,8 +785,7 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
       ),
       child: Text(
         rotulo,
-        style: TextStyle(
-            color: cor, fontWeight: FontWeight.w700, fontSize: 12),
+        style: TextStyle(color: cor, fontWeight: FontWeight.w700, fontSize: 12),
       ),
     );
   }

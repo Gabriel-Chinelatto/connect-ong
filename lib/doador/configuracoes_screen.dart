@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 
 import '../config/config_controller.dart';
@@ -7,15 +8,22 @@ import '../services/api_service.dart';
 import '../services/perfil_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../screens/legal/documentos_legais_screen.dart';
 
-/// Central de configuracoes do doador: aparencia (tema/fonte), notificacoes,
-/// privacidade, seguranca e acessibilidade. Mudancas de aparencia sao aplicadas
-/// na hora e persistidas pelo ConfigController.
+/// Central de configuracoes do doador: aparencia, acessibilidade,
+/// notificacoes, privacidade, seguranca e area legal.
 ///
-/// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
+/// Fluxo de edicao (rascunho + Salvar):
+/// - Os toggles alteram uma COPIA local ([_p]) e mostram um PREVIEW imediato
+///   via [ConfigController.aplicarPreview] (tema/contraste/fonte mudam na
+///   hora, sem persistir).
+/// - "Salvar configuracoes" (barra fixa que aparece so com mudanca pendente)
+///   persiste tudo via [ConfigController.atualizar]; "Descartar" (ou sair da
+///   tela sem salvar) reverte o preview com [ConfigController.reverterPreview].
 class ConfiguracoesScreen extends StatefulWidget {
   const ConfiguracoesScreen({super.key});
 
@@ -24,166 +32,392 @@ class ConfiguracoesScreen extends StatefulWidget {
 }
 
 class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
+  /// Snapshot do estado persistido no momento em que a tela abriu (ou do
+  /// ultimo salvar): e a referencia para saber se ha mudanca pendente.
+  late Preferencia _original;
+
+  /// Copia PENDENTE que os toggles editam (so vira definitiva no Salvar).
   late Preferencia _p;
+
   int? _usuarioId;
   bool _excluindo = false;
+  bool _salvando = false; // guard anti-duplo-toque do Salvar
+
+  /// Ha mudanca pendente? (compara a copia editada com o snapshot original)
+  bool get _temMudanca => !mapEquals(_p.toJson(), _original.toJson());
 
   @override
   void initState() {
     super.initState();
-    _p = ConfigController.instance.prefs.copy();
+    _original = ConfigController.instance.prefs.copy();
+    _p = _original.copy();
     SessionService().obterUsuario().then((u) {
       if (mounted) setState(() => _usuarioId = u?.id);
     });
   }
 
-  // Aplica + persiste (a aparencia muda o app na hora).
-  void _aplicar() {
-    setState(() {});
-    ConfigController.instance.atualizar(_p.copy());
+  /// Aplica a edicao como PREVIEW (visual imediato, sem persistir).
+  void _editar(void Function() muda) {
+    setState(muda);
+    ConfigController.instance.aplicarPreview(_p);
+  }
+
+  /// Persiste as mudancas pendentes. Retorna true se concluiu.
+  Future<bool> _salvar() async {
+    if (_salvando) return false; // anti-duplo-toque
+    setState(() => _salvando = true);
+    await ConfigController.instance.atualizar(_p.copy());
+    if (!mounted) return true;
+    setState(() {
+      _original = _p.copy();
+      _salvando = false;
+    });
+    AppSnackbar.sucesso(context, 'Configurações salvas 💚');
+    return true;
+  }
+
+  /// Descarta as mudancas pendentes e reverte o preview.
+  void _descartar() {
+    ConfigController.instance.reverterPreview();
+    setState(() => _p = _original.copy());
+  }
+
+  /// Dialog ao tentar sair com mudancas pendentes.
+  Future<void> _confirmarSaida() async {
+    final escolha = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text(
+            'Você mudou algumas configurações mas ainda não salvou.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'editar'),
+            child: const Text('Continuar editando'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'descartar'),
+            child: const Text('Descartar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, 'salvar'),
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+
+    switch (escolha) {
+      case 'salvar':
+        final ok = await _salvar();
+        if (ok && mounted) Navigator.pop(context);
+      case 'descartar':
+        _descartar();
+        Navigator.pop(context);
+      default:
+        break; // continuar editando (ou dialog fechado)
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Configurações'),
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.onSurface,
+    return PopScope(
+      // Sem pendencias, sai normal; com pendencias, intercepta e pergunta.
+      canPop: !_temMudanca,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _confirmarSaida();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Configurações'),
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        body: Stack(
+          children: [
+            ListView(
+              // Espaco extra embaixo para a barra de salvar nao cobrir a
+              // ultima secao.
+              padding: const EdgeInsets.fromLTRB(
+                  0, AppSpacing.sm, 0, AppSpacing.xxl * 2.5),
+              children: [
+                _cartaoSecao(
+                  icone: Icons.palette_outlined,
+                  titulo: 'Aparência',
+                  subtitulo: 'Tema e tamanho do texto',
+                  filhos: [
+                    _escolha(
+                      'Tema',
+                      'Claro, escuro ou acompanha o aparelho',
+                      const ['CLARO', 'ESCURO', 'AUTOMATICO'],
+                      const ['Claro', 'Escuro', 'Automático'],
+                      _p.tema,
+                      (v) => _editar(() => _p.tema = v),
+                    ),
+                    _escolha(
+                      'Tamanho da fonte',
+                      'Ajusta o tamanho do texto em todo o app',
+                      const ['PEQUENA', 'MEDIA', 'GRANDE'],
+                      const ['Pequena', 'Média', 'Grande'],
+                      _p.tamanhoFonte,
+                      (v) => _editar(() => _p.tamanhoFonte = v),
+                    ),
+                  ],
+                ),
+                _cartaoSecao(
+                  icone: Icons.accessibility_new_outlined,
+                  titulo: 'Acessibilidade',
+                  subtitulo: 'Recursos para facilitar o uso',
+                  filhos: [
+                    _switch(
+                        'Alto contraste',
+                        'Fundos puros, bordas marcadas e cores mais fortes',
+                        _p.altoContraste,
+                        (v) => _editar(() => _p.altoContraste = v)),
+                    _switch(
+                        'Fonte para dislexia',
+                        'Troca para a fonte Lexend, mais fácil de ler',
+                        _p.fonteDislexia,
+                        (v) => _editar(() => _p.fonteDislexia = v)),
+                    _switch(
+                        'Navegação simplificada',
+                        'Reduz animações e movimentos automáticos',
+                        _p.navegacaoSimplificada,
+                        (v) => _editar(() => _p.navegacaoSimplificada = v)),
+                  ],
+                ),
+                _cartaoSecao(
+                  icone: Icons.notifications_outlined,
+                  titulo: 'Notificações',
+                  subtitulo: 'O que você quer receber',
+                  filhos: [
+                    _switch(
+                        'Novas mensagens',
+                        'Avisa quando uma ONG responder no chat',
+                        _p.notifMensagens,
+                        (v) => _editar(() => _p.notifMensagens = v)),
+                    _switch(
+                        'Match de doações',
+                        'Avisa quando uma ONG aceitar sua doação',
+                        _p.notifMatch,
+                        (v) => _editar(() => _p.notifMatch = v)),
+                    _switch(
+                        'Atualizações de campanhas',
+                        'Novidades das campanhas que você acompanha',
+                        _p.notifCampanhas,
+                        (v) => _editar(() => _p.notifCampanhas = v)),
+                    _switch(
+                        'Novas necessidades',
+                        'Quando as ONGs publicarem novos pedidos',
+                        _p.notifNecessidades,
+                        (v) => _editar(() => _p.notifNecessidades = v)),
+                    _switch(
+                        'Notícias da plataforma',
+                        'Novidades e avisos do Connect ONG',
+                        _p.notifNoticias,
+                        (v) => _editar(() => _p.notifNoticias = v)),
+                  ],
+                ),
+                _cartaoSecao(
+                  icone: Icons.lock_outline,
+                  titulo: 'Privacidade',
+                  subtitulo: 'O que os outros veem sobre você',
+                  filhos: [
+                    _switch(
+                        'Exibir telefone',
+                        'Mostra seu telefone para ONGs com match',
+                        _p.mostrarTelefone,
+                        (v) => _editar(() => _p.mostrarTelefone = v)),
+                    _switch(
+                        'Exibir e-mail',
+                        'Mostra seu e-mail no seu perfil público',
+                        _p.mostrarEmail,
+                        (v) => _editar(() => _p.mostrarEmail = v)),
+                    _switch(
+                        'Perfil público',
+                        'Permite que outros vejam seu perfil de doador',
+                        _p.perfilPublico,
+                        (v) => _editar(() => _p.perfilPublico = v)),
+                    _switch(
+                        'Receber contatos de ONGs',
+                        'ONGs podem iniciar uma conversa com você',
+                        _p.receberContatos,
+                        (v) => _editar(() => _p.receberContatos = v)),
+                    _switch(
+                        'Receber sugestões',
+                        'Sugestões de ONGs e necessidades para você',
+                        _p.receberSugestoes,
+                        (v) => _editar(() => _p.receberSugestoes = v)),
+                  ],
+                ),
+                _cartaoSecao(
+                  icone: Icons.shield_outlined,
+                  titulo: 'Segurança',
+                  subtitulo: 'Proteja o acesso à sua conta',
+                  filhos: [
+                    ListTile(
+                      leading: const Icon(Icons.password),
+                      title: const Text('Alterar senha'),
+                      subtitle: const Text('Troque sua senha de acesso'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: _abrirAlterarSenha,
+                    ),
+                  ],
+                ),
+                _cartaoSecao(
+                  icone: Icons.storefront_outlined,
+                  titulo: 'Apresentação',
+                  subtitulo: 'Recursos para demonstrações',
+                  filhos: [
+                    // Preferencia LOCAL do aparelho: aplica e salva na hora
+                    // (nao entra no fluxo de rascunho/Salvar).
+                    _switch(
+                      'Modo Feira',
+                      'Mostra as credenciais de demonstração na tela de login',
+                      ConfigController.instance.modoFeira,
+                      (v) {
+                        ConfigController.instance.definirModoFeira(v);
+                        setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+                _cartaoSecao(
+                  icone: Icons.gavel_outlined,
+                  titulo: 'Termos e Privacidade',
+                  subtitulo: 'Documentos legais da plataforma',
+                  filhos: [
+                    ListTile(
+                      leading: const Icon(Icons.privacy_tip_outlined),
+                      title: const Text('Política de Privacidade'),
+                      subtitle:
+                          const Text('Como tratamos seus dados (LGPD)'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () =>
+                          _abrirDocumento(DocumentoLegal.privacidade),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.description_outlined),
+                      title: const Text('Termos de Uso'),
+                      subtitle: const Text('Regras de uso da plataforma'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _abrirDocumento(DocumentoLegal.termos),
+                    ),
+                  ],
+                ),
+                // Zona de perigo: acao destrutiva, destacada em vermelho.
+                _cartaoSecao(
+                  icone: Icons.warning_amber_rounded,
+                  titulo: 'Zona de perigo',
+                  subtitulo: 'Ações permanentes na sua conta',
+                  cor: AppColors.error,
+                  filhos: [
+                    ListTile(
+                      leading: const Icon(Icons.delete_forever,
+                          color: AppColors.error),
+                      title: const Text(
+                        'Excluir minha conta',
+                        style: TextStyle(color: AppColors.error),
+                      ),
+                      subtitle:
+                          const Text('Desativa sua conta permanentemente'),
+                      onTap: _excluindo ? null : _confirmarExcluirConta,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            // Barra fixa de Salvar/Descartar: so aparece com mudanca pendente.
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _barraSalvar(),
+            ),
+          ],
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          _secao('Aparência', Icons.palette_outlined),
-          _escolha(
-            'Tema',
-            const ['CLARO', 'ESCURO', 'AUTOMATICO'],
-            const ['Claro', 'Escuro', 'Automático'],
-            _p.tema,
-            (v) {
-              _p.tema = v;
-              _aplicar();
-            },
-          ),
-          _escolha(
-            'Tamanho da fonte',
-            const ['PEQUENA', 'MEDIA', 'GRANDE'],
-            const ['Pequena', 'Média', 'Grande'],
-            _p.tamanhoFonte,
-            (v) {
-              _p.tamanhoFonte = v;
-              _aplicar();
-            },
-          ),
-          _switch('Alto contraste', 'Mais contraste para leitura',
-              _p.altoContraste, (v) {
-            _p.altoContraste = v;
-            _aplicar();
-          }),
-          _switch('Fonte para dislexia', 'Usa uma fonte mais legível',
-              _p.fonteDislexia, (v) {
-            _p.fonteDislexia = v;
-            _aplicar();
-          }),
-          _switch('Navegação simplificada', 'Modo mais simples de usar',
-              _p.navegacaoSimplificada, (v) {
-            _p.navegacaoSimplificada = v;
-            _aplicar();
-          }),
+    );
+  }
 
-          _secao('Notificações', Icons.notifications_outlined),
-          _switch('Novas mensagens', null, _p.notifMensagens, (v) {
-            _p.notifMensagens = v;
-            _aplicar();
-          }),
-          _switch('Match de doações', null, _p.notifMatch, (v) {
-            _p.notifMatch = v;
-            _aplicar();
-          }),
-          _switch('Atualizações de campanhas', null, _p.notifCampanhas, (v) {
-            _p.notifCampanhas = v;
-            _aplicar();
-          }),
-          _switch('Novas necessidades', null, _p.notifNecessidades, (v) {
-            _p.notifNecessidades = v;
-            _aplicar();
-          }),
-          _switch('Notícias da plataforma', null, _p.notifNoticias, (v) {
-            _p.notifNoticias = v;
-            _aplicar();
-          }),
-
-          _secao('Privacidade', Icons.lock_outline),
-          _switch('Exibir telefone', null, _p.mostrarTelefone, (v) {
-            _p.mostrarTelefone = v;
-            _aplicar();
-          }),
-          _switch('Exibir e-mail', null, _p.mostrarEmail, (v) {
-            _p.mostrarEmail = v;
-            _aplicar();
-          }),
-          _switch('Perfil público', null, _p.perfilPublico, (v) {
-            _p.perfilPublico = v;
-            _aplicar();
-          }),
-          _switch('Receber contatos de ONGs', null, _p.receberContatos, (v) {
-            _p.receberContatos = v;
-            _aplicar();
-          }),
-          _switch('Receber sugestões', null, _p.receberSugestoes, (v) {
-            _p.receberSugestoes = v;
-            _aplicar();
-          }),
-
-          _secao('Segurança', Icons.shield_outlined),
-          ListTile(
-            leading: const Icon(Icons.password),
-            title: const Text('Alterar senha'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: _abrirAlterarSenha,
-          ),
-
-          _secao('Apresentação', Icons.storefront_outlined),
-          _switch(
-            'Modo Feira',
-            'Mostra as credenciais de demonstração na tela de login',
-            ConfigController.instance.modoFeira,
-            (v) {
-              ConfigController.instance.definirModoFeira(v);
-              setState(() {});
-            },
-          ),
-
-          _secao('Termos e Privacidade', Icons.gavel_outlined),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('Política de Privacidade'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _abrirDocumento(DocumentoLegal.privacidade),
-          ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('Termos de Uso'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _abrirDocumento(DocumentoLegal.termos),
-          ),
-
-          // Zona de perigo: acao destrutiva, destacada em vermelho.
-          _secaoPerigo('Zona de perigo', Icons.warning_amber_rounded),
-          ListTile(
-            leading: const Icon(Icons.delete_forever, color: AppColors.error),
-            title: const Text(
-              'Excluir minha conta',
-              style: TextStyle(color: AppColors.error),
+  // ---- Barra fixa "Salvar configurações" / "Descartar" ----
+  Widget _barraSalvar() {
+    final cs = Theme.of(context).colorScheme;
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      offset: _temMudanca ? Offset.zero : const Offset(0, 1.2),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 180),
+        opacity: _temMudanca ? 1 : 0,
+        child: IgnorePointer(
+          ignoring: !_temMudanca,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              border: Border(top: BorderSide(color: cs.outlineVariant)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.10),
+                  blurRadius: 12,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
-            subtitle: const Text('Desativa sua conta permanentemente'),
-            onTap: _excluindo ? null : _confirmarExcluirConta,
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _salvando ? null : _descartar,
+                      style: OutlinedButton.styleFrom(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadius.brMd),
+                      ),
+                      child: const Text('Descartar'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      onPressed: _salvando ? null : _salvar,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: cs.onPrimary,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadius.brMd),
+                      ),
+                      icon: _salvando
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.onPrimary,
+                              ),
+                            )
+                          : const Icon(Icons.check),
+                      label: Text(
+                          _salvando ? 'Salvando...' : 'Salvar configurações'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }
@@ -257,83 +491,114 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
     }
   }
 
-  Widget _secaoPerigo(String titulo, IconData icone) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-      child: Row(
-        children: [
-          Icon(icone, size: 20, color: AppColors.error),
-          const SizedBox(width: 8),
-          Text(
-            titulo,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.error,
+  // ---- Componentes visuais das secoes ----
+
+  /// Card de secao: cabecalho com icone em "pilula" + titulo + subtitulo,
+  /// seguido dos itens da secao.
+  Widget _cartaoSecao({
+    required IconData icone,
+    required String titulo,
+    required String subtitulo,
+    required List<Widget> filhos,
+    Color? cor,
+  }) {
+    final Color destaque = cor ?? Theme.of(context).colorScheme.primary;
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      margin: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: destaque.withValues(alpha: 0.12),
+                      borderRadius: AppRadius.brMd,
+                    ),
+                    child: Icon(icone, size: 22, color: destaque),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          titulo,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: cor ?? cs.onSurface,
+                          ),
+                        ),
+                        Text(
+                          subtitulo,
+                          style: TextStyle(
+                              fontSize: 12, color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            ...filhos,
+          ],
+        ),
       ),
     );
   }
 
-  Widget _secao(String titulo, IconData icone) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-      child: Row(
-        children: [
-          Icon(icone, size: 20, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            titulo,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _switch(
-      String titulo, String? subtitulo, bool valor, ValueChanged<bool> onChange) {
+  Widget _switch(String titulo, String subtitulo, bool valor,
+      ValueChanged<bool> onChange) {
     return SwitchListTile(
       title: Text(titulo),
-      subtitle: subtitulo == null ? null : Text(subtitulo),
+      subtitle: Text(subtitulo),
       value: valor,
-      activeThumbColor: AppColors.primary,
+      activeThumbColor: Theme.of(context).colorScheme.primary,
       onChanged: onChange,
     );
   }
 
   Widget _escolha(
     String titulo,
+    String subtitulo,
     List<String> valores,
     List<String> rotulos,
     String selecionado,
     ValueChanged<String> onChange,
   ) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 6),
-            child: Text(titulo),
+          Text(titulo),
+          Text(
+            subtitulo,
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
-            spacing: 8,
+            spacing: AppSpacing.sm,
             children: List.generate(valores.length, (i) {
               final sel = valores[i] == selecionado;
               return ChoiceChip(
                 label: Text(rotulos[i]),
                 selected: sel,
-                selectedColor: AppColors.primary,
+                selectedColor: cs.primary,
                 labelStyle: TextStyle(
-                  color: sel ? Colors.white : null,
+                  color: sel ? cs.onPrimary : null,
                 ),
                 onSelected: (_) => onChange(valores[i]),
               );

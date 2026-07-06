@@ -9,8 +9,8 @@ import '../services/session_service.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../utils/formatters.dart';
 import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/forms/seletor_uf_cidade.dart';
 
 /// Edicao dos dados pessoais do doador (nome, telefone, cidade, estado, bio e
 /// foto de perfil via galeria). Separada da aba Perfil (que virou um hub de
@@ -200,13 +200,20 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[\d()\-+ ]')),
                     ]),
-                _campo(_cidade, 'Cidade', maxLength: 60),
-                _campo(_estado, 'Estado (UF)',
-                    maxLength: 2,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
-                      UpperCaseTextFormatter(),
-                    ]),
+                // Estado → Cidade com dados do IBGE offline. O seletor devolve
+                // os valores nos mesmos controllers de antes, então o _salvar
+                // continua lendo _cidade/_estado sem nenhuma mudança.
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: SeletorUfCidade(
+                    ufInicial: _estado.text,
+                    cidadeInicial: _cidade.text,
+                    onChanged: (uf, cidade) {
+                      _estado.text = uf ?? '';
+                      _cidade.text = cidade ?? '';
+                    },
+                  ),
+                ),
                 _campo(_bio, 'Bio', linhas: 3, maxLength: 200),
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(

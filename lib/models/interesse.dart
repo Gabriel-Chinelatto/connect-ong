@@ -14,6 +14,10 @@ class Interesse {
   /// antigos (a UI degrada mostrando o card sem a data).
   final String? dataConclusao;
 
+  /// true quando a ONG deste match bloqueou o doador logado: o chat abre com
+  /// o envio desabilitado. Ausente no JSON (backend antigo) = false.
+  final bool bloqueadoPelaOng;
+
   const Interesse({
     required this.id,
     required this.status,
@@ -24,6 +28,7 @@ class Interesse {
     this.ongId,
     this.ongNome,
     this.dataConclusao,
+    this.bloqueadoPelaOng = false,
   });
 
   factory Interesse.fromJson(Map<String, dynamic> json) {
@@ -37,6 +42,7 @@ class Interesse {
       ongId: json['ongId'],
       ongNome: json['ongNome'],
       dataConclusao: json['dataConclusao'],
+      bloqueadoPelaOng: json['bloqueadoPelaOng'] ?? false,
     );
   }
 }

@@ -19,6 +19,12 @@ class Preferencia {
   bool receberContatos;
   bool receberSugestoes;
 
+  /// Indica se o JSON de origem TRAZIA o campo `navegacaoSimplificada`.
+  /// O backend pode ser antigo e ainda nao ter esse campo — nesse caso o
+  /// [ConfigController] usa a copia local (SharedPreferences) como fallback.
+  /// Nao e serializado (nao vai no toJson).
+  bool navegacaoSimplificadaDoBackend;
+
   Preferencia({
     this.tema = 'AUTOMATICO',
     this.tamanhoFonte = 'MEDIA',
@@ -35,6 +41,7 @@ class Preferencia {
     this.perfilPublico = true,
     this.receberContatos = true,
     this.receberSugestoes = true,
+    this.navegacaoSimplificadaDoBackend = true,
   });
 
   factory Preferencia.fromJson(Map<String, dynamic> j) {
@@ -55,6 +62,7 @@ class Preferencia {
       perfilPublico: b(j['perfilPublico'], true),
       receberContatos: b(j['receberContatos'], true),
       receberSugestoes: b(j['receberSugestoes'], true),
+      navegacaoSimplificadaDoBackend: j.containsKey('navegacaoSimplificada'),
     );
   }
 

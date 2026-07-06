@@ -17,6 +17,11 @@ class PerfilPublicoOng {
   final int transparenciaScore;
   final String nivelTransparencia;
 
+  /// true quando a ONG bloqueou o doador logado: o backend devolve só
+  /// {"id","nome","bloqueado":true} e a tela mostra o estado mínimo de
+  /// "perfil indisponível". Ausente no JSON (backend antigo) = false.
+  final bool bloqueado;
+
   // Perfil rico (feira): capa em base64, endereço e fotos do local. Todos
   // opcionais — contas antigas sem esses dados degradam graciosamente.
   final String? capaBase64;
@@ -51,6 +56,7 @@ class PerfilPublicoOng {
     required this.totalPrestacoes,
     required this.transparenciaScore,
     required this.nivelTransparencia,
+    this.bloqueado = false,
     this.capaBase64,
     this.endereco,
     this.fotosLocal = const [],
@@ -87,14 +93,16 @@ class PerfilPublicoOng {
       totalPrestacoes: (j['totalPrestacoes'] ?? 0) as int,
       transparenciaScore: (j['transparenciaScore'] ?? 0) as int,
       nivelTransparencia: j['nivelTransparencia'] ?? 'BRONZE',
+      bloqueado: j['bloqueado'] ?? false,
       capaBase64: j['capaBase64'] as String?,
       endereco: j['endereco'] as String?,
-      fotosLocal: (j['fotosLocal'] is List)
-          ? (j['fotosLocal'] as List)
-              .whereType<String>()
-              .where((f) => f.isNotEmpty)
-              .toList()
-          : const <String>[],
+      fotosLocal:
+          (j['fotosLocal'] is List)
+              ? (j['fotosLocal'] as List)
+                  .whereType<String>()
+                  .where((f) => f.isNotEmpty)
+                  .toList()
+              : const <String>[],
       diasNoTopo: (j['diasNoTopo'] as num?)?.toInt(),
       ultimoReinadoDias: (j['ultimoReinadoDias'] as num?)?.toInt(),
       necessidades: lista('necessidades', NecessidadeResumo.fromJson),
@@ -123,7 +131,8 @@ class NecessidadeResumo {
     required this.status,
   });
 
-  factory NecessidadeResumo.fromJson(Map<String, dynamic> j) => NecessidadeResumo(
+  factory NecessidadeResumo.fromJson(Map<String, dynamic> j) =>
+      NecessidadeResumo(
         id: (j['id'] ?? 0) as int,
         titulo: j['titulo'] ?? '',
         descricao: j['descricao'] ?? '',
@@ -154,14 +163,14 @@ class CampanhaResumo {
   });
 
   factory CampanhaResumo.fromJson(Map<String, dynamic> j) => CampanhaResumo(
-        id: (j['id'] ?? 0) as int,
-        titulo: j['titulo'] ?? '',
-        descricao: j['descricao'] ?? '',
-        metaValor: ((j['metaValor'] ?? 0) as num).toDouble(),
-        valorArrecadado: ((j['valorArrecadado'] ?? 0) as num).toDouble(),
-        progresso: (j['progresso'] ?? 0) as int,
-        encerrada: j['encerrada'] ?? false,
-      );
+    id: (j['id'] ?? 0) as int,
+    titulo: j['titulo'] ?? '',
+    descricao: j['descricao'] ?? '',
+    metaValor: ((j['metaValor'] ?? 0) as num).toDouble(),
+    valorArrecadado: ((j['valorArrecadado'] ?? 0) as num).toDouble(),
+    progresso: (j['progresso'] ?? 0) as int,
+    encerrada: j['encerrada'] ?? false,
+  );
 }
 
 /// Versao enxuta de uma avaliacao (nota + comentario) exibida no perfil publico da ONG.
@@ -179,11 +188,11 @@ class AvaliacaoResumo {
   });
 
   factory AvaliacaoResumo.fromJson(Map<String, dynamic> j) => AvaliacaoResumo(
-        doadorNome: j['doadorNome'] ?? 'Anonimo',
-        nota: (j['nota'] ?? 0) as int,
-        comentario: j['comentario'] as String?,
-        dataCriacao: j['dataCriacao'] as String?,
-      );
+    doadorNome: j['doadorNome'] ?? 'Anonimo',
+    nota: (j['nota'] ?? 0) as int,
+    comentario: j['comentario'] as String?,
+    dataCriacao: j['dataCriacao'] as String?,
+  );
 }
 
 /// Versao enxuta de uma prestacao de contas exibida no perfil publico da ONG.
@@ -201,9 +210,9 @@ class PrestacaoResumo {
   });
 
   factory PrestacaoResumo.fromJson(Map<String, dynamic> j) => PrestacaoResumo(
-        titulo: j['titulo'] ?? '',
-        descricao: j['descricao'] ?? '',
-        fotoUrl: j['fotoUrl'] as String?,
-        dataCriacao: j['dataCriacao'] as String?,
-      );
+    titulo: j['titulo'] ?? '',
+    descricao: j['descricao'] ?? '',
+    fotoUrl: j['fotoUrl'] as String?,
+    dataCriacao: j['dataCriacao'] as String?,
+  );
 }

@@ -14,6 +14,7 @@ import '../theme/app_spacing.dart';
 import '../utils/tempo.dart';
 import '../widgets/common/visualizador_imagem.dart';
 import '../widgets/feedback/app_snackbar.dart';
+import 'perfil_publico_ong_screen.dart';
 
 /// Mapa CODIGO -> emoji das reacoes. O backend guarda o codigo (ex.: 'LIKE'),
 /// e a UI mostra o caractere correspondente.
@@ -45,11 +46,24 @@ class ChatScreen extends StatefulWidget {
   final String meuRemetente; // 'DOADOR' neste app
   final String titulo;
 
+  /// Dados OPCIONAIS da ONG do match (podem faltar em chamadores antigos —
+  /// tudo degrada graciosamente): quando presentes, o cabeçalho estilo
+  /// WhatsApp fica tocável e navega para o perfil público da ONG.
+  final int? ongId;
+  final String? ongNome;
+
+  /// true quando o match veio com `bloqueadoPelaOng` (a ONG bloqueou o
+  /// doador): a tela já abre com o envio desabilitado e o aviso inline.
+  final bool bloqueadoPelaOng;
+
   const ChatScreen({
     super.key,
     required this.interesseId,
     required this.meuRemetente,
     required this.titulo,
+    this.ongId,
+    this.ongNome,
+    this.bloqueadoPelaOng = false,
   });
 
   @override
@@ -86,19 +100,22 @@ class _ChatScreenState extends State<ChatScreen> {
   // Throttle do heartbeat de digitacao: no maximo 1 envio a cada 2s.
   DateTime? _ultimoHeartbeat;
 
+  // Envio bloqueado pela ONG: inicia pelo match (bloqueadoPelaOng) e tambem
+  // vira true se um POST /mensagens voltar 403 (BloqueadoException). Sem loop
+  // de reenvio: a mensagem que falhou fica no campo, agora desabilitado.
+  bool _bloqueado = false;
+
   @override
   void initState() {
     super.initState();
+    _bloqueado = widget.bloqueadoPelaOng;
     _carregar(primeira: true);
     _carregarStatus();
     // Polling: busca novas mensagens a cada 2 segundos.
-    _timer = Timer.periodic(
-      const Duration(seconds: 2),
-      (_) {
-        _carregar();
-        _carregarStatus();
-      },
-    );
+    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _carregar();
+      _carregarStatus();
+    });
   }
 
   @override
@@ -184,6 +201,10 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
       await _carregar();
+    } on BloqueadoException {
+      // 403: a ONG bloqueou este doador. Desabilita o envio com o aviso
+      // inline — sem snackbar de erro e sem reenviar a mensagem que falhou.
+      if (mounted) setState(() => _bloqueado = true);
     } catch (e) {
       if (mounted) {
         AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
@@ -244,7 +265,9 @@ class _ChatScreenState extends State<ChatScreen> {
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -257,7 +280,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                     child: Container(
                       constraints: const BoxConstraints(
-                          minWidth: 44, minHeight: 44),
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
                       alignment: Alignment.center,
                       padding: const EdgeInsets.all(8),
                       child: Text(
@@ -311,9 +336,10 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 320),
               margin: const EdgeInsets.symmetric(
-                  vertical: 4, horizontal: AppSpacing.md),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                vertical: 4,
+                horizontal: AppSpacing.md,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: minha ? AppColors.primary : cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.only(
@@ -331,21 +357,22 @@ class _ChatScreenState extends State<ChatScreen> {
                   // tap → tela cheia).
                   if (_bytesDoAnexo(m) != null) ...[
                     GestureDetector(
-                      onTap: () => VisualizadorImagem.abrir(
-                          context, _bytesDoAnexo(m)!),
+                      onTap:
+                          () => VisualizadorImagem.abrir(
+                            context,
+                            _bytesDoAnexo(m)!,
+                          ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            maxWidth:
-                                MediaQuery.of(context).size.width * 0.6,
+                            maxWidth: MediaQuery.of(context).size.width * 0.6,
                             maxHeight: 260,
                           ),
                           child: Image.memory(
                             _bytesDoAnexo(m)!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                const SizedBox.shrink(),
+                            errorBuilder: (_, _, _) => const SizedBox.shrink(),
                           ),
                         ),
                       ),
@@ -369,9 +396,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Icon(
                           m.lida ? Icons.done_all : Icons.check,
                           size: 14,
-                          color: m.lida
-                              ? Colors.lightBlueAccent
-                              : Colors.white70,
+                          color:
+                              m.lida ? Colors.lightBlueAccent : Colors.white70,
                         ),
                       ),
                     ),
@@ -390,25 +416,121 @@ class _ChatScreenState extends State<ChatScreen> {
   // quando ha uma reacao do MEU lado.
   Widget _chipReacoes(Mensagem m) {
     final cs = Theme.of(context).colorScheme;
-    final euReagi =
-        m.reacoes.any((r) => r.lado == widget.meuRemetente);
-    final texto =
-        m.reacoes.map((r) => _emojiReacoes[r.emoji] ?? '').join();
+    final euReagi = m.reacoes.any((r) => r.lado == widget.meuRemetente);
+    final texto = m.reacoes.map((r) => _emojiReacoes[r.emoji] ?? '').join();
     return Padding(
       padding: const EdgeInsets.only(
-          left: AppSpacing.md, right: AppSpacing.md, top: 2, bottom: 2),
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+        top: 2,
+        bottom: 2,
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: euReagi
-              ? AppColors.primary.withValues(alpha: 0.15)
-              : cs.surfaceContainerHighest,
+          color:
+              euReagi
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(10),
-          border: euReagi
-              ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
-              : null,
+          border:
+              euReagi
+                  ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
+                  : null,
         ),
         child: Text(texto, style: const TextStyle(fontSize: 13)),
+      ),
+    );
+  }
+
+  // Abre o perfil público da ONG do match (cabeçalho estilo WhatsApp).
+  void _abrirPerfilOng() {
+    final ongId = widget.ongId;
+    if (ongId == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => PerfilPublicoOngScreen(
+              ongId: ongId,
+              ongNome: widget.ongNome ?? widget.titulo,
+            ),
+      ),
+    );
+  }
+
+  // Cabeçalho estilo WhatsApp: avatar à esquerda + coluna nome (negrito) e
+  // status (fonte menor). Tocável quando o chamador informou a ONG.
+  Widget _cabecalhoAppBar(ColorScheme cs) {
+    // Nome exibido: ONG quando conhecida; senão o título do match (assunto).
+    final nome =
+        (widget.ongNome ?? '').trim().isNotEmpty
+            ? widget.ongNome!.trim()
+            : widget.titulo;
+    final inicial = nome.isNotEmpty ? nome[0].toUpperCase() : '?';
+
+    final conteudo = Row(
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+          child: Text(
+            inicial,
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                nome,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                ),
+              ),
+              if (_digitando)
+                Text(
+                  'digitando...',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.primary,
+                  ),
+                )
+              else if (_textoPresenca().isNotEmpty)
+                Text(
+                  _textoPresenca(),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    // Sem ongId (chamador antigo), o cabeçalho fica como antes (não tocável).
+    if (widget.ongId == null) return conteudo;
+
+    return Tooltip(
+      message: 'Ver perfil da ONG',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: _abrirPerfilOng,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: conteudo,
+        ),
       ),
     );
   }
@@ -416,91 +538,46 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final inicial =
-        widget.titulo.isNotEmpty ? widget.titulo[0].toUpperCase() : '?';
 
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-              child: Text(
-                inicial,
-                style: const TextStyle(
-                    color: AppColors.primary, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.titulo,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: cs.onSurface),
-                  ),
-                  if (_digitando)
-                    Text(
-                      'digitando...',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  else if (_textoPresenca().isNotEmpty)
-                    Text(
-                      _textoPresenca(),
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      appBar: AppBar(titleSpacing: 0, title: _cabecalhoAppBar(cs)),
       body: Column(
         children: [
           Expanded(
-            child: _carregando
-                ? const Center(child: CircularProgressIndicator())
-                : _mensagens.isEmpty
+            child:
+                _carregando
+                    ? const Center(child: CircularProgressIndicator())
+                    : _mensagens.isEmpty
                     ? Center(
-                        child: Text(
-                          'Nenhuma mensagem ainda.\nDiga olá! 👋',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: cs.onSurfaceVariant, fontSize: 16),
+                      child: Text(
+                        'Nenhuma mensagem ainda.\nDiga olá! 👋',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: cs.onSurfaceVariant,
+                          fontSize: 16,
                         ),
-                      )
-                    : ListView.builder(
-                        controller: _scroll,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.md),
-                        itemCount: _mensagens.length,
-                        itemBuilder: (context, i) => _bolha(_mensagens[i]),
                       ),
+                    )
+                    : ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                      ),
+                      itemCount: _mensagens.length,
+                      itemBuilder: (context, i) => _bolha(_mensagens[i]),
+                    ),
           ),
           // Preview do anexo pendente (escolhido e ainda nao enviado), com
-          // botao para remover antes de enviar.
-          if (_anexoBytes != null)
+          // botao para remover antes de enviar. Oculto quando bloqueado.
+          if (_anexoBytes != null && !_bloqueado)
             Container(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md, AppSpacing.xs, AppSpacing.md, 0),
+                AppSpacing.md,
+                AppSpacing.xs,
+                AppSpacing.md,
+                0,
+              ),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -522,11 +599,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       style: IconButton.styleFrom(
                         backgroundColor: cs.surfaceContainerHighest,
                       ),
-                      icon: Icon(Icons.close,
-                          size: 16, color: cs.onSurface),
-                      onPressed: _enviando
-                          ? null
-                          : () => setState(() {
+                      icon: Icon(Icons.close, size: 16, color: cs.onSurface),
+                      onPressed:
+                          _enviando
+                              ? null
+                              : () => setState(() {
                                 _anexoBytes = null;
                                 _anexoBase64 = null;
                               }),
@@ -535,63 +612,104 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
             ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: 'Anexar imagem',
-                    onPressed: _enviando ? null : _escolherAnexo,
-                    icon: Icon(Icons.image_outlined,
-                        color: AppColors.primary),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: 'Mensagem...',
-                        filled: true,
-                        fillColor: cs.surfaceContainerHighest,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: AppRadius.brXl,
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: AppRadius.brXl,
-                          borderSide: BorderSide.none,
+          // Bloqueado pela ONG: no lugar do campo de envio, aviso inline —
+          // nada de retry; o doador continua vendo o histórico da conversa.
+          if (_bloqueado)
+            SafeArea(
+              top: false,
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: AppRadius.brMd,
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.block, size: 18, color: cs.onSurfaceVariant),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Você não pode enviar mensagens para esta ONG',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
-                      onChanged: _aoDigitar,
-                      onSubmitted: (_) => _enviar(),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.primary,
-                    child: IconButton(
-                      tooltip: 'Enviar mensagem',
-                      icon: _enviando
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2),
-                            )
-                          : const Icon(Icons.send, color: Colors.white),
-                      onPressed: _enviando ? null : _enviar,
+                  ],
+                ),
+              ),
+            )
+          else
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Anexar imagem',
+                      onPressed: _enviando ? null : _escolherAnexo,
+                      icon: Icon(
+                        Icons.image_outlined,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: 'Mensagem...',
+                          filled: true,
+                          fillColor: cs.surfaceContainerHighest,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: AppRadius.brXl,
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: AppRadius.brXl,
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: _aoDigitar,
+                        onSubmitted: (_) => _enviar(),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: AppColors.primary,
+                      child: IconButton(
+                        tooltip: 'Enviar mensagem',
+                        icon:
+                            _enviando
+                                ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Icon(Icons.send, color: Colors.white),
+                        onPressed: _enviando ? null : _enviar,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

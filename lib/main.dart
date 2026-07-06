@@ -54,10 +54,12 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.light(
             dislexia: config.fonteDislexia,
             altoContraste: config.altoContraste,
+            navegacaoSimplificada: config.navegacaoSimplificada,
           ),
           darkTheme: AppTheme.dark(
             dislexia: config.fonteDislexia,
             altoContraste: config.altoContraste,
+            navegacaoSimplificada: config.navegacaoSimplificada,
           ),
           themeMode: config.themeMode,
           // Aplica o tamanho da fonte escolhido em todo o app.

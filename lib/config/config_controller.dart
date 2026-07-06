@@ -13,6 +13,13 @@ class ConfigController extends ChangeNotifier {
   final PreferenciaService _service = PreferenciaService();
 
   Preferencia _prefs = Preferencia();
+
+  // Ultimo estado PERSISTIDO (carregado do backend ou salvo com sucesso).
+  // E o ponto de retorno do preview: a tela de Configuracoes aplica mudancas
+  // visuais na hora via [aplicarPreview] e, se o usuario descartar/sair sem
+  // salvar, [reverterPreview] volta para esta copia.
+  Preferencia _persistido = Preferencia();
+
   int? _usuarioId;
 
   Preferencia get prefs => _prefs;
@@ -74,22 +81,82 @@ class ConfigController extends ChangeNotifier {
 
   bool get fonteDislexia => _prefs.fonteDislexia;
   bool get altoContraste => _prefs.altoContraste;
+  bool get navegacaoSimplificada => _prefs.navegacaoSimplificada;
+
+  // ----- Navegacao simplificada: fallback LOCAL -----
+  // O campo `navegacaoSimplificada` vai junto das preferencias no backend
+  // (PUT /usuarios/{id}/preferencias). Como o backend pode ser antigo e ainda
+  // nao ter esse campo, gravamos TAMBEM uma copia no SharedPreferences
+  // (chave 'navegacao_simplificada'): ao carregar, se o JSON do backend nao
+  // trouxer o campo, vale a copia local.
+  static const String _navSimplificadaKey = 'navegacao_simplificada';
+
+  Future<bool?> _lerNavSimplificadaLocal() async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      return sp.getBool(_navSimplificadaKey);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _gravarNavSimplificadaLocal(bool valor) async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      await sp.setBool(_navSimplificadaKey, valor);
+    } catch (_) {
+      // preferencia local e um fallback; falha aqui nao pode quebrar o fluxo
+    }
+  }
 
   // Carrega as preferencias do usuario apos o login.
   Future<void> carregar(int usuarioId) async {
     _usuarioId = usuarioId;
     try {
-      _prefs = await _service.obter(usuarioId);
+      final carregada = await _service.obter(usuarioId);
+      // Backend antigo sem o campo navegacaoSimplificada: usa a copia local.
+      if (!carregada.navegacaoSimplificadaDoBackend) {
+        carregada.navegacaoSimplificada = await _lerNavSimplificadaLocal() ??
+            carregada.navegacaoSimplificada;
+      }
+      _prefs = carregada;
+      _persistido = carregada.copy();
       notifyListeners();
     } catch (_) {
-      // mantem os padroes se falhar
+      // mantem os padroes se falhar, mas ainda tenta a flag local
+      final local = await _lerNavSimplificadaLocal();
+      if (local != null) {
+        _prefs.navegacaoSimplificada = local;
+        _persistido = _prefs.copy();
+        notifyListeners();
+      }
     }
+  }
+
+  // ----- Preview (usado pela tela de Configuracoes) -----
+
+  /// Aplica [p] visualmente na hora (tema/fonte/contraste/etc.) SEM persistir.
+  /// O estado final so vira definitivo em [atualizar]; para desfazer, chame
+  /// [reverterPreview].
+  void aplicarPreview(Preferencia p) {
+    _prefs = p.copy();
+    notifyListeners();
+  }
+
+  /// Desfaz qualquer preview pendente, voltando ao ultimo estado persistido
+  /// (o que veio do backend no carregar ou o do ultimo salvar).
+  void reverterPreview() {
+    _prefs = _persistido.copy();
+    notifyListeners();
   }
 
   // Aplica e persiste novas preferencias (atualiza a tela na hora).
   Future<void> atualizar(Preferencia novo) async {
-    _prefs = novo;
+    _prefs = novo.copy();
+    _persistido = novo.copy();
     notifyListeners();
+    // Copia local da navegacao simplificada (fallback p/ backend antigo).
+    await _gravarNavSimplificadaLocal(novo.navegacaoSimplificada);
     if (_usuarioId != null) {
       try {
         await _service.salvar(_usuarioId!, novo);
@@ -102,6 +169,7 @@ class ConfigController extends ChangeNotifier {
   // Volta ao estado padrao (no logout).
   void limpar() {
     _prefs = Preferencia();
+    _persistido = Preferencia();
     _usuarioId = null;
     notifyListeners();
   }

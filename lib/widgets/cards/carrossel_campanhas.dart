@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../config/config_controller.dart';
 import '../../models/campanha.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
@@ -52,10 +53,14 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
       initialPage: _paginaBase * (_n == 0 ? 1 : _n),
     );
     _ligarTimer();
+    // Reage ao liga/desliga da navegacao simplificada (inclusive no preview
+    // da tela de Configuracoes): religa ou cancela o auto-avanco na hora.
+    ConfigController.instance.addListener(_ligarTimer);
   }
 
   @override
   void dispose() {
+    ConfigController.instance.removeListener(_ligarTimer);
     _timer?.cancel();
     _controller.dispose();
     super.dispose();
@@ -64,6 +69,8 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
   void _ligarTimer() {
     _timer?.cancel();
     if (_n <= 1) return; // nada a rolar com 0 ou 1 campanha
+    // Navegacao simplificada: sem auto-avanco (o usuario passa no swipe).
+    if (ConfigController.instance.navegacaoSimplificada) return;
     _timer = Timer.periodic(_intervalo, (_) {
       if (!mounted || !_controller.hasClients) return;
       _controller.nextPage(duration: _transicao, curve: Curves.easeOutCubic);
@@ -186,23 +193,19 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
                         ),
                         const Spacer(),
                         // Barra de progresso ANIMADA: cresce de 0 até o valor
-                        // real quando o card aparece.
-                        TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: prog),
-                          duration: const Duration(milliseconds: 900),
-                          curve: Curves.easeOutCubic,
-                          builder: (_, valor, _) => ClipRRect(
-                            borderRadius: AppRadius.brSm,
-                            child: LinearProgressIndicator(
-                              value: valor,
-                              minHeight: 8,
-                              backgroundColor:
-                                  AppColors.primary.withValues(alpha: 0.12),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Categorias.cor(categoria)),
-                            ),
+                        // real quando o card aparece. Com navegação
+                        // simplificada ligada, aparece direto no valor final
+                        // (sem animação).
+                        if (ConfigController.instance.navegacaoSimplificada)
+                          _barraProgresso(prog, categoria)
+                        else
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0, end: prog),
+                            duration: const Duration(milliseconds: 900),
+                            curve: Curves.easeOutCubic,
+                            builder: (_, valor, _) =>
+                                _barraProgresso(valor, categoria),
                           ),
-                        ),
                         const SizedBox(height: AppSpacing.xs),
                         Row(
                           children: [
@@ -229,6 +232,19 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Barra de progresso da campanha na cor da categoria.
+  Widget _barraProgresso(double valor, String categoria) {
+    return ClipRRect(
+      borderRadius: AppRadius.brSm,
+      child: LinearProgressIndicator(
+        value: valor,
+        minHeight: 8,
+        backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+        valueColor: AlwaysStoppedAnimation<Color>(Categorias.cor(categoria)),
       ),
     );
   }

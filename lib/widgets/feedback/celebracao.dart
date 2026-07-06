@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../config/config_controller.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/categorias.dart';
 
@@ -10,6 +11,10 @@ import '../../utils/categorias.dart';
 ///
 /// Implementada só com AnimationController + CustomPainter (sem pacotes novos).
 /// Usada no comprovante do fluxo PIX.
+///
+/// Com a NAVEGAÇÃO SIMPLIFICADA ligada (Configurações > Acessibilidade), a
+/// celebração fica calma: sem confetes e sem animação — mostra direto o
+/// círculo verde com o checkmark pronto.
 class CelebracaoSucesso extends StatefulWidget {
   final double tamanho;
 
@@ -24,13 +29,30 @@ class _CelebracaoSucessoState extends State<CelebracaoSucesso>
   late final AnimationController _controller;
   late final List<_Confete> _confetes;
 
+  // Congela a decisão na criação do widget (a celebração dura ~2s; não faz
+  // sentido trocar de modo no meio dela).
+  final bool _semAnimacao = ConfigController.instance.navegacaoSimplificada;
+
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
-    )..forward();
+    );
+    if (_semAnimacao) {
+      // Navegação simplificada: pula direto para o estado final (checkmark
+      // completo, confetes já "esvaídos" — o painter não os desenha).
+      _controller.value = 1.0;
+    } else {
+      _controller.forward();
+    }
+
+    // Sem animação: nenhum confete para desenhar (fica só o check).
+    if (_semAnimacao) {
+      _confetes = const [];
+      return;
+    }
 
     // Confetes pré-sorteados (posição, cor, tamanho e rotação) para o painter
     // ser puro e barato a cada frame.

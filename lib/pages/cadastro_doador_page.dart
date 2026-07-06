@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../doador/main_shell.dart';
 import '../screens/legal/documentos_legais_screen.dart';
-import '../utils/formatters.dart';
 import '../services/auth_service.dart';
 import '../services/login_service.dart';
 import '../theme/app_colors.dart';
@@ -13,6 +12,7 @@ import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
 import '../widgets/buttons/app_button.dart';
 import '../widgets/feedback/app_snackbar.dart';
+import '../widgets/forms/seletor_uf_cidade.dart';
 import '../widgets/inputs/app_text_field.dart';
 
 /// Cadastro do doador em MULTI-PASSO (estilo Instagram: um foco por tela,
@@ -296,22 +296,16 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
       subtitulo:
           'Opcional — usamos sua cidade para destacar necessidades perto de você.',
       campos: [
-        AppTextField(
-          controller: _cidade,
-          hint: 'Cidade',
-          icon: Icons.location_city_outlined,
-          maxLength: 60,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppTextField(
-          controller: _estado,
-          hint: 'Estado (UF)',
-          icon: Icons.map_outlined,
-          maxLength: 2,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
-            UpperCaseTextFormatter(),
-          ],
+        // Estado → Cidade com dados do IBGE offline. Os valores continuam nos
+        // controllers _estado/_cidade (usados no _criarConta); os iniciais
+        // preservam o que foi digitado se o usuário voltar a este passo.
+        SeletorUfCidade(
+          ufInicial: _estado.text,
+          cidadeInicial: _cidade.text,
+          onChanged: (uf, cidade) {
+            _estado.text = uf ?? '';
+            _cidade.text = cidade ?? '';
+          },
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
