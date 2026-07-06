@@ -274,8 +274,8 @@ class _CadastrarDoacaoScreenState
                               children: [
                                 Text(
                                   editando
-                                      ? 'Editar Doação'
-                                      : 'Nova Doação',
+                                      ? 'Editar doação'
+                                      : 'Nova doação',
                                   style:
                                       const TextStyle(
                                     fontSize: 30,
@@ -289,15 +289,22 @@ class _CadastrarDoacaoScreenState
                                   height: 8,
                                 ),
 
+                                // Deixa claro que a oferta NÃO é direcionada
+                                // a uma ONG específica: fica disponível para
+                                // qualquer ONG que precise.
                                 Text(
                                   editando
                                       ? 'Atualize as informações da sua doação.'
-                                      : 'Preencha os dados para disponibilizar uma nova doação.',
+                                      : 'Preencha os dados para disponibilizar '
+                                          'sua doação a qualquer ONG que '
+                                          'precise. As ONGs interessadas '
+                                          'poderão entrar em contato com você.',
                                   style:
                                       TextStyle(
                                     color: cs
                                         .onSurfaceVariant,
                                     fontSize: 16,
+                                    height: 1.4,
                                   ),
                                 ),
                               ],

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../models/interesse.dart';
+import '../services/doacao_financeira_service.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/page_transition.dart';
 import '../widgets/feedback/empty_state.dart';
+
+import 'minhas_doacoes_screen.dart';
 
 /// Painel de impacto do doador: mostra em numeros a participacao dele.
 /// Calculado a partir dos interesses/matches que o app ja carrega.
@@ -38,13 +42,17 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
   static const Color _acentoAzul = Color(0xFF2563EB);
   static const Color _acentoRosa = Color(0xFFEC4899);
 
+  /// Teal do PIX (cor da marca do meio de pagamento) — acento próprio do
+  /// card "Doações PIX", legível como tint nos temas claro e escuro.
+  static const Color _acentoPix = Color(0xFF00A08C);
+
   bool _carregando = true;
   bool _erro = false;
   String _nome = '';
   int _totalInteresses = 0;
   int _aceitos = 0;
-  int _aguardando = 0;
   int _ongsApoiadas = 0;
+  int _doacoesPix = 0;
 
   @override
   void initState() {
@@ -67,6 +75,14 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
       final List<Interesse> matches =
           await _interesseService.meusMatches(usuario.id);
 
+      // Doações PIX do doador — falha aqui não derruba o painel (o card
+      // degrada para 0, ex.: backend antigo sem o endpoint).
+      int pix = 0;
+      try {
+        pix = (await DoacaoFinanceiraService().listarPorDoador(usuario.id))
+            .length;
+      } catch (_) {}
+
       // ACEITO e CONCLUIDO contam como match realizado.
       final aceitos = matches
           .where((m) => m.status == 'ACEITO' || m.status == 'CONCLUIDO')
@@ -81,8 +97,8 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
         _nome = usuario.nome;
         _totalInteresses = matches.length;
         _aceitos = aceitos.length;
-        _aguardando = matches.where((m) => m.status == 'PENDENTE').length;
         _ongsApoiadas = ongs.length;
+        _doacoesPix = pix;
         _carregando = false;
       });
     } catch (e) {
@@ -233,9 +249,11 @@ class _DashboardImpactoScreenState extends State<DashboardImpactoScreen> {
                     _statCard(Icons.send, '$_totalInteresses',
                         'Interesses enviados', _acentoAzul,
                         () => widget.onIrParaAba(2, 1)), // Matches → Aguardando
-                    _statCard(Icons.hourglass_top, '$_aguardando',
-                        'Aguardando resposta', AppColors.warning,
-                        () => widget.onIrParaAba(2, 1)), // Matches → Aguardando
+                    _statCard(Icons.pix, '$_doacoesPix',
+                        'Doações PIX', _acentoPix,
+                        // Minhas Doações (histórico PIX + itens).
+                        () => Navigator.push(context,
+                            PageTransition.fade(const MinhasDoacoesScreen()))),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Container(

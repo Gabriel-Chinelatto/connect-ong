@@ -125,9 +125,9 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
         if (!mounted) return;
         setState(() => _temPrestacao[i.id] = prestacoes.isNotEmpty);
       } catch (_) {
-        // Na dúvida, mostra o botão (a tela de prestações lida com o vazio).
-        if (!mounted) return;
-        setState(() => _temPrestacao[i.id] = true);
+        // Na dúvida (falha de rede), deixa null: sem chip de status, mas o
+        // botão "Ver prestação de contas" continua visível (a tela de
+        // prestações lida com o vazio).
       }
     }));
   }
@@ -568,21 +568,56 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          if (tem == false)
-            Padding(
-              padding: const EdgeInsets.only(left: AppSpacing.sm),
-              child: Text(
-                'Prestação ainda não publicada',
-                style: TextStyle(
-                    color: cs.onSurfaceVariant,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic),
-              ),
-            )
-          else
+          // Chip de status da prestação de contas (a checagem por match é a
+          // do _verificarPrestacoes): verde suave quando publicada, âmbar
+          // enquanto a ONG não publica. tem == null → ainda verificando.
+          if (tem != null) ...[
+            _chipPrestacao(tem),
+            const SizedBox(height: AppSpacing.xs),
+          ],
+          if (tem != false)
             _acao(Icons.receipt_long, 'Ver prestação de contas',
                 () => _abrirPrestacoes(i)),
         ],
+      ),
+    );
+  }
+
+  /// Chip do status da prestação de contas de um match concluído:
+  /// verde suave = publicada; âmbar = aguardando a ONG publicar.
+  Widget _chipPrestacao(bool publicada) {
+    final cor = publicada ? AppColors.success : AppColors.warning;
+    final texto = publicada
+        ? 'Prestação de contas publicada'
+        : 'Aguardando prestação de contas';
+    return Semantics(
+      label: texto,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: cor.withValues(alpha: 0.12),
+          borderRadius: AppRadius.brSm,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              publicada ? Icons.check_circle : Icons.hourglass_top,
+              size: 14,
+              color: cor,
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                texto,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    color: cor, fontWeight: FontWeight.w700, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
