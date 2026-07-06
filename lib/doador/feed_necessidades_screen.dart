@@ -12,9 +12,14 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/categorias.dart';
 import '../utils/escala.dart';
+import '../utils/page_transition.dart';
+import '../utils/tempo.dart';
 import '../widgets/cards/capa_categoria.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
+
+import 'necessidade_detalhe_screen.dart';
+import 'perfil_publico_ong_screen.dart';
 
 /// Feed das necessidades abertas das ONGs (aba Explorar), com filtros (busca,
 /// categoria, urgentes) e priorizacao pela cidade do doador. Hero feature: ao
@@ -36,7 +41,17 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   final SessionService _sessionService = SessionService();
 
   List<Necessidade> _necessidades = [];
-  final Set<int> _jaInteressado = {}; // ids onde o doador ja clicou
+
+  /// Ids de necessidade em que o doador JÁ demonstrou interesse — semeado do
+  /// servidor (GET /interesses?doadorId=) a cada carga e atualizado na hora
+  /// quando ele demonstra interesse agora. Controla o estado do botão.
+  final Set<int> _jaInteressado = {};
+
+  /// Foto do [_jaInteressado] tirada NA CARGA: controla a ORDENAÇÃO (com
+  /// interesse vão para o fim). Interesses demonstrados agora só mudam de
+  /// posição na próxima recarga — o card não "teleporta" na frente do usuário.
+  Set<int> _interessadoNaCarga = {};
+
   final Set<int> _enviandoInteresse = {}; // ids com POST em andamento (anti duplo)
   bool _carregando = true;
   bool _erroCarga = false;
@@ -68,11 +83,26 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
           cidade = (perfil['cidade'] ?? '').toString();
         } catch (_) {}
       }
+      // Interesses já demonstrados (qualquer status): marca os cards como
+      // "Interesse demonstrado" e manda essas necessidades para o fim da
+      // lista. Falha aqui não derruba o feed (degrada para "nenhum").
+      final interessados = <int>{};
+      if (usuario != null) {
+        try {
+          final interesses = await _interesseService.meusMatches(usuario.id);
+          interessados.addAll(
+              interesses.map((i) => i.necessidadeId).whereType<int>());
+        } catch (_) {}
+      }
       if (!mounted) return;
       setState(() {
         _doadorId = usuario?.id;
         _necessidades = lista;
         _minhaCidade = cidade;
+        _jaInteressado
+          ..clear()
+          ..addAll(interessados);
+        _interessadoNaCarga = Set.of(interessados);
         _carregando = false;
       });
     } catch (e) {
@@ -153,14 +183,52 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       return s;
     }
 
-    lista.sort((a, b) => score(b).compareTo(score(a)));
+    // Necessidades com interesse JÁ demonstrado (na carga) vão para o FIM;
+    // dentro de cada grupo vale o score. Usa a foto da carga (e não o set
+    // vivo) para o card não teleportar assim que o doador clica.
+    int grupo(Necessidade n) => _interessadoNaCarga.contains(n.id) ? 1 : 0;
+
+    lista.sort((a, b) {
+      final g = grupo(a).compareTo(grupo(b));
+      if (g != 0) return g;
+      return score(b).compareTo(score(a));
+    });
     return lista;
+  }
+
+  // Abre o detalhe da necessidade. O detalhe espelha o estado "interesse já
+  // demonstrado" e avisa de volta quando o doador demonstra interesse lá —
+  // o card do feed muda na hora (e desce só na próxima recarga).
+  void _abrirDetalhe(Necessidade n) {
+    Navigator.push(
+      context,
+      PageTransition.fade(NecessidadeDetalheScreen(
+        necessidade: n,
+        jaInteressado: _jaInteressado.contains(n.id),
+        onInteresseDemonstrado: () {
+          if (!mounted) return;
+          setState(() => _jaInteressado.add(n.id));
+        },
+      )),
+    );
+  }
+
+  void _abrirPerfilOng(Necessidade n) {
+    if (n.ongId == null) return;
+    Navigator.push(
+      context,
+      PageTransition.fade(PerfilPublicoOngScreen(
+        ongId: n.ongId!,
+        ongNome: n.ongNome ?? 'ONG',
+      )),
+    );
   }
 
   Widget _card(Necessidade n) {
     final cs = Theme.of(context).colorScheme;
     final interessado = _jaInteressado.contains(n.id);
     final enviando = _enviandoInteresse.contains(n.id);
+    final postado = tempoRelativo(n.dataCriacao);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -170,7 +238,13 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
         borderRadius: AppRadius.brLg,
         border: Border.all(color: cs.outlineVariant),
       ),
-      child: Column(
+      child: Material(
+        color: Colors.transparent,
+        // Toque no CORPO do card abre o detalhe; o botão "Tenho interesse" e
+        // a linha da ONG absorvem os próprios toques.
+        child: InkWell(
+          onTap: () => _abrirDetalhe(n),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Capa visual por categoria (estilo marketplace); o selo URGENTE
@@ -193,39 +267,52 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                // ONG + verificada + nota
-                Row(
-                  children: [
-                    const Icon(Icons.handshake,
-                        size: 16, color: AppColors.primary),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        n.ongNome ?? 'ONG',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600),
-                      ),
+                // ONG + verificada + nota — linha TOCÁVEL: abre o perfil
+                // público da ONG (quando o backend informa o ongId).
+                InkWell(
+                  onTap: n.ongId != null ? () => _abrirPerfilOng(n) : null,
+                  borderRadius: AppRadius.brSm,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.handshake,
+                            size: 16, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            n.ongNome ?? 'ONG',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        if (n.ongVerificada) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified,
+                              size: 15, color: AppColors.primary),
+                        ],
+                        if (n.ongTotalAvaliacoes > 0) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          const Icon(Icons.star_rounded,
+                              size: 15, color: AppColors.ouro),
+                          const SizedBox(width: 2),
+                          Text(
+                            n.ongNotaMedia.toStringAsFixed(1),
+                            style: TextStyle(
+                                fontSize: 12, color: cs.onSurfaceVariant),
+                          ),
+                        ],
+                        if (n.ongId != null) ...[
+                          const SizedBox(width: 2),
+                          Icon(Icons.chevron_right,
+                              size: 16, color: cs.onSurfaceVariant),
+                        ],
+                      ],
                     ),
-                    if (n.ongVerificada) ...[
-                      const SizedBox(width: 4),
-                      const Icon(Icons.verified,
-                          size: 15, color: AppColors.primary),
-                    ],
-                    if (n.ongTotalAvaliacoes > 0) ...[
-                      const SizedBox(width: AppSpacing.sm),
-                      const Icon(Icons.star_rounded,
-                          size: 15, color: AppColors.ouro),
-                      const SizedBox(width: 2),
-                      Text(
-                        n.ongNotaMedia.toStringAsFixed(1),
-                        style: TextStyle(
-                            fontSize: 12, color: cs.onSurfaceVariant),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
@@ -237,23 +324,38 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    if ((n.ongCidade ?? '').isNotEmpty)
+                    if ((n.ongCidade ?? '').isNotEmpty || postado.isNotEmpty)
                       Expanded(
                         child: Row(
                           children: [
-                            Icon(Icons.location_on_outlined,
-                                size: 15, color: cs.onSurfaceVariant),
-                            const SizedBox(width: 3),
-                            Flexible(
-                              child: Text(
-                                n.ongCidade!,
+                            if ((n.ongCidade ?? '').isNotEmpty) ...[
+                              Icon(Icons.location_on_outlined,
+                                  size: 15, color: cs.onSurfaceVariant),
+                              const SizedBox(width: 3),
+                              Flexible(
+                                child: Text(
+                                  n.ongCidade!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: cs.onSurfaceVariant),
+                                ),
+                              ),
+                            ],
+                            // "há X dias" discreto (some quando o backend
+                            // ainda não envia dataCriacao).
+                            if (postado.isNotEmpty)
+                              Text(
+                                (n.ongCidade ?? '').isNotEmpty
+                                    ? ' · $postado'
+                                    : postado,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                     fontSize: 12,
                                     color: cs.onSurfaceVariant),
                               ),
-                            ),
                           ],
                         ),
                       )
@@ -270,7 +372,7 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                               key: const ValueKey('enviado'),
                               onPressed: null,
                               icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Enviado'),
+                              label: const Text('Interesse demonstrado'),
                             )
                           : FilledButton.icon(
                               key: const ValueKey('interesse'),
@@ -299,6 +401,8 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }

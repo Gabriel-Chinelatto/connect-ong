@@ -31,6 +31,8 @@ import 'campanhas_screen.dart';
 import 'favoritos_screen.dart';
 import 'minhas_doacoes_screen.dart';
 import 'mural_impacto_screen.dart';
+import 'necessidade_detalhe_screen.dart';
+import 'perfil_publico_ong_screen.dart';
 import 'ranking_transparencia_screen.dart';
 import 'timeline_atividades_screen.dart';
 
@@ -399,7 +401,9 @@ class _InicioTabState extends State<InicioTab> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => widget.onIrParaAba(1),
+              // Abre o DETALHE da necessidade (a lista completa continua no
+              // "Ver todas" do cabeçalho, que leva à aba Explorar).
+              onTap: () => _abrir(NecessidadeDetalheScreen(necessidade: n)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -508,7 +512,11 @@ class _InicioTabState extends State<InicioTab> {
     final cs = Theme.of(context).colorScheme;
     return _cartaoBase(
       largura: 210,
-      onTap: () => _abrir(const RankingTransparenciaScreen()),
+      semantica: 'Abrir perfil da ONG ${o.nome}',
+      // Abre o PERFIL PÚBLICO da ONG (o ranking continua no "Ver ranking"
+      // do cabeçalho da seção).
+      onTap: () => _abrir(
+          PerfilPublicoOngScreen(ongId: o.ongId, ongNome: o.nome)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

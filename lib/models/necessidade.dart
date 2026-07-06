@@ -13,6 +13,11 @@ class Necessidade {
   final double ongNotaMedia;
   final int ongTotalAvaliacoes;
 
+  /// Data de publicação (ISO-8601) que o backend está adicionando ao
+  /// NecessidadeResponseDTO. Nula em backends antigos — a UI oculta o
+  /// "Postado há X" quando ausente (degradação graciosa).
+  final String? dataCriacao;
+
   const Necessidade({
     required this.id,
     required this.titulo,
@@ -26,6 +31,7 @@ class Necessidade {
     this.ongVerificada = false,
     this.ongNotaMedia = 0,
     this.ongTotalAvaliacoes = 0,
+    this.dataCriacao,
   });
 
   factory Necessidade.fromJson(Map<String, dynamic> json) {
@@ -42,6 +48,7 @@ class Necessidade {
       ongVerificada: json['ongVerificada'] ?? false,
       ongNotaMedia: (json['ongNotaMedia'] ?? 0).toDouble(),
       ongTotalAvaliacoes: json['ongTotalAvaliacoes'] ?? 0,
+      dataCriacao: json['dataCriacao'],
     );
   }
 }
