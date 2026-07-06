@@ -50,7 +50,9 @@
       "NotebookEdit",
       "Read",
       "Glob",
-      "Grep"
+      "Grep",
+      "Bash(netstat -ano)",
+      "Bash(\"/c/Users/gabri/AppData/Local/Android/Sdk/emulator/emulator.exe\" -list-avds)"
     ]
   }
 }
