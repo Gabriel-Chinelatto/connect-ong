@@ -1,6 +1,6 @@
 ---
 name: connect-ong-sessao-2026-07-06
-description: "Estado VIVO da sessão 2026-07-06: 2ª rodada de feedback do usuário (13 tópicos), plano em 3 ondas, contratos do bloqueio, decisões tomadas e como retomar se a sessão cair"
+description: "CONCLUÍDA — 2ª rodada de feedback (13 tópicos): backend bloqueio+privacidade, mobile detalhe/interesse/impacto, desktop bloqueio, mobile2 UF-cidade/config/contraste/Maps/chat-bloqueado. Verificada visualmente e no ar."
 metadata: 
   node_type: memory
   type: project
@@ -38,7 +38,17 @@ Sessão de 2026-07-06 (PC principal). Usuário viu os 2 apps rodando (builds rel
 - **ONDA 2 (disparar quando Mobile 1 terminar — mesmo repo)**: MOBILE 2: tópico 2 (UF/cidades no editar perfil + cadastro; copiar/gerar mesmo asset IBGE), 6 (configurações bonitas + alto contraste/nav simplificada REAIS via ConfigController), 5 (botão Salvar no mobile), 8 (fix Maps mobile), 11 (Como chegar), 13 lado doador (chat header → perfil ONG; tratar 403 de mensagem; perfil {bloqueado:true} → tela "Você não pode ver este perfil"; feed já vem filtrado do servidor).
 - **ONDA 3**: E2E do bloqueio ao vivo (H2), verificação visual por screenshots (harness JÁ VERSIONADO: `lib/main_screenshots.dart` + `tool/screenshots/`; gotchas: build RELEASE, iframe 430px p/ viewport mobile, `--virtual-time-budget=6000` p/ telas com timer, 20000 p/ painel), rebuild dos 2 apps + servidores 5100/5200 (script `scratchpad/servidor.dart` — recriar de qualquer pasta build/web se sumir), memórias + relatório final.
 
-## ESTADO FINAL DA SESSÃO FABLE (2026-07-06 ~13h) — HANDOFF PARA O OPUS
+## ✅ ONDA 3 CONCLUÍDA (2026-07-06 tarde, sessão Opus) — RODADA 2 FECHADA
+O Opus retomou do handoff e fechou tudo:
+- **Integração Mobile 2 revisada e confirmada** (as 6 tarefas cabeadas corretamente): SeletorUfCidade em editar-perfil E cadastro; ConfiguracoesScreen redesenhada (cards+descrições) com Salvar/Descartar via `mapEquals(_p.toJson(), _original.toJson())`; alto contraste + navegação simplificada REAIS (AppTheme._build muda bg/surface/texto/primária/bordas; carrossel para o Timer e confete/animações desligam quando navegacaoSimplificada); fix Maps (`Uri.https('www.google.com','/maps/dir/',...)` sem canLaunchUrl); botão "Como chegar" (perfil_publico_ong_screen linha ~699); chat 403→`_bloqueado`+"Você não pode enviar mensagens para esta ONG", perfil `{bloqueado:true}`→"Você não pode ver este perfil". Único conserto do orquestrador: import faltante `mapEquals` (flutter/foundation) em configuracoes_screen.dart.
+- **Flag navegação simplificada** persistida: vai junto das preferências no backend SE o campo existir; senão fallback em SharedPreferences (chave `navegacao_simplificada`), reconciliado no ConfigController.carregar.
+- **Verificação**: `flutter analyze` No issues + **62 testes verdes** + `flutter build web --release` OK (mobile e desktop).
+- **Verificação visual** (harness estendido com fragments `config` e `contraste`): Configurações redesenhada confirmada (seções em cards com ícone + descrição sob cada toggle) e **alto contraste comprovadamente diferente** (bordas grossas pretas, texto preto puro, verde escuro, fonte pesada — resolve o "não vi diferença" do usuário). perfil-ong/home não capturaram no headless (dependem de fetch e não fecham no virtual-time-budget) → "Como chegar" confirmado por inspeção; home vista ao vivo. GOTCHA NOVO: headless no Windows precisa `--user-data-dir` ISOLADO por chamada (senão o lock de profile das janelas abertas faz o --screenshot não gravar nada silenciosamente).
+- **Demo NO AR** p/ o usuário: API real 8080 (MySQL escola, migration bloqueio aplicada), mobile release 5100, desktop release 5200, 2 janelas Chrome abertas.
+- Commits desta onda: mobile `571eb62` (WIP Mobile 2 integrado pelo Fable) — o Opus só corrigiu o import e NÃO precisou de commit de código novo (o fix entrou junto). Falta commitar: memórias + o import fix (se ficou fora). VERIFICAR git status ao fim.
+**RESULTADO: os 13 tópicos da 2ª rodada estão TODOS entregues, testados e verificados. Roadmap segue 100%. Pendências humanas: pôster A0, ensaio, confirmar app no emulador Android (notebook). Deferred menor: utf8mb4, hospedar web, ongId no DTO de avaliação, coluna `estado` na entidade Ong (hoje desktop grava "Cidade - UF" no campo cidade).**
+
+## ESTADO FINAL DA SESSÃO FABLE (2026-07-06 ~13h) — HANDOFF PARA O OPUS (histórico)
 O usuário trocou de modelo por limite de tokens. TUDO COMMITADO E PUSHADO nos 3 repos (árvores limpas). O que cada onda entregou:
 - **BACKEND ✅ COMPLETO** (commit `cf9404a`, master): bloqueio (endpoints + enforcement completo, incl. /campanhas/destaques), privacidade real (campos REAIS: `mostrarEmail`/`mostrarTelefone` na entidade Preferencia; default de ONG sem registro = email OCULTO, telefone visível), dataCriacao (já existia + testes). **97 testes verdes** + 34/34 ao vivo. Migration `bloqueio` entra no próximo startup.
 - **MOBILE 1 ✅ COMPLETO** (commits `a434507`+`4d02fab`+`d39f7bd`, main): foguinho branco, NecessidadeDetalheScreen (urgentes+feed abrem nela; ONG clicável), ONG destaque→perfil, "há X dias" no feed, "Interesse demonstrado"+reordenação, Impacto 4 destinos (stat novo "Doações PIX" teal→Minhas Doações), chip prestação nas Concluídas, cabeçalho Nova doação. 54 testes.

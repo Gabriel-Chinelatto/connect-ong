@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'doador/chat_screen.dart';
+import 'doador/configuracoes_screen.dart';
 import 'doador/doar_pix_screen.dart';
 import 'doador/main_shell.dart';
 import 'doador/meus_matches_screen.dart';
@@ -63,15 +64,21 @@ class _HarnessApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 'contraste' renderiza a mesma tela de Configuracoes com o tema de alto
+    // contraste, para provar visualmente que ele muda (feedback do usuario).
+    final contraste = tela == 'contraste';
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.light(altoContraste: contraste),
       home: _telaPorNome(tela),
     );
   }
 
   Widget _telaPorNome(String nome) {
     switch (nome) {
+      case 'config':
+      case 'contraste':
+        return const ConfiguracoesScreen();
       case 'matches':
         return const MeusMatchesScreen();
       case 'concluidas':
