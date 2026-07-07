@@ -19,6 +19,7 @@ import '../utils/page_transition.dart';
 import '../web/portal_institucional_screen.dart';
 import 'cadastro_doador_page.dart';
 import 'esqueci_senha_page.dart';
+import 'verificacao_2fa_page.dart';
 
 /// Tela de login do doador (porta de entrada do app mobile).
 ///
@@ -102,12 +103,30 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = true);
 
     try {
-      final usuario = await _loginService.fazerLogin(
+      final resultado = await _loginService.fazerLogin(
         email: email,
         senha: senha,
         tipoSelecionado: 0, // app mobile é exclusivo do doador
       );
+      if (!mounted) return;
 
+      // Verificação em duas etapas: em vez do token, o backend pediu um código.
+      // Segue para a tela de confirmação (que finaliza o login).
+      if (resultado.requer2fa) {
+        Navigator.push(
+          context,
+          PageTransition.fade(
+            Verificacao2faPage(
+              email: resultado.email ?? email,
+              senha: senha,
+              codigoDemo: resultado.codigoDemo,
+            ),
+          ),
+        );
+        return;
+      }
+
+      final usuario = resultado.usuario!;
       await ConfigController.instance.carregar(usuario.id);
       if (!mounted) return;
 

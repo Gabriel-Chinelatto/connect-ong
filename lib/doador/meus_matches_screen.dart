@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../config/config_controller.dart';
 import '../models/interesse.dart';
 import '../services/interesse_service.dart';
 import '../services/prestacao_service.dart';
@@ -40,14 +43,24 @@ class MeusMatchesScreen extends StatefulWidget {
   /// específica (ex.: cards clicáveis do Meu Impacto).
   final MatchesAbaController? abaController;
 
-  const MeusMatchesScreen({super.key, this.abaController});
+  /// true quando esta é a aba VISÍVEL do shell. Controla o polling em tempo
+  /// real: só atualiza sozinho enquanto o usuário está de fato nesta aba
+  /// (evita bater na API com a tela escondida no IndexedStack). Padrão true
+  /// para telas isoladas (harness/testes).
+  final bool ativa;
+
+  const MeusMatchesScreen({
+    super.key,
+    this.abaController,
+    this.ativa = true,
+  });
 
   @override
   State<MeusMatchesScreen> createState() => _MeusMatchesScreenState();
 }
 
 class _MeusMatchesScreenState extends State<MeusMatchesScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final InteresseService _interesseService = InteresseService();
   final SessionService _sessionService = SessionService();
 
@@ -61,9 +74,26 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
   /// verificando). Preenchido só para os CONCLUÍDOS.
   final Map<int, bool> _temPrestacao = {};
 
+  // ---- Polling em tempo real ----
+  // Enquanto a aba está visível, recarrega os interesses de tempos em tempos.
+  // Quando a ONG aceita/conclui um interesse, ele muda de aba sozinho e o
+  // doador recebe um aviso — sem precisar sair e entrar da tela.
+  Timer? _poll;
+
+  /// Último status conhecido por interesseId, para detectar transições
+  /// (PENDENTE→ACEITO, →CONCLUIDO) entre uma leitura e a próxima.
+  final Map<int, String> _statusConhecido = {};
+
+  // Intervalo do polling: mais espaçado com navegação simplificada (menos
+  // movimento/rede para quem prefere calma), curto no uso normal.
+  Duration get _intervaloPoll => ConfigController.instance.navegacaoSimplificada
+      ? const Duration(seconds: 12)
+      : const Duration(seconds: 4);
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabs = TabController(
       length: 3,
       vsync: this,
@@ -71,13 +101,56 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     );
     widget.abaController?.addListener(_aoPedirSubAba);
     _carregar();
+    if (widget.ativa) _iniciarPoll();
+  }
+
+  @override
+  void didUpdateWidget(MeusMatchesScreen old) {
+    super.didUpdateWidget(old);
+    // O shell troca o valor de [ativa] ao entrar/sair da aba de Matches.
+    if (widget.ativa && !old.ativa) {
+      _carregar(silencioso: true); // atualiza na hora ao voltar à aba
+      _iniciarPoll();
+    } else if (!widget.ativa && old.ativa) {
+      _pararPoll();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pararPoll();
     widget.abaController?.removeListener(_aoPedirSubAba);
     _tabs.dispose();
     super.dispose();
+  }
+
+  // Pausa o polling quando o app vai para segundo plano; retoma (e atualiza na
+  // hora) ao voltar, se a aba estiver visível.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    if (estado == AppLifecycleState.resumed) {
+      if (widget.ativa) {
+        _carregar(silencioso: true);
+        _iniciarPoll();
+      }
+    } else if (estado == AppLifecycleState.paused ||
+        estado == AppLifecycleState.hidden) {
+      _pararPoll();
+    }
+  }
+
+  void _iniciarPoll() {
+    _poll?.cancel();
+    _poll = Timer.periodic(_intervaloPoll, (_) {
+      if (!mounted || !widget.ativa) return;
+      _carregar(silencioso: true);
+    });
+  }
+
+  void _pararPoll() {
+    _poll?.cancel();
+    _poll = null;
   }
 
   void _aoPedirSubAba() {
@@ -85,11 +158,16 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     _tabs.animateTo(widget.abaController!.aba);
   }
 
-  Future<void> _carregar() async {
-    setState(() {
-      _carregando = true;
-      _erro = false;
-    });
+  /// Carrega os interesses. Com [silencioso] = true (polling / retorno à aba)
+  /// não mostra o spinner nem apaga a lista atual em caso de falha de rede — a
+  /// atualização é "invisível" até algo realmente mudar.
+  Future<void> _carregar({bool silencioso = false}) async {
+    if (!silencioso) {
+      setState(() {
+        _carregando = true;
+        _erro = false;
+      });
+    }
     try {
       final usuario = await _sessionService.obterUsuario();
       if (usuario == null) {
@@ -99,18 +177,46 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
       }
       final lista = await _interesseService.meusMatches(usuario.id);
       if (!mounted) return;
+      _detectarTransicoes(lista, silencioso);
       setState(() {
         _matches = lista;
         _carregando = false;
+        _erro = false;
       });
       _verificarPrestacoes(lista);
     } catch (e) {
-      // Distingue "sem matches" de "a API caiu".
+      // Distingue "sem matches" de "a API caiu". No polling silencioso, uma
+      // falha de rede momentânea não deve estragar a tela já carregada.
       if (!mounted) return;
+      if (silencioso) return;
       setState(() {
         _carregando = false;
         _erro = true;
       });
+    }
+  }
+
+  // Compara os status novos com os últimos conhecidos e avisa o doador quando
+  // um interesse foi ACEITO (vira match ativo) ou CONCLUÍDO. Na primeira carga
+  // o mapa está vazio, então não dispara avisos falsos.
+  void _detectarTransicoes(List<Interesse> lista, bool silencioso) {
+    var virouAceito = false;
+    var virouConcluido = false;
+    for (final i in lista) {
+      final anterior = _statusConhecido[i.id];
+      if (anterior != null && anterior != i.status) {
+        if (i.status == 'ACEITO') virouAceito = true;
+        if (i.status == 'CONCLUIDO') virouConcluido = true;
+      }
+      _statusConhecido[i.id] = i.status;
+    }
+    // Só avisa em atualização automática (não na carga inicial) e com a tela
+    // visível.
+    if (!silencioso || !mounted || !widget.ativa) return;
+    if (virouAceito) {
+      AppSnackbar.sucesso(context, 'Seu interesse foi aceito! 💚 Já dá pra conversar.');
+    } else if (virouConcluido) {
+      AppSnackbar.sucesso(context, 'Uma doação sua foi concluída! 🎉');
     }
   }
 

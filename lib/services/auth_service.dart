@@ -48,6 +48,13 @@ class AuthService {
         utf8.decode(response.bodyBytes),
       );
 
+      // 2FA: o backend pode responder 200 SEM token, pedindo o segundo fator
+      // (`requer2fa: true`). Nesse caso não há accessToken para guardar — o
+      // fluxo continua na tela de código, que chama [loginDoisFatores].
+      if (resp['requer2fa'] == true) {
+        return resp;
+      }
+
       // Guarda o accessToken para ser enviado nas próximas requisições.
       await ApiService.setToken(resp['accessToken']);
 
@@ -109,6 +116,30 @@ class AuthService {
       msgErro = 'Erro (HTTP ${response.statusCode})';
     }
     throw Exception(msgErro);
+  }
+
+  /// Segundo fator do login (2FA): `POST /auth/login-2fa` {email, codigo}.
+  ///
+  /// Chamado depois que `POST /usuarios/login` respondeu `requer2fa: true`.
+  /// Em sucesso (200) a resposta tem o mesmo formato do login normal
+  /// (accessToken + dados do usuário) — o token é guardado aqui. Em falha
+  /// (ex.: 400 "Código inválido ou expirado.") lança [Exception].
+  Future<Map<String, dynamic>> loginDoisFatores({
+    required String email,
+    required String codigo,
+  }) async {
+    final response = await ApiService.post(
+      '/auth/login-2fa',
+      body: jsonEncode({'email': email, 'codigo': codigo}),
+    );
+
+    if (response.statusCode == 200) {
+      final resp =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      await ApiService.setToken(resp['accessToken']);
+      return resp;
+    }
+    throw Exception(_extrairErro(response));
   }
 
   /// Passo 1 do "esqueci a senha": `POST /auth/esqueci-senha`.

@@ -6,9 +6,11 @@ import '../../theme/app_colors.dart';
 /// de transparência: "Há N dias em 1º lugar". Usado no header do perfil da
 /// ONG, no card #1 do ranking e nas "ONGs em destaque" da Início.
 ///
-/// A chama é um ícone Material BRANCO (não o emoji 🔥, que é laranja e
-/// sumia sobre o fundo laranja do chip). O fundo laranja é fixo da marca,
-/// então o contraste branco-sobre-laranja vale nos temas claro e escuro.
+/// REDESENHO (contraste forte): o chip antigo era laranja com chama branca e o
+/// fogo "sumia". Agora o fundo é um CREME/laranja bem claro, o ícone de fogo é
+/// LARANJA e o texto laranja escuro em negrito, com uma borda laranja fina que
+/// delimita o chip. Assim ele destaca tanto sobre os cards claros (surface
+/// branca / selo dourado das "ONGs em destaque") quanto sobre o tema escuro.
 ///
 /// [compacto] encurta o texto ("N dias em 1º") para caber nos cards pequenos
 /// — o número de dias aparece sempre no próprio chip.
@@ -17,6 +19,10 @@ class ChipFoguinho extends StatelessWidget {
   final bool compacto;
 
   const ChipFoguinho({super.key, required this.dias, this.compacto = false});
+
+  // Fundo creme/laranja bem claro (constante: legível nos dois temas porque o
+  // chip tem fundo próprio, não é transparente).
+  static const Color _fundo = Color(0xFFFFF1E0);
 
   @override
   Widget build(BuildContext context) {
@@ -30,18 +36,15 @@ class ChipFoguinho extends StatelessWidget {
         padding: EdgeInsets.symmetric(
             horizontal: compacto ? 8 : 12, vertical: compacto ? 3 : 6),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.fogo, AppColors.fogoEscuro],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: _fundo,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.fogo, width: 1.3),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.local_fire_department_rounded,
-                size: compacto ? 13 : 16, color: Colors.white),
+                size: compacto ? 14 : 17, color: AppColors.fogo),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
@@ -49,9 +52,9 @@ class ChipFoguinho extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.fogoEscuro,
                   fontSize: compacto ? 10 : 13,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),

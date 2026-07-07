@@ -10,6 +10,13 @@ class PerfilPublicoDoador {
   final String estado;
   final String fotoBase64;
   final String? membroDesde; // ISO; null em contas antigas
+
+  /// Contato PÚBLICO: só vem preenchido quando o doador ligou os toggles de
+  /// privacidade ("Exibir e-mail" / "Exibir telefone"). Null = oculto (ou
+  /// backend antigo sem o campo): a seção "Contato" some.
+  final String? email;
+  final String? telefone;
+
   final double notaMediaDoador;
   final int totalAvaliacoesDoador;
   final int matchesConcluidos;
@@ -24,6 +31,8 @@ class PerfilPublicoDoador {
     required this.estado,
     required this.fotoBase64,
     this.membroDesde,
+    this.email,
+    this.telefone,
     required this.notaMediaDoador,
     required this.totalAvaliacoesDoador,
     required this.matchesConcluidos,
@@ -35,6 +44,20 @@ class PerfilPublicoDoador {
   /// Badge "Doador 5 estrelas": média >= 4.8 com pelo menos 1 avaliação.
   bool get doadorCincoEstrelas =>
       notaMediaDoador >= 4.8 && totalAvaliacoesDoador >= 1;
+
+  /// Há algum contato público para exibir?
+  bool get temContato =>
+      (email?.isNotEmpty ?? false) || (telefone?.isNotEmpty ?? false);
+
+  // Normaliza um campo textual opcional: string não-vazia ou null (trata ""
+  // e valores não-String como ausentes).
+  static String? _limpo(dynamic v) {
+    if (v is String) {
+      final t = v.trim();
+      return t.isEmpty ? null : t;
+    }
+    return null;
+  }
 
   factory PerfilPublicoDoador.fromJson(Map<String, dynamic> j) {
     final stats = (j['stats'] is Map<String, dynamic>)
@@ -59,6 +82,8 @@ class PerfilPublicoDoador {
       estado: j['estado'] ?? '',
       fotoBase64: j['fotoBase64'] ?? '',
       membroDesde: j['membroDesde'] as String?,
+      email: _limpo(j['email']),
+      telefone: _limpo(j['telefone']),
       notaMediaDoador: ((j['notaMediaDoador'] ?? 0) as num).toDouble(),
       totalAvaliacoesDoador: ((j['totalAvaliacoesDoador'] ?? 0) as num).toInt(),
       matchesConcluidos: ((stats['matchesConcluidos'] ?? 0) as num).toInt(),

@@ -62,6 +62,42 @@ class PerfilService {
     }
   }
 
+  // Alterar o e-mail de acesso. Exige a senha atual para confirmar.
+  // PUT /usuarios/{id}/email {novoEmail, senha} -> 200 {mensagem, email}.
+  // Mapeia os erros comuns para mensagens claras: 401 (senha incorreta) e
+  // 409 (e-mail ja em uso).
+  Future<Map<String, dynamic>> alterarEmail(
+    int usuarioId,
+    String novoEmail,
+    String senha,
+  ) async {
+    final response = await http.put(
+      Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/email'),
+      headers: ApiService.jsonHeaders(),
+      body: jsonEncode({'novoEmail': novoEmail, 'senha': senha}),
+    ).timeout(ApiService.timeout);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) {
+      throw Exception('Senha incorreta.');
+    }
+    if (response.statusCode == 409) {
+      throw Exception('Este e-mail já está em uso.');
+    }
+    String msgErro;
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      msgErro = (body is Map && body['erro'] != null)
+          ? body['erro'].toString()
+          : 'Erro (HTTP ${response.statusCode})';
+    } catch (_) {
+      msgErro = 'Erro (HTTP ${response.statusCode})';
+    }
+    throw Exception(msgErro);
+  }
+
   // Excluir a propria conta (soft-delete no backend: desativa a conta e
   // preserva o historico). Exige o token do dono (Authorization: Bearer);
   // o backend valida que so o dono pode excluir.

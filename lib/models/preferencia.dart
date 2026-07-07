@@ -18,6 +18,10 @@ class Preferencia {
   bool perfilPublico;
   bool receberContatos;
   bool receberSugestoes;
+  // Seguranca
+  /// Verificacao em duas etapas (2FA): a cada login o backend envia um codigo
+  /// para confirmar a identidade. Backend antigo sem o campo = false.
+  bool doisFatores;
 
   /// Indica se o JSON de origem TRAZIA o campo `navegacaoSimplificada`.
   /// O backend pode ser antigo e ainda nao ter esse campo — nesse caso o
@@ -41,6 +45,7 @@ class Preferencia {
     this.perfilPublico = true,
     this.receberContatos = true,
     this.receberSugestoes = true,
+    this.doisFatores = false,
     this.navegacaoSimplificadaDoBackend = true,
   });
 
@@ -62,6 +67,7 @@ class Preferencia {
       perfilPublico: b(j['perfilPublico'], true),
       receberContatos: b(j['receberContatos'], true),
       receberSugestoes: b(j['receberSugestoes'], true),
+      doisFatores: b(j['doisFatores'], false),
       navegacaoSimplificadaDoBackend: j.containsKey('navegacaoSimplificada'),
     );
   }
@@ -82,6 +88,7 @@ class Preferencia {
         'perfilPublico': perfilPublico,
         'receberContatos': receberContatos,
         'receberSugestoes': receberSugestoes,
+        'doisFatores': doisFatores,
       };
 
   Preferencia copy() => Preferencia.fromJson(toJson());

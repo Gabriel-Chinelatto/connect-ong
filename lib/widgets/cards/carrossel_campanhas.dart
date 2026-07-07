@@ -54,16 +54,24 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
     );
     _ligarTimer();
     // Reage ao liga/desliga da navegacao simplificada (inclusive no preview
-    // da tela de Configuracoes): religa ou cancela o auto-avanco na hora.
-    ConfigController.instance.addListener(_ligarTimer);
+    // da tela de Configuracoes): religa ou cancela o auto-avanco na hora E
+    // reconstroi para mostrar/esconder o aviso de "modo simplificado".
+    ConfigController.instance.addListener(_aoMudarConfig);
   }
 
   @override
   void dispose() {
-    ConfigController.instance.removeListener(_ligarTimer);
+    ConfigController.instance.removeListener(_aoMudarConfig);
     _timer?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  // Chamado quando as preferencias mudam (ex.: toggle da navegacao
+  // simplificada): reavalia o auto-avanco e reconstroi a UI (aviso visivel).
+  void _aoMudarConfig() {
+    _ligarTimer();
+    if (mounted) setState(() {});
   }
 
   void _ligarTimer() {
@@ -110,7 +118,41 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
           const SizedBox(height: AppSpacing.sm),
           Center(child: _indicador()),
         ],
+        // Navegacao simplificada: sem auto-avanco. Deixa isso VISIVEL com um
+        // aviso — o usuario passa os cards no swipe (nada se move sozinho).
+        if (ConfigController.instance.navegacaoSimplificada && _n > 1) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Center(child: _avisoSimplificado()),
+        ],
       ],
+    );
+  }
+
+  // Aviso discreto exibido quando a navegacao simplificada esta ligada: mostra
+  // que o carrossel ficou estatico de proposito e convida ao swipe.
+  Widget _avisoSimplificado() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.10),
+        borderRadius: AppRadius.brSm,
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.30)),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.swipe_outlined, size: 15, color: AppColors.primary),
+          SizedBox(width: 6),
+          Text(
+            'Modo simplificado — deslize para ver mais',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -101,6 +101,7 @@ class _PerfilPublicoDoadorScreenState extends State<PerfilPublicoDoadorScreen> {
                     children: [
                       _cabecalho(_perfil!),
                       _statsRow(_perfil!),
+                      if (_perfil!.temContato) _secaoContato(_perfil!),
                       if (_perfil!.avaliacoes.isNotEmpty)
                         _secaoAvaliacoes(_perfil!),
                       if (_perfil!.prestacoesRecebidas.isNotEmpty)
@@ -322,6 +323,32 @@ class _PerfilPublicoDoadorScreenState extends State<PerfilPublicoDoadorScreen> {
         ],
       ),
     );
+  }
+
+  // ---------- Contato público (só quando o doador liberou nos toggles) ----------
+  Widget _secaoContato(PerfilPublicoDoador p) {
+    final cs = Theme.of(context).colorScheme;
+    Widget linha(IconData icon, String valor) => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: AppColors.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SelectableText(
+                  valor,
+                  style: TextStyle(fontSize: 14, color: cs.onSurface),
+                ),
+              ),
+            ],
+          ),
+        );
+    return _secao('Contato', Icons.contact_mail_outlined, [
+      if (p.telefone != null && p.telefone!.isNotEmpty)
+        linha(Icons.phone_outlined, p.telefone!),
+      if (p.email != null && p.email!.isNotEmpty)
+        linha(Icons.email_outlined, p.email!),
+    ]);
   }
 
   Widget _secaoAvaliacoes(PerfilPublicoDoador p) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../config/config_controller.dart';
 import '../models/preferencia.dart';
+import '../models/usuario_logado.dart';
 import '../pages/login_page.dart';
 import '../services/api_service.dart';
 import '../services/perfil_service.dart';
@@ -267,6 +268,18 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: _abrirAlterarSenha,
                     ),
+                    ListTile(
+                      leading: const Icon(Icons.alternate_email),
+                      title: const Text('Alterar e-mail'),
+                      subtitle: const Text('Troque o e-mail de acesso'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: _abrirAlterarEmail,
+                    ),
+                    _switch(
+                        'Verificação em duas etapas',
+                        'A cada login enviaremos um código para confirmar que é você',
+                        _p.doisFatores,
+                        (v) => _editar(() => _p.doisFatores = v)),
                   ],
                 ),
                 _cartaoSecao(
@@ -676,5 +689,101 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
     // Descarta os controllers apos o dialogo fechar (evita vazamento).
     atualController.dispose();
     novaController.dispose();
+  }
+
+  Future<void> _abrirAlterarEmail() async {
+    final emailController = TextEditingController();
+    final senhaController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool salvando = false; // guard anti-duplo-toque dentro do dialog
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setStateDialog) => AlertDialog(
+          title: const Text('Alterar e-mail'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Novo e-mail'),
+                  validator: (v) {
+                    final t = (v ?? '').trim();
+                    if (t.isEmpty) return 'Informe o novo e-mail';
+                    final ok = RegExp(r'^[\w\.\-+]+@[\w\-]+(\.[\w\-]+)+$')
+                        .hasMatch(t);
+                    return ok ? null : 'E-mail inválido';
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: senhaController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Senha atual'),
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? 'Informe a senha atual'
+                      : null,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed:
+                  salvando ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: salvando
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+                      if (_usuarioId == null) return;
+                      setStateDialog(() => salvando = true);
+                      try {
+                        final resp = await PerfilService().alterarEmail(
+                          _usuarioId!,
+                          emailController.text.trim(),
+                          senhaController.text,
+                        );
+                        // Atualiza a sessao com o novo e-mail (backend devolve
+                        // o e-mail confirmado; fallback = o que foi digitado).
+                        final novoEmail = (resp['email'] ??
+                                emailController.text.trim())
+                            .toString();
+                        final atual = await SessionService().obterUsuario();
+                        if (atual != null) {
+                          await SessionService().salvarUsuario(UsuarioLogado(
+                            id: atual.id,
+                            nome: atual.nome,
+                            email: novoEmail,
+                            tipo: atual.tipo,
+                          ));
+                        }
+                        if (!dialogContext.mounted) return;
+                        Navigator.pop(dialogContext);
+                        if (!mounted) return;
+                        AppSnackbar.sucesso(
+                            context, 'E-mail alterado com sucesso! 💚');
+                      } catch (e) {
+                        setStateDialog(() => salvando = false);
+                        if (!dialogContext.mounted) return;
+                        AppSnackbar.erro(
+                            dialogContext, ApiService.mensagemAmigavel(e));
+                      }
+                    },
+              child: Text(salvando ? 'Salvando...' : 'Salvar'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    emailController.dispose();
+    senhaController.dispose();
   }
 }

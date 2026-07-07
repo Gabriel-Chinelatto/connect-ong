@@ -76,7 +76,7 @@ class _MainShellState extends State<MainShell> {
     final abas = <Widget>[
       InicioTab(onIrParaAba: _irParaAba),
       const FeedNecessidadesScreen(),
-      MeusMatchesScreen(abaController: _abaMatches),
+      MeusMatchesScreen(abaController: _abaMatches, ativa: _indice == 2),
       DashboardImpactoScreen(onIrParaAba: _irParaAba),
       const PerfilScreen(),
     ];
