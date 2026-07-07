@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../config/config_controller.dart';
 import '../models/necessidade.dart';
 import '../services/api_service.dart';
-import '../services/favorito_service.dart';
 import '../services/necessidade_service.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
@@ -54,7 +53,6 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen>
   final NecessidadeService _necessidadeService = NecessidadeService();
   final InteresseService _interesseService = InteresseService();
   final SessionService _sessionService = SessionService();
-  final FavoritoService _favoritoService = FavoritoService();
 
   List<Necessidade> _necessidades = [];
 
@@ -73,9 +71,10 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen>
   /// próxima recarga — o card não "teleporta" na frente do usuário.
   Set<int> _emAndamentoNaCarga = {};
 
-  /// Ids das ONGs FAVORITADAS pelo doador (tipo 'ONG'): as necessidades delas
-  /// sobem para o topo do feed.
-  final Set<int> _ongsFavoritas = {};
+  /// Foto do [_concluidoAntes] na CARGA: controla a ORDENAÇÃO das
+  /// "demonstrar interesse novamente" (ficam depois das disponíveis e antes das
+  /// em andamento), sem o card teleportar ao interagir.
+  Set<int> _concluidoAntesNaCarga = {};
 
   final Set<int> _enviandoInteresse = {}; // ids com POST em andamento (anti duplo)
   bool _carregando = true;
@@ -197,14 +196,6 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen>
         } catch (_) {}
       }
 
-      // ONGs favoritadas (para subir as necessidades delas). Degrada p/ vazio.
-      final favoritas = <int>{};
-      if (usuario != null) {
-        try {
-          favoritas.addAll(await _favoritoService.ids(usuario.id, 'ONG'));
-        } catch (_) {}
-      }
-
       if (!mounted) return;
       setState(() {
         _doadorId = usuario?.id;
@@ -216,9 +207,7 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen>
           ..clear()
           ..addAll(concluidoAntes);
         _emAndamentoNaCarga = Set.of(emAndamento);
-        _ongsFavoritas
-          ..clear()
-          ..addAll(favoritas);
+        _concluidoAntesNaCarga = Set.of(concluidoAntes);
         _carregando = false;
         _erroCarga = false;
       });
@@ -291,25 +280,28 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen>
       return bateBusca && bateCategoria && bateUrgente;
     }).toList();
 
-    // ---- CHAVE DE ORDENAÇÃO (prioridade; menor = mais acima) ----
-    // 0) FAVORITAS  — necessidades de ONGs favoritadas pelo doador
-    // 1) URGENTES   — não favoritas, marcadas como urgentes
-    // 2) RECENTES   — demais (não urgentes)
-    // 3) EM ANDAMENTO — interesse já demonstrado (PENDENTE/ACEITO): vão pro FIM
-    // Usa a foto de "em andamento" da CARGA (não o set vivo) para o card não
-    // teleportar assim que o doador demonstra interesse. Dentro de cada grupo:
-    // dataCriacao mais RECENTE primeiro.
-    int grupo(Necessidade n) {
-      if (_emAndamentoNaCarga.contains(n.id)) return 3;
-      if (n.ongId != null && _ongsFavoritas.contains(n.ongId)) return 0;
-      if (n.urgente) return 1;
-      return 2;
+    // ---- CHAVE DE ORDENAÇÃO ----
+    // Particiona por ESTADO do interesse (grupo primário); dentro de cada
+    // estado, URGENTES sempre primeiro e depois dataCriacao mais RECENTE no topo.
+    //   estado 0 = DISPONÍVEL (nunca demonstrado) — o topo (ação possível)
+    //   estado 1 = "DEMONSTRAR NOVAMENTE" (última doação já CONCLUÍDA) — depois
+    //              de todas as disponíveis e antes das em andamento
+    //   estado 2 = interesse EM ANDAMENTO (PENDENTE/ACEITO) — por último
+    // Usa as FOTOS da carga (não os sets vivos) para o card não teleportar
+    // assim que o doador demonstra interesse (reordena só na próxima recarga).
+    int estado(Necessidade n) {
+      if (_emAndamentoNaCarga.contains(n.id)) return 2;
+      if (_concluidoAntesNaCarga.contains(n.id)) return 1;
+      return 0;
     }
 
     // dataCriacao ISO ordena lexicograficamente; null vira "" (mais antigo).
     lista.sort((a, b) {
-      final g = grupo(a).compareTo(grupo(b));
-      if (g != 0) return g;
+      final e = estado(a).compareTo(estado(b));
+      if (e != 0) return e;
+      // Urgentes sempre acima dentro do mesmo estado.
+      if (a.urgente != b.urgente) return a.urgente ? -1 : 1;
+      // Mais recente primeiro.
       return (b.dataCriacao ?? '').compareTo(a.dataCriacao ?? '');
     });
     return lista;
