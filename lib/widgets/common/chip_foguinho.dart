@@ -6,54 +6,66 @@ import '../../theme/app_colors.dart';
 /// de transparência: "Há N dias em 1º lugar". Usado no header do perfil da
 /// ONG, no card #1 do ranking e nas "ONGs em destaque" da Início.
 ///
-/// REDESENHO (contraste forte): o chip antigo era laranja com chama branca e o
-/// fogo "sumia". Agora o fundo é um CREME/laranja bem claro, o ícone de fogo é
-/// LARANJA e o texto laranja escuro em negrito, com uma borda laranja fina que
-/// delimita o chip. Assim ele destaca tanto sobre os cards claros (surface
-/// branca / selo dourado das "ONGs em destaque") quanto sobre o tema escuro.
+/// REDESENHO (contraste MÁXIMO — 3ª tentativa): as versões anteriores usavam
+/// fundo creme/claro e fogo laranja e o chip "sumia" (virava um pill quase
+/// branco vazio). Agora o fundo é SÓLIDO e vibrante (gradiente laranja→vermelho
+/// do fogo), o ícone de chama é BRANCO e o texto é BRANCO em negrito, com uma
+/// sombra alaranjada para o chip saltar aos olhos tanto sobre o card claro
+/// (selo dourado das "ONGs em destaque") quanto sobre o header verde e o tema
+/// escuro.
 ///
-/// [compacto] encurta o texto ("N dias em 1º") para caber nos cards pequenos
-/// — o número de dias aparece sempre no próprio chip.
+/// [compacto] mostra só o NÚMERO de dias ao lado da chama (estilo streak do
+/// TikTok), para caber nos cards pequenos; o significado completo fica no
+/// Semantics. A versão normal escreve "Há N dias em 1º lugar".
 class ChipFoguinho extends StatelessWidget {
   final int dias;
   final bool compacto;
 
   const ChipFoguinho({super.key, required this.dias, this.compacto = false});
 
-  // Fundo creme/laranja bem claro (constante: legível nos dois temas porque o
-  // chip tem fundo próprio, não é transparente).
-  static const Color _fundo = Color(0xFFFFF1E0);
-
   @override
   Widget build(BuildContext context) {
+    // Compacto = só o número (como o contador de "dias de sequência" do
+    // TikTok); normal = frase inteira.
     final texto = compacto
-        ? '$dias ${dias == 1 ? "dia" : "dias"} em 1º'
+        ? '$dias'
         : 'Há $dias ${dias == 1 ? "dia" : "dias"} em 1º lugar';
     return Semantics(
       label: 'Há $dias ${dias == 1 ? "dia" : "dias"} em primeiro lugar no '
           'ranking de transparência',
       child: Container(
         padding: EdgeInsets.symmetric(
-            horizontal: compacto ? 8 : 12, vertical: compacto ? 3 : 6),
+            horizontal: compacto ? 8 : 12, vertical: compacto ? 4 : 6),
         decoration: BoxDecoration(
-          color: _fundo,
+          // Fundo SÓLIDO (gradiente do fogo): laranja vibrante → vermelho.
+          gradient: const LinearGradient(
+            colors: [AppColors.fogo, AppColors.fogoEscuro],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.fogo, width: 1.3),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.fogo.withValues(alpha: 0.45),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.local_fire_department_rounded,
-                size: compacto ? 14 : 17, color: AppColors.fogo),
-            const SizedBox(width: 4),
+                size: compacto ? 15 : 17, color: Colors.white),
+            const SizedBox(width: 3),
             Flexible(
               child: Text(
                 texto,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: AppColors.fogoEscuro,
-                  fontSize: compacto ? 10 : 13,
+                  color: Colors.white,
+                  fontSize: compacto ? 12 : 13,
                   fontWeight: FontWeight.w800,
                 ),
               ),

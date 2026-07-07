@@ -196,17 +196,26 @@ class AvaliacaoResumo {
 }
 
 /// Versao enxuta de uma prestacao de contas exibida no perfil publico da ONG.
+///
+/// [doadorId]/[doadorNome] identificam o doador BENEFICIÁRIO da prestação
+/// (contraparte) — o backend os adiciona quando a prestação está ligada a uma
+/// doação concreta. Ausentes (null) em prestações gerais / backend antigo: a
+/// UI degrada mostrando a prestação sem o link "para o doador".
 class PrestacaoResumo {
   final String titulo;
   final String descricao;
   final String? fotoUrl;
   final String? dataCriacao;
+  final int? doadorId;
+  final String? doadorNome;
 
   const PrestacaoResumo({
     required this.titulo,
     required this.descricao,
     this.fotoUrl,
     this.dataCriacao,
+    this.doadorId,
+    this.doadorNome,
   });
 
   factory PrestacaoResumo.fromJson(Map<String, dynamic> j) => PrestacaoResumo(
@@ -214,5 +223,7 @@ class PrestacaoResumo {
     descricao: j['descricao'] ?? '',
     fotoUrl: j['fotoUrl'] as String?,
     dataCriacao: j['dataCriacao'] as String?,
+    doadorId: (j['doadorId'] as num?)?.toInt(),
+    doadorNome: j['doadorNome'] as String?,
   );
 }

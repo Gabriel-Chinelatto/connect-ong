@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../config/config_controller.dart';
 import '../models/necessidade.dart';
 import '../services/api_service.dart';
+import '../services/favorito_service.dart';
 import '../services/necessidade_service.dart';
 import '../services/interesse_service.dart';
 import '../services/session_service.dart';
-import '../services/perfil_service.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
@@ -22,35 +25,57 @@ import 'necessidade_detalhe_screen.dart';
 import 'perfil_publico_ong_screen.dart';
 
 /// Feed das necessidades abertas das ONGs (aba Explorar), com filtros (busca,
-/// categoria, urgentes) e priorizacao pela cidade do doador. Hero feature: ao
-/// demonstrar interesse numa necessidade, cria um interesse que a ONG pode
-/// aceitar (match), habilitando o chat.
+/// categoria, urgentes) e priorizacao. Hero feature: ao demonstrar interesse
+/// numa necessidade, cria um interesse que a ONG pode aceitar (match),
+/// habilitando o chat.
+///
+/// AUTO-ATUALIZAÇÃO: enquanto a aba está visível ([ativa]), recarrega ao
+/// voltar o foco e por um polling leve (silencioso, sem spinner nem apagar a
+/// lista em falha) — necessidades novas aparecem sem refresh manual. Com
+/// navegação simplificada o intervalo é bem maior (menos rede/movimento).
 ///
 /// Redesenho (Bloco 21 / Fase 4): consome o design system e usa cores do TEMA
 /// (colorScheme), ficando correto no claro e no escuro.
 class FeedNecessidadesScreen extends StatefulWidget {
-  const FeedNecessidadesScreen({super.key});
+  /// true quando esta é a aba VISÍVEL do shell. Controla o polling em tempo
+  /// real: só atualiza sozinho enquanto o usuário está de fato nesta aba
+  /// (evita bater na API com a tela escondida no IndexedStack). Padrão true
+  /// para telas isoladas (harness/testes).
+  final bool ativa;
+
+  const FeedNecessidadesScreen({super.key, this.ativa = true});
 
   @override
   State<FeedNecessidadesScreen> createState() => _FeedNecessidadesScreenState();
 }
 
-class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
+class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen>
+    with WidgetsBindingObserver {
   final NecessidadeService _necessidadeService = NecessidadeService();
   final InteresseService _interesseService = InteresseService();
   final SessionService _sessionService = SessionService();
+  final FavoritoService _favoritoService = FavoritoService();
 
   List<Necessidade> _necessidades = [];
 
-  /// Ids de necessidade em que o doador JÁ demonstrou interesse — semeado do
-  /// servidor (GET /interesses?doadorId=) a cada carga e atualizado na hora
-  /// quando ele demonstra interesse agora. Controla o estado do botão.
-  final Set<int> _jaInteressado = {};
+  /// Necessidades cujo interesse do doador está EM ANDAMENTO (último interesse
+  /// PENDENTE ou ACEITO). Só estas exibem "Interesse demonstrado" (desabilitado)
+  /// e vão para o fim da lista. Semeado do servidor a cada carga.
+  final Set<int> _emAndamento = {};
 
-  /// Foto do [_jaInteressado] tirada NA CARGA: controla a ORDENAÇÃO (com
-  /// interesse vão para o fim). Interesses demonstrados agora só mudam de
-  /// posição na próxima recarga — o card não "teleporta" na frente do usuário.
-  Set<int> _interessadoNaCarga = {};
+  /// Necessidades em que o doador já teve um interesse CONCLUÍDO e nenhum em
+  /// andamento — ficam DISPONÍVEIS de novo, com o botão "Demonstrar interesse
+  /// novamente".
+  final Set<int> _concluidoAntes = {};
+
+  /// Foto do [_emAndamento] tirada NA CARGA: controla a ORDENAÇÃO (em andamento
+  /// vão para o fim). Interesses demonstrados agora só mudam de posição na
+  /// próxima recarga — o card não "teleporta" na frente do usuário.
+  Set<int> _emAndamentoNaCarga = {};
+
+  /// Ids das ONGs FAVORITADAS pelo doador (tipo 'ONG'): as necessidades delas
+  /// sobem para o topo do feed.
+  final Set<int> _ongsFavoritas = {};
 
   final Set<int> _enviandoInteresse = {}; // ids com POST em andamento (anti duplo)
   bool _carregando = true;
@@ -60,53 +85,147 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
   String _busca = '';
   String? _categoria; // null = todas
   bool _soUrgentes = false;
-  String _minhaCidade = '';
+
+  // ---- Polling em tempo real ----
+  Timer? _poll;
+
+  // Intervalo do polling: bem espaçado com navegação simplificada (menos
+  // rede/movimento para quem prefere calma), leve no uso normal.
+  Duration get _intervaloPoll => ConfigController.instance.navegacaoSimplificada
+      ? const Duration(seconds: 30)
+      : const Duration(seconds: 8);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _carregar();
+    if (widget.ativa) _iniciarPoll();
   }
 
-  Future<void> _carregar() async {
-    setState(() {
-      _carregando = true;
-      _erroCarga = false;
+  @override
+  void didUpdateWidget(FeedNecessidadesScreen old) {
+    super.didUpdateWidget(old);
+    // O shell troca [ativa] ao entrar/sair da aba Explorar.
+    if (widget.ativa && !old.ativa) {
+      _carregar(silencioso: true); // atualiza na hora ao voltar à aba
+      _iniciarPoll();
+    } else if (!widget.ativa && old.ativa) {
+      _pararPoll();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pararPoll();
+    super.dispose();
+  }
+
+  // Pausa o polling em segundo plano; retoma (e atualiza) ao voltar, se visível.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    if (estado == AppLifecycleState.resumed) {
+      if (widget.ativa) {
+        _carregar(silencioso: true);
+        _iniciarPoll();
+      }
+    } else if (estado == AppLifecycleState.paused ||
+        estado == AppLifecycleState.hidden) {
+      _pararPoll();
+    }
+  }
+
+  void _iniciarPoll() {
+    _poll?.cancel();
+    // Polling silencioso enquanto a aba está visível. Com navegação
+    // simplificada o intervalo é bem maior (30s) — menos rede/movimento.
+    _poll = Timer.periodic(_intervaloPoll, (_) {
+      if (!mounted || !widget.ativa) return;
+      _carregar(silencioso: true);
     });
+  }
+
+  void _pararPoll() {
+    _poll?.cancel();
+    _poll = null;
+  }
+
+  /// Carrega necessidades + interesses + favoritos. Com [silencioso] = true
+  /// (polling / retorno à aba) não mostra o spinner nem apaga a lista atual em
+  /// caso de falha — a atualização é "invisível" até algo mudar.
+  Future<void> _carregar({bool silencioso = false}) async {
+    if (!silencioso) {
+      setState(() {
+        _carregando = true;
+        _erroCarga = false;
+      });
+    }
     try {
       final usuario = await _sessionService.obterUsuario();
       final lista = await _necessidadeService.listarAbertas();
-      String cidade = '';
-      if (usuario != null) {
-        try {
-          final perfil = await PerfilService().obter(usuario.id);
-          cidade = (perfil['cidade'] ?? '').toString();
-        } catch (_) {}
-      }
-      // Interesses já demonstrados (qualquer status): marca os cards como
-      // "Interesse demonstrado" e manda essas necessidades para o fim da
-      // lista. Falha aqui não derruba o feed (degrada para "nenhum").
-      final interessados = <int>{};
+
+      // Interesses do doador: agrupa por necessidadeId e olha o mais recente
+      // (maior id) para separar EM ANDAMENTO (PENDENTE/ACEITO) de CONCLUÍDO.
+      // Só as em andamento contam como "interesse demonstrado". Falha aqui não
+      // derruba o feed (degrada para "nenhum").
+      final emAndamento = <int>{};
+      final concluidoAntes = <int>{};
       if (usuario != null) {
         try {
           final interesses = await _interesseService.meusMatches(usuario.id);
-          interessados.addAll(
-              interesses.map((i) => i.necessidadeId).whereType<int>());
+          // necessidadeId -> lista de interesses (para achar o mais recente).
+          final porNecessidade = <int, List<dynamic>>{};
+          for (final i in interesses) {
+            final nid = i.necessidadeId;
+            if (nid == null) continue;
+            porNecessidade.putIfAbsent(nid, () => []).add(i);
+          }
+          for (final entrada in porNecessidade.entries) {
+            final itens = entrada.value..sort((a, b) => a.id.compareTo(b.id));
+            // "Em andamento" se QUALQUER interesse desta necessidade está
+            // PENDENTE ou ACEITO (o backend só permite um ativo por vez).
+            final temAtivo = itens.any(
+                (i) => i.status == 'PENDENTE' || i.status == 'ACEITO');
+            final temConcluido = itens.any((i) => i.status == 'CONCLUIDO');
+            if (temAtivo) {
+              emAndamento.add(entrada.key);
+            } else if (temConcluido) {
+              concluidoAntes.add(entrada.key);
+            }
+          }
         } catch (_) {}
       }
+
+      // ONGs favoritadas (para subir as necessidades delas). Degrada p/ vazio.
+      final favoritas = <int>{};
+      if (usuario != null) {
+        try {
+          favoritas.addAll(await _favoritoService.ids(usuario.id, 'ONG'));
+        } catch (_) {}
+      }
+
       if (!mounted) return;
       setState(() {
         _doadorId = usuario?.id;
         _necessidades = lista;
-        _minhaCidade = cidade;
-        _jaInteressado
+        _emAndamento
           ..clear()
-          ..addAll(interessados);
-        _interessadoNaCarga = Set.of(interessados);
+          ..addAll(emAndamento);
+        _concluidoAntes
+          ..clear()
+          ..addAll(concluidoAntes);
+        _emAndamentoNaCarga = Set.of(emAndamento);
+        _ongsFavoritas
+          ..clear()
+          ..addAll(favoritas);
         _carregando = false;
+        _erroCarga = false;
       });
     } catch (e) {
       if (!mounted) return;
+      // No polling silencioso, falha momentânea não estraga a tela carregada.
+      if (silencioso) return;
       // Distingue "sem dados" de "a API caiu": mostra estado de erro com retry.
       setState(() {
         _carregando = false;
@@ -120,9 +239,9 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       AppSnackbar.erro(context, 'Você precisa estar logado como doador.');
       return;
     }
-    // Guarda contra toque duplo: marca o id como "enviando" antes do await e
-    // desabilita o botão enquanto o POST não retorna (evita interesse duplicado).
-    if (_enviandoInteresse.contains(n.id) || _jaInteressado.contains(n.id)) {
+    // Guarda contra toque duplo: só bloqueia se já está enviando ou EM
+    // ANDAMENTO (concluído antes pode demonstrar de novo).
+    if (_enviandoInteresse.contains(n.id) || _emAndamento.contains(n.id)) {
       return;
     }
     setState(() => _enviandoInteresse.add(n.id));
@@ -134,7 +253,8 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       if (!mounted) return;
       setState(() {
         _enviandoInteresse.remove(n.id);
-        _jaInteressado.add(n.id);
+        _emAndamento.add(n.id);
+        _concluidoAntes.remove(n.id); // agora tem interesse ativo de novo
       });
       AppSnackbar.sucesso(context, 'Interesse enviado! A ONG vai avaliar. 💚');
     } catch (e) {
@@ -159,7 +279,6 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
 
   List<Necessidade> get _filtradas {
     final q = _busca.toLowerCase().trim();
-    final cidade = _minhaCidade.toLowerCase().trim();
 
     final lista = _necessidades.where((n) {
       final bateBusca = q.isEmpty ||
@@ -172,42 +291,46 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       return bateBusca && bateCategoria && bateUrgente;
     }).toList();
 
-    // Ordenacao inteligente: urgentes primeiro, depois ONGs da mesma cidade.
-    int score(Necessidade n) {
-      int s = 0;
-      if (n.urgente) s += 2;
-      if (cidade.isNotEmpty &&
-          (n.ongCidade ?? '').toLowerCase().trim() == cidade) {
-        s += 1;
-      }
-      return s;
+    // ---- CHAVE DE ORDENAÇÃO (prioridade; menor = mais acima) ----
+    // 0) FAVORITAS  — necessidades de ONGs favoritadas pelo doador
+    // 1) URGENTES   — não favoritas, marcadas como urgentes
+    // 2) RECENTES   — demais (não urgentes)
+    // 3) EM ANDAMENTO — interesse já demonstrado (PENDENTE/ACEITO): vão pro FIM
+    // Usa a foto de "em andamento" da CARGA (não o set vivo) para o card não
+    // teleportar assim que o doador demonstra interesse. Dentro de cada grupo:
+    // dataCriacao mais RECENTE primeiro.
+    int grupo(Necessidade n) {
+      if (_emAndamentoNaCarga.contains(n.id)) return 3;
+      if (n.ongId != null && _ongsFavoritas.contains(n.ongId)) return 0;
+      if (n.urgente) return 1;
+      return 2;
     }
 
-    // Necessidades com interesse JÁ demonstrado (na carga) vão para o FIM;
-    // dentro de cada grupo vale o score. Usa a foto da carga (e não o set
-    // vivo) para o card não teleportar assim que o doador clica.
-    int grupo(Necessidade n) => _interessadoNaCarga.contains(n.id) ? 1 : 0;
-
+    // dataCriacao ISO ordena lexicograficamente; null vira "" (mais antigo).
     lista.sort((a, b) {
       final g = grupo(a).compareTo(grupo(b));
       if (g != 0) return g;
-      return score(b).compareTo(score(a));
+      return (b.dataCriacao ?? '').compareTo(a.dataCriacao ?? '');
     });
     return lista;
   }
 
-  // Abre o detalhe da necessidade. O detalhe espelha o estado "interesse já
-  // demonstrado" e avisa de volta quando o doador demonstra interesse lá —
-  // o card do feed muda na hora (e desce só na próxima recarga).
+  // Abre o detalhe da necessidade. O detalhe espelha os estados "em andamento"
+  // e "concluído antes" e avisa de volta quando o doador demonstra interesse
+  // lá — o card do feed muda na hora (e reordena só na próxima recarga).
   void _abrirDetalhe(Necessidade n) {
     Navigator.push(
       context,
       PageTransition.fade(NecessidadeDetalheScreen(
         necessidade: n,
-        jaInteressado: _jaInteressado.contains(n.id),
+        jaInteressado: _emAndamento.contains(n.id),
+        jaConcluido: _concluidoAntes.contains(n.id),
         onInteresseDemonstrado: () {
           if (!mounted) return;
-          setState(() => _jaInteressado.add(n.id));
+          setState(() {
+            _emAndamento.add(n.id);
+            _concluidoAntes.remove(n.id);
+          });
         },
       )),
     );
@@ -226,7 +349,8 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
 
   Widget _card(Necessidade n) {
     final cs = Theme.of(context).colorScheme;
-    final interessado = _jaInteressado.contains(n.id);
+    final emAndamento = _emAndamento.contains(n.id);
+    final concluido = !emAndamento && _concluidoAntes.contains(n.id);
     final enviando = _enviandoInteresse.contains(n.id);
     final postado = tempoRelativo(n.dataCriacao);
 
@@ -240,7 +364,7 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
       ),
       child: Material(
         color: Colors.transparent,
-        // Toque no CORPO do card abre o detalhe; o botão "Tenho interesse" e
+        // Toque no CORPO do card abre o detalhe; o botão de interesse e
         // a linha da ONG absorvem os próprios toques.
         child: InkWell(
           onTap: () => _abrirDetalhe(n),
@@ -361,39 +485,16 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
                       )
                     else
                       const Spacer(),
-                    // Transicao suave entre "Tenho interesse" -> "Enviado"
+                    // Transicao suave entre os estados do botão principal
                     // (o "momento de recompensa" da acao principal do app).
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
                       transitionBuilder: (child, anim) =>
                           ScaleTransition(scale: anim, child: child),
-                      child: interessado
-                          ? FilledButton.tonalIcon(
-                              key: const ValueKey('enviado'),
-                              onPressed: null,
-                              icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Interesse demonstrado'),
-                            )
-                          : FilledButton.icon(
-                              key: const ValueKey('interesse'),
-                              // Desabilita enquanto o POST esta em andamento.
-                              onPressed: enviando
-                                  ? null
-                                  : () => _demonstrarInteresse(n),
-                              icon: enviando
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2, color: Colors.white))
-                                  : const Icon(Icons.favorite, size: 18),
-                              label: Text(
-                                  enviando ? 'Enviando...' : 'Tenho interesse'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
+                      child: _botaoCard(n,
+                          emAndamento: emAndamento,
+                          concluido: concluido,
+                          enviando: enviando),
                     ),
                   ],
                 ),
@@ -403,6 +504,42 @@ class _FeedNecessidadesScreenState extends State<FeedNecessidadesScreen> {
         ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Botão de interesse do card, com 3 estados:
+  // - EM ANDAMENTO: "Interesse demonstrado" (desabilitado);
+  // - CONCLUÍDO ANTES: "Demonstrar interesse novamente" (habilitado);
+  // - novo: "Tenho interesse".
+  Widget _botaoCard(Necessidade n,
+      {required bool emAndamento,
+      required bool concluido,
+      required bool enviando}) {
+    if (emAndamento) {
+      return FilledButton.tonalIcon(
+        key: const ValueKey('enviado'),
+        onPressed: null,
+        icon: const Icon(Icons.check, size: 18),
+        label: const Text('Interesse demonstrado'),
+      );
+    }
+    return FilledButton.icon(
+      key: ValueKey(concluido ? 'novamente' : 'interesse'),
+      onPressed: enviando ? null : () => _demonstrarInteresse(n),
+      icon: enviando
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.white))
+          : const Icon(Icons.favorite, size: 18),
+      label: Text(enviando
+          ? 'Enviando...'
+          : (concluido ? 'Demonstrar novamente' : 'Tenho interesse')),
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/necessidade.dart';
 import '../models/perfil_publico_ong.dart';
 import '../services/denuncia_service.dart';
 import '../services/perfil_publico_service.dart';
@@ -14,6 +15,8 @@ import '../widgets/common/chip_foguinho.dart';
 import '../widgets/common/visualizador_imagem.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
+import 'necessidade_detalhe_screen.dart';
+import 'perfil_publico_doador_screen.dart';
 
 /// Pagina publica de uma ONG: capa (quando cadastrada), avatar, selo de
 /// verificacao, nota, streak de 1º lugar, sobre, contato (com endereço +
@@ -809,91 +812,209 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     );
   }
 
+  // Abre o DETALHE de uma necessidade da ONG (onde o doador pode demonstrar
+  // interesse ou ver "já demonstrado"). Constrói um [Necessidade] completo a
+  // partir do resumo do perfil + os dados desta ONG (id/nome/cidade/nota).
+  void _abrirNecessidade(PerfilPublicoOng p, NecessidadeResumo n) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NecessidadeDetalheScreen(
+          necessidade: Necessidade(
+            id: n.id,
+            titulo: n.titulo,
+            descricao: n.descricao,
+            categoria: n.categoria,
+            urgente: n.urgente,
+            status: n.status,
+            ongId: p.id,
+            ongNome: p.nome,
+            ongCidade: p.cidade,
+            ongVerificada: p.verificada,
+            ongNotaMedia: p.notaMedia,
+            ongTotalAvaliacoes: p.totalAvaliacoes,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _secaoNecessidades(PerfilPublicoOng p) {
     final cs = Theme.of(context).colorScheme;
     return _secao('Necessidades', Icons.favorite_outline, [
       for (final n in p.necessidades)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                n.urgente ? Icons.priority_high : Icons.circle,
-                size: n.urgente ? 18 : 8,
-                color: n.urgente ? AppColors.error : AppColors.primary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+        // Cada necessidade é TOCÁVEL: abre o detalhe (demonstrar interesse).
+        InkWell(
+          onTap: () => _abrirNecessidade(p, n),
+          borderRadius: AppRadius.brSm,
+          child: Semantics(
+            button: true,
+            label: 'Abrir necessidade ${n.titulo}',
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    n.urgente ? Icons.priority_high : Icons.circle,
+                    size: n.urgente ? 18 : 8,
+                    color: n.urgente ? AppColors.error : AppColors.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          n.titulo,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        if (n.categoria.isNotEmpty)
+                          Text(
+                            n.categoria,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (n.urgente)
                     Text(
-                      n.titulo,
+                      'Urgente',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 11,
+                        color: AppColors.error,
                         fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
                       ),
                     ),
-                    if (n.categoria.isNotEmpty)
-                      Text(
-                        n.categoria,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right,
+                      size: 18, color: cs.onSurfaceVariant),
+                ],
               ),
-              if (n.urgente)
-                Text(
-                  'Urgente',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
     ]);
   }
 
+  // Abre o perfil PÚBLICO de um doador (contraparte de uma prestação).
+  void _abrirPerfilDoador(int usuarioId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PerfilPublicoDoadorScreen(usuarioId: usuarioId),
+      ),
+    );
+  }
+
+  // Card de uma prestação (título + descrição), reutilizado dentro e fora dos
+  // grupos por doador.
+  Widget _cardPrestacao(PrestacaoResumo pr) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            pr.titulo,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
+            ),
+          ),
+          if (pr.descricao.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              pr.descricao,
+              style: TextStyle(
+                fontSize: 13,
+                color: cs.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _secaoPrestacoes(PerfilPublicoOng p) {
     final cs = Theme.of(context).colorScheme;
-    return _secao('Prestacoes de contas', Icons.receipt_long_outlined, [
-      for (final pr in p.prestacoes)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                pr.titulo,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface,
+
+    // Agrupa por doador BENEFICIÁRIO (dedupe): prestações do mesmo doador
+    // aparecem uma vez sob "para <doador>" (clicável). Prestações sem doadorId
+    // (backend antigo / gerais) degradam para blocos avulsos, sem link. A
+    // ordem de primeira aparição é preservada.
+    final ordem = <String>[];
+    final grupos = <String, List<PrestacaoResumo>>{};
+    for (final pr in p.prestacoes) {
+      final chave = pr.doadorId != null
+          ? 'd${pr.doadorId}'
+          : 's${identityHashCode(pr)}';
+      if (!grupos.containsKey(chave)) {
+        grupos[chave] = [];
+        ordem.add(chave);
+      }
+      grupos[chave]!.add(pr);
+    }
+
+    final filhos = <Widget>[];
+    for (final chave in ordem) {
+      final grupo = grupos[chave]!;
+      final primeira = grupo.first;
+      final temDoador = primeira.doadorId != null;
+      if (temDoador) {
+        final nome = (primeira.doadorNome ?? 'Doador').trim();
+        filhos.add(
+          InkWell(
+            onTap: () => _abrirPerfilDoador(primeira.doadorId!),
+            borderRadius: AppRadius.brSm,
+            child: Semantics(
+              button: true,
+              label: 'Abrir perfil do doador $nome',
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_outline,
+                        size: 14, color: cs.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'para $nome',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right,
+                        size: 14, color: cs.onSurfaceVariant),
+                  ],
                 ),
               ),
-              if (pr.descricao.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  pr.descricao,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: cs.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
-        ),
-    ]);
+        );
+      }
+      for (final pr in grupo) {
+        filhos.add(_cardPrestacao(pr));
+      }
+    }
+
+    return _secao('Prestacoes de contas', Icons.receipt_long_outlined, filhos);
   }
 
   Widget _secaoAvaliacoes(PerfilPublicoOng p) {

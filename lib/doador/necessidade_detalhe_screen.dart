@@ -23,19 +23,24 @@ import 'perfil_publico_ong_screen.dart';
 /// Aberta ao tocar num card das "Necessidades urgentes" da Início ou no corpo
 /// de um card do feed Explorar.
 ///
-/// O botão espelha o estado do feed: [jaInteressado] informa se o doador já
-/// demonstrou interesse; quando o chamador não sabe (ex.: Início), a tela
-/// verifica sozinha via GET /interesses?doadorId= (falha degrada para "não").
-/// [onInteresseDemonstrado] avisa o chamador para atualizar o card na volta.
+/// O botão espelha o estado do feed: [jaInteressado] indica interesse EM
+/// ANDAMENTO (PENDENTE/ACEITO) → "Interesse demonstrado" (desabilitado);
+/// [jaConcluido] indica que houve um interesse CONCLUÍDO e nenhum ativo →
+/// disponível de novo com "Demonstrar interesse novamente". Quando o chamador
+/// não sabe (ex.: Início), a tela verifica sozinha via GET /interesses?doadorId=
+/// (falha degrada para "não"). [onInteresseDemonstrado] avisa o chamador para
+/// atualizar o card na volta.
 class NecessidadeDetalheScreen extends StatefulWidget {
   final Necessidade necessidade;
   final bool? jaInteressado;
+  final bool? jaConcluido;
   final VoidCallback? onInteresseDemonstrado;
 
   const NecessidadeDetalheScreen({
     super.key,
     required this.necessidade,
     this.jaInteressado,
+    this.jaConcluido,
     this.onInteresseDemonstrado,
   });
 
@@ -49,18 +54,21 @@ class _NecessidadeDetalheScreenState extends State<NecessidadeDetalheScreen> {
   final SessionService _sessionService = SessionService();
 
   int? _doadorId;
-  bool _jaInteressado = false;
+  bool _jaInteressado = false; // interesse EM ANDAMENTO (PENDENTE/ACEITO)
+  bool _jaConcluido = false; // houve concluído antes e nada ativo agora
   bool _enviando = false; // guarda anti-duplo-toque do POST
 
   @override
   void initState() {
     super.initState();
     _jaInteressado = widget.jaInteressado ?? false;
+    _jaConcluido = widget.jaConcluido ?? false;
     _preparar();
   }
 
   /// Carrega o doador da sessão e, quando o chamador não informou o estado,
-  /// verifica se já existe interesse nesta necessidade (qualquer status).
+  /// verifica os interesses nesta necessidade: EM ANDAMENTO (PENDENTE/ACEITO)
+  /// vs apenas CONCLUÍDO (disponível de novo).
   Future<void> _preparar() async {
     final usuario = await _sessionService.obterUsuario();
     if (!mounted) return;
@@ -69,10 +77,19 @@ class _NecessidadeDetalheScreenState extends State<NecessidadeDetalheScreen> {
     if (widget.jaInteressado != null || usuario == null) return;
     try {
       final interesses = await _interesseService.meusMatches(usuario.id);
-      final ja = interesses
-          .any((i) => i.necessidadeId == widget.necessidade.id);
+      final desta = interesses
+          .where((i) => i.necessidadeId == widget.necessidade.id)
+          .toList();
+      // Em andamento se algum está PENDENTE/ACEITO; senão, "concluído antes"
+      // quando existe um CONCLUÍDO. O backend só permite um ativo por vez.
+      final emAndamento = desta
+          .any((i) => i.status == 'PENDENTE' || i.status == 'ACEITO');
+      final concluido = desta.any((i) => i.status == 'CONCLUIDO');
       if (!mounted) return;
-      setState(() => _jaInteressado = _jaInteressado || ja);
+      setState(() {
+        _jaInteressado = _jaInteressado || emAndamento;
+        _jaConcluido = !emAndamento && concluido;
+      });
     } catch (_) {
       // Sem rede/backend antigo: segue como "não demonstrado"; o backend
       // continua sendo a barreira contra duplicados.
@@ -95,6 +112,7 @@ class _NecessidadeDetalheScreenState extends State<NecessidadeDetalheScreen> {
       setState(() {
         _enviando = false;
         _jaInteressado = true;
+        _jaConcluido = false; // agora há interesse ativo de novo
       });
       widget.onInteresseDemonstrado?.call();
       AppSnackbar.sucesso(context, 'Interesse enviado! A ONG vai avaliar. 💚');
@@ -331,7 +349,12 @@ class _NecessidadeDetalheScreenState extends State<NecessidadeDetalheScreen> {
               child: CircularProgressIndicator(
                   strokeWidth: 2, color: Colors.white))
           : const Icon(Icons.favorite, size: 20),
-      label: Text(_enviando ? 'Enviando...' : 'Tenho interesse'),
+      // "novamente" quando já houve uma doação concluída antes.
+      label: Text(_enviando
+          ? 'Enviando...'
+          : (_jaConcluido
+              ? 'Demonstrar interesse novamente'
+              : 'Tenho interesse')),
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,

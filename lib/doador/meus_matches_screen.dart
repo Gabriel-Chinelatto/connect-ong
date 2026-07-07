@@ -586,22 +586,16 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                 ),
               ],
             ),
-            Wrap(
-              spacing: AppSpacing.md,
-              runSpacing: 6,
-              children: [
-                _acao(
-                  Icons.chat_bubble_outline,
-                  'Conversar',
-                  () => _abrirChat(i),
-                ),
-                _acao(
-                  Icons.receipt_long,
-                  'Prestação',
-                  () => _abrirPrestacoes(i),
-                ),
-                _acao(Icons.star_outline, 'Avaliar', () => _abrirAvaliar(i)),
-              ],
+            // ATIVAS: só "Conversar". Prestação de contas e avaliação da ONG
+            // só fazem sentido DEPOIS que a doação é concluída → ficam na aba
+            // Concluídas.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _acao(
+                Icons.chat_bubble_outline,
+                'Conversar',
+                () => _abrirChat(i),
+              ),
             ),
           ],
         ),
@@ -734,12 +728,28 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
             _chipPrestacao(tem),
             const SizedBox(height: AppSpacing.xs),
           ],
-          if (tem != false)
-            _acao(
-              Icons.receipt_long,
-              'Ver prestação de contas',
-              () => _abrirPrestacoes(i),
-            ),
+          // CONCLUÍDAS: histórico da conversa + prestação de contas da ONG +
+          // avaliar a ONG (só faz sentido depois de concluída).
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: 6,
+            children: [
+              _acao(
+                Icons.chat_bubble_outline,
+                'Conversar',
+                () => _abrirChat(i),
+              ),
+              // Só oferece a prestação quando ela existe (tem != false); tem ==
+              // null = ainda verificando, mantém o botão (a tela lida com o vazio).
+              if (tem != false)
+                _acao(
+                  Icons.receipt_long,
+                  'Ver prestação de contas',
+                  () => _abrirPrestacoes(i),
+                ),
+              _acao(Icons.star_outline, 'Avaliar', () => _abrirAvaliar(i)),
+            ],
+          ),
         ],
       ),
     );
@@ -847,26 +857,15 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                       ),
                       if (aceito) ...[
                         const SizedBox(height: AppSpacing.sm),
-                        Wrap(
-                          spacing: AppSpacing.md,
-                          runSpacing: 6,
-                          children: [
-                            _acao(
-                              Icons.chat_bubble_outline,
-                              'Conversar',
-                              () => _abrirChat(i),
-                            ),
-                            _acao(
-                              Icons.receipt_long,
-                              'Prestação',
-                              () => _abrirPrestacoes(i),
-                            ),
-                            _acao(
-                              Icons.star_outline,
-                              'Avaliar',
-                              () => _abrirAvaliar(i),
-                            ),
-                          ],
+                        // ATIVAS: só "Conversar" (prestação e avaliação são da
+                        // aba Concluídas).
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _acao(
+                            Icons.chat_bubble_outline,
+                            'Conversar',
+                            () => _abrirChat(i),
+                          ),
                         ),
                       ],
                     ],

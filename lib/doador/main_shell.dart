@@ -75,7 +75,7 @@ class _MainShellState extends State<MainShell> {
     // (ex.: atalho "Ver meu impacto" pula direto para a aba 3).
     final abas = <Widget>[
       InicioTab(onIrParaAba: _irParaAba),
-      const FeedNecessidadesScreen(),
+      FeedNecessidadesScreen(ativa: _indice == 1),
       MeusMatchesScreen(abaController: _abaMatches, ativa: _indice == 2),
       DashboardImpactoScreen(onIrParaAba: _irParaAba),
       const PerfilScreen(),

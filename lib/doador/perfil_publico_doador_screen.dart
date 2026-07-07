@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../utils/tempo.dart';
 import '../widgets/feedback/empty_state.dart';
+import 'perfil_publico_ong_screen.dart';
 
 /// Página PÚBLICA de um doador — visual espelhado no perfil público da ONG:
 /// header verde com foto/inicial, nome, cidade, estrelas da média e "Membro
@@ -396,43 +397,123 @@ class _PerfilPublicoDoadorScreenState extends State<PerfilPublicoDoadorScreen> {
     ]);
   }
 
+  // Abre o perfil PÚBLICO da ONG que prestou contas (contraparte).
+  void _abrirPerfilOng(int ongId, String ongNome) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            PerfilPublicoOngScreen(ongId: ongId, ongNome: ongNome),
+      ),
+    );
+  }
+
+  // Uma prestação (título + descrição + necessidade/data), sem repetir o nome
+  // da ONG (ele fica no cabeçalho do grupo).
+  Widget _cardPrestacao(PrestacaoRecebida pr) {
+    final cs = Theme.of(context).colorScheme;
+    final meta = [
+      if (pr.necessidadeTitulo.isNotEmpty) pr.necessidadeTitulo,
+      if (dataCurtaDeIso(pr.criadoEm).isNotEmpty) dataCurtaDeIso(pr.criadoEm),
+    ].join(' · ');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(pr.titulo,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface)),
+          if (pr.descricao.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(pr.descricao,
+                style: TextStyle(
+                    fontSize: 13, color: cs.onSurfaceVariant, height: 1.4)),
+          ],
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(meta,
+                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _secaoPrestacoes(PerfilPublicoDoador p) {
     final cs = Theme.of(context).colorScheme;
-    return _secao(
-        'Prestações de contas recebidas', Icons.receipt_long_outlined, [
-      for (final pr in p.prestacoesRecebidas)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(pr.titulo,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface)),
-              if (pr.descricao.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(pr.descricao,
-                    style: TextStyle(
+
+    // Agrupa por ONG (dedupe): várias prestações da MESMA ONG aparecem uma vez
+    // sob o nome dela (clicável → perfil da ONG). Sem ongId (backend antigo)
+    // cada prestação vira um bloco avulso, com o nome exibido mas sem link.
+    // Preserva a ordem de primeira aparição.
+    final ordem = <String>[];
+    final grupos = <String, List<PrestacaoRecebida>>{};
+    for (final pr in p.prestacoesRecebidas) {
+      final chave =
+          pr.ongId != null ? 'o${pr.ongId}' : 's${identityHashCode(pr)}';
+      if (!grupos.containsKey(chave)) {
+        grupos[chave] = [];
+        ordem.add(chave);
+      }
+      grupos[chave]!.add(pr);
+    }
+
+    final filhos = <Widget>[];
+    for (final chave in ordem) {
+      final grupo = grupos[chave]!;
+      final primeira = grupo.first;
+      final nome = primeira.ongNome.trim().isNotEmpty
+          ? primeira.ongNome.trim()
+          : 'ONG';
+      final clicavel = primeira.ongId != null;
+      // Cabeçalho da ONG (uma vez por grupo), clicável quando há ongId.
+      filhos.add(
+        InkWell(
+          onTap: clicavel
+              ? () => _abrirPerfilOng(primeira.ongId!, nome)
+              : null,
+          borderRadius: AppRadius.brSm,
+          child: Semantics(
+            button: clicavel,
+            label: clicavel ? 'Abrir perfil da ONG $nome' : null,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.handshake,
+                      size: 15, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      nome,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         fontSize: 13,
-                        color: cs.onSurfaceVariant,
-                        height: 1.4)),
-              ],
-              const SizedBox(height: 2),
-              Text(
-                [
-                  pr.ongNome,
-                  if (pr.necessidadeTitulo.isNotEmpty) pr.necessidadeTitulo,
-                  if (dataCurtaDeIso(pr.criadoEm).isNotEmpty)
-                    dataCurtaDeIso(pr.criadoEm),
-                ].join(' · '),
-                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  if (clicavel)
+                    Icon(Icons.chevron_right,
+                        size: 16, color: cs.onSurfaceVariant),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-    ]);
+      );
+      for (final pr in grupo) {
+        filhos.add(_cardPrestacao(pr));
+      }
+    }
+
+    return _secao(
+        'Prestações de contas recebidas', Icons.receipt_long_outlined, filhos);
   }
 
   Widget _semHistorico() {

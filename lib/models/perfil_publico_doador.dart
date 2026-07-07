@@ -118,9 +118,14 @@ class AvaliacaoDoador {
 }
 
 /// Prestação de contas que o doador RECEBEU (das doações dele).
+///
+/// [ongId] identifica a ONG que prestou contas (contraparte) — o backend o
+/// adiciona para tornar o nome da ONG clicável (abre o perfil dela). Ausente
+/// (null) em backend antigo: a UI degrada mostrando o nome sem link.
 class PrestacaoRecebida {
   final String titulo;
   final String descricao;
+  final int? ongId;
   final String ongNome;
   final String necessidadeTitulo;
   final String? criadoEm;
@@ -128,6 +133,7 @@ class PrestacaoRecebida {
   const PrestacaoRecebida({
     required this.titulo,
     required this.descricao,
+    this.ongId,
     required this.ongNome,
     required this.necessidadeTitulo,
     this.criadoEm,
@@ -137,6 +143,7 @@ class PrestacaoRecebida {
       PrestacaoRecebida(
         titulo: j['titulo'] ?? '',
         descricao: j['descricao'] ?? '',
+        ongId: (j['ongId'] as num?)?.toInt(),
         ongNome: j['ongNome'] ?? 'ONG',
         necessidadeTitulo: j['necessidadeTitulo'] ?? '',
         criadoEm: j['criadoEm'] as String?,
