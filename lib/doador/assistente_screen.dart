@@ -6,11 +6,13 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/necessidade.dart';
 import '../services/assistente_service.dart';
+import '../services/conversas_dora_service.dart';
 import '../services/perfil_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../utils/tempo.dart';
 import '../widgets/common/dora_avatar.dart';
 import '../widgets/common/visualizador_imagem.dart';
 import '../widgets/feedback/app_snackbar.dart';
@@ -31,6 +33,10 @@ class _Bolha {
   /// a Dora analisar). So nas bolhas do usuario.
   final Uint8List? imagemBytes;
 
+  /// A mesma foto em base64 — persistida no historico para reaparecer ao
+  /// reabrir a conversa. So nas bolhas do usuario.
+  final String? imagemBase64;
+
   /// Preenchido apenas nas bolhas de erro: a pergunta que falhou, para o
   /// botao "tentar de novo" reenviar exatamente ela.
   final String? perguntaOriginal;
@@ -46,24 +52,34 @@ class _Bolha {
     required this.texto,
     this.sugestoes = const [],
     this.imagemBytes,
+    this.imagemBase64,
     this.perguntaOriginal,
     this.imagemOriginal,
     this.modoRegras = false,
   });
 }
 
-/// Chat da Dora — a assistente de doacao do Connect ONG (estilo o botao de IA
-/// do iFood).
+/// Chat da Dora — a assistente de doacao do Connect ONG (estilo ChatGPT com
+/// historico persistente).
 ///
 /// A Dora ajuda o doador a decidir para quem doar ("tenho roupas e nao sei pra
 /// quem"), a achar ONGs perto dele e a entender como a doacao funciona.
 /// Conversa com `POST /assistente` (via [AssistenteService]) mandando a cidade
-/// do doador (do perfil), as ultimas ~6 trocas e, quando o doador anexa uma
-/// foto, a imagem em base64 para a Dora "analisar". Quando a resposta traz
+/// do doador (do perfil), as ultimas ~6 trocas DESTA conversa (isolamento — uma
+/// conversa nao contamina a outra) e, quando o doador anexa uma foto, a imagem
+/// em base64 para a Dora "analisar".
+///
+/// As conversas sao guardadas LOCALMENTE (via [ConversasDoraService]) e
+/// reabertas ao voltar para a tela. Um Drawer lateral lista o historico
+/// (fixar/renomear/excluir/buscar), estilo ChatGPT. Quando a resposta traz
 /// sugestoes, elas viram cards clicaveis que abrem o perfil da ONG ou o detalhe
 /// da necessidade. Degrada com bolha de erro + "tentar de novo".
 class AssistenteScreen extends StatefulWidget {
-  const AssistenteScreen({super.key});
+  /// Abre o Drawer de historico automaticamente ao iniciar. Usado por
+  /// deep-links/harness de verificacao visual; no fluxo normal fica false.
+  final bool abrirHistoricoAoIniciar;
+
+  const AssistenteScreen({super.key, this.abrirHistoricoAoIniciar = false});
 
   @override
   State<AssistenteScreen> createState() => _AssistenteScreenState();
@@ -71,12 +87,24 @@ class AssistenteScreen extends StatefulWidget {
 
 class _AssistenteScreenState extends State<AssistenteScreen> {
   final AssistenteService _service = AssistenteService();
+  final ConversasDoraService _conversasService = ConversasDoraService();
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _buscaController = TextEditingController();
   final ScrollController _scroll = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   // Enter envia / Shift+Enter quebra linha (web/desktop) — ver [_aoTeclar].
   late final FocusNode _campoFocus = FocusNode(onKeyEvent: _aoTeclar);
 
+  // Bolhas REAIS da conversa atual (a bolha de boas-vindas e renderizada a
+  // parte, sempre no topo, e nunca persistida).
   final List<_Bolha> _bolhas = [];
+
+  // Conversa atualmente aberta (nova e vazia ate a 1a mensagem do usuario).
+  ConversaDora _conversa = ConversaDora.nova();
+  // Lista de conversas do historico (para o Drawer), ja ordenada pelo service.
+  List<ConversaDora> _conversas = [];
+  String _busca = '';
+
   bool _enviando = false; // guard anti-duplo-toque + indicador da Dora
   bool _analisandoImagem = false; // indicador "analisando a imagem..."
   String? _cidade; // cidade do doador (do perfil), enviada no request
@@ -97,23 +125,94 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
   @override
   void initState() {
     super.initState();
-    _bolhas.add(const _Bolha(
-      papel: _Papel.assistente,
-      texto:
-          'Oi! Eu sou a Dora 💚\n\nPosso te ajudar a decidir para quem doar, '
-          'achar ONGs perto de voce ou tirar duvidas sobre como doar. Pode ate '
-          'me mandar a foto de um item que voce quer doar que eu dou uma olhada. '
-          'Como posso ajudar?',
-    ));
     _carregarCidade();
+    _restaurar();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _buscaController.dispose();
     _scroll.dispose();
     _campoFocus.dispose();
     super.dispose();
+  }
+
+  /// Restaura a ULTIMA conversa aberta do storage (ou comeca uma nova vazia se
+  /// nao houver) e carrega a lista do historico para o Drawer.
+  Future<void> _restaurar() async {
+    final ultima = await _conversasService.obterUltima();
+    if (!mounted) return;
+    setState(() {
+      if (ultima != null) {
+        _conversa = ultima;
+        _reconstruirBolhas();
+      }
+    });
+    await _carregarConversas();
+    _irParaOFim();
+    if (widget.abrirHistoricoAoIniciar && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scaffoldKey.currentState?.openDrawer(),
+      );
+    }
+  }
+
+  /// Recarrega a lista de conversas (usada apos qualquer CRUD do historico).
+  Future<void> _carregarConversas() async {
+    final lista = await _conversasService.listar();
+    if (!mounted) return;
+    setState(() => _conversas = lista);
+  }
+
+  /// Reconstroi as bolhas da UI a partir das mensagens persistidas da conversa
+  /// atual (decodifica a foto base64 de volta para bytes, para exibir).
+  void _reconstruirBolhas() {
+    _bolhas
+      ..clear()
+      ..addAll(_conversa.mensagens.map(_mensagemParaBolha));
+  }
+
+  _Bolha _mensagemParaBolha(MensagemDora m) {
+    Uint8List? bytes;
+    final b64 = m.imagemBase64;
+    if (b64 != null && b64.isNotEmpty) {
+      try {
+        bytes = base64Decode(b64);
+      } catch (_) {
+        // base64 corrompido: mostra so o texto, sem quebrar.
+      }
+    }
+    return _Bolha(
+      papel: m.ehUsuario ? _Papel.usuario : _Papel.assistente,
+      texto: m.texto,
+      sugestoes: m.sugestoes,
+      imagemBytes: bytes,
+      imagemBase64: b64,
+      modoRegras: m.modoRegras,
+    );
+  }
+
+  MensagemDora _bolhaParaMensagem(_Bolha b) => MensagemDora(
+        papel: b.papel == _Papel.usuario ? 'user' : 'assistente',
+        texto: b.texto,
+        imagemBase64: b.imagemBase64,
+        sugestoes: b.sugestoes,
+        modoRegras: b.modoRegras,
+      );
+
+  /// Autosave: transfere as bolhas reais (sem erros) para a conversa atual,
+  /// salva no storage e a marca como a ultima aberta.
+  Future<void> _persistir() async {
+    _conversa.mensagens
+      ..clear()
+      ..addAll(
+        _bolhas.where((b) => b.papel != _Papel.erro).map(_bolhaParaMensagem),
+      );
+    _conversa.atualizadoEm = DateTime.now();
+    await _conversasService.salvar(_conversa);
+    await _conversasService.definirUltima(_conversa.id);
+    await _carregarConversas();
   }
 
   /// Enter (sem Shift) envia; Shift+Enter deixa o campo inserir a quebra de
@@ -144,8 +243,8 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     }
   }
 
-  /// Monta o historico recente (ultimas ~6 trocas de user/assistente, sem as
-  /// bolhas de erro) no formato do contrato: {papel, texto}.
+  /// Monta o historico recente (ultimas ~6 trocas de user/assistente DESTA
+  /// conversa, sem as bolhas de erro) no formato do contrato: {papel, texto}.
   List<Map<String, String>> _historico() {
     final trocas = _bolhas
         .where((b) => b.papel != _Papel.erro)
@@ -158,7 +257,8 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     return trocas.sublist(trocas.length - 6);
   }
 
-  Future<void> _enviar(String texto, {String? imagemBase64, Uint8List? imagemBytes}) async {
+  Future<void> _enviar(String texto,
+      {String? imagemBase64, Uint8List? imagemBytes}) async {
     final mensagem = texto.trim();
     // Anexo atual (parametro tem prioridade — usado no "tentar de novo").
     final imgB64 = imagemBase64 ?? _anexoBase64;
@@ -180,6 +280,7 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
         papel: _Papel.usuario,
         texto: mensagem,
         imagemBytes: temImagem ? imgBytes : null,
+        imagemBase64: temImagem ? imgB64 : null,
       ));
       _enviando = true;
       _analisandoImagem = temImagem;
@@ -206,7 +307,27 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
           sugestoes: resposta.sugestoes,
           modoRegras: resposta.modoRegras,
         ));
+        // Titulo da conversa: definido na 1a resposta. Usa o do backend se
+        // vier; senao deriva da 1a mensagem do usuario. Dedupe contra as
+        // conversas existentes. Renomear manual sobrepoe (nao mexe depois).
+        if (_conversa.titulo.trim().isEmpty) {
+          final primeira = _bolhas
+              .firstWhere((b) => b.papel == _Papel.usuario,
+                  orElse: () => const _Bolha(papel: _Papel.usuario, texto: ''))
+              .texto;
+          final base = resposta.titulo.isNotEmpty
+              ? resposta.titulo
+              : (primeira.trim().isNotEmpty
+                  ? ConversasDoraService.tituloDerivado(primeira)
+                  : 'Foto para doar');
+          _conversa.titulo = ConversasDoraService.tituloUnico(
+            base,
+            _conversas,
+            ignorarId: _conversa.id,
+          );
+        }
       });
+      await _persistir();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -288,6 +409,112 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     });
   }
 
+  // ---- Acoes do historico (Drawer) ----
+
+  /// Abre uma nova conversa vazia (nao persiste ate a 1a mensagem).
+  void _novaConversa() {
+    _scaffoldKey.currentState?.closeDrawer();
+    if (!_conversa.temMensagemDoUsuario && _bolhas.isEmpty) return; // ja vazia
+    setState(() {
+      _conversa = ConversaDora.nova();
+      _bolhas.clear();
+      _busca = '';
+      _buscaController.clear();
+    });
+  }
+
+  /// Abre uma conversa existente do historico.
+  void _abrirConversa(ConversaDora c) {
+    _scaffoldKey.currentState?.closeDrawer();
+    if (c.id == _conversa.id) return;
+    setState(() {
+      _conversa = c;
+      _reconstruirBolhas();
+    });
+    _conversasService.definirUltima(c.id);
+    _irParaOFim();
+  }
+
+  Future<void> _alternarFixado(ConversaDora c) async {
+    await _conversasService.alternarFixado(c.id);
+    if (c.id == _conversa.id) _conversa.fixado = !_conversa.fixado;
+    await _carregarConversas();
+  }
+
+  Future<void> _renomear(ConversaDora c) async {
+    final ctrl = TextEditingController(text: c.tituloExibicao);
+    final novo = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        final cs = Theme.of(ctx).colorScheme;
+        return AlertDialog(
+          title: const Text('Renomear conversa'),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            maxLength: 60,
+            decoration: InputDecoration(
+              hintText: 'Nome da conversa',
+              filled: true,
+              fillColor: cs.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: AppRadius.brMd,
+                borderSide: BorderSide.none,
+              ),
+            ),
+            onSubmitted: (v) => Navigator.pop(ctx, v),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+    if (novo == null || novo.trim().isEmpty) return;
+    await _conversasService.renomear(c.id, novo.trim());
+    if (c.id == _conversa.id) _conversa.titulo = novo.trim();
+    await _carregarConversas();
+  }
+
+  Future<void> _excluir(ConversaDora c) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir conversa'),
+        content: Text(
+          'Excluir "${c.tituloExibicao}"? Esta acao nao pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await _conversasService.excluir(c.id);
+    if (c.id == _conversa.id) {
+      setState(() {
+        _conversa = ConversaDora.nova();
+        _bolhas.clear();
+      });
+    }
+    await _carregarConversas();
+  }
+
   // ---- Navegacao a partir dos cards de sugestao ----
   void _abrirSugestao(SugestaoAssistente s) {
     if (s.id == null) return; // sem id nao da para abrir — degrada em silencio.
@@ -320,10 +547,15 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final mostrarIndicador = _enviando;
-    final itemCount = _bolhas.length + (mostrarIndicador ? 1 : 0);
+    // itemCount: bolha de boas-vindas (1) + bolhas reais + indicador.
+    final itemCount = 1 + _bolhas.length + (mostrarIndicador ? 1 : 0);
     // Chips so aparecem no comeco (antes de qualquer troca real).
     final mostrarChips =
         _bolhas.where((b) => b.papel == _Papel.usuario).isEmpty && !_enviando;
+    // Subtitulo do cabecalho: o titulo da conversa quando ja existe.
+    final subtitulo = _conversa.titulo.trim().isNotEmpty
+        ? _conversa.titulo.trim()
+        : 'Sua assistente de doacao';
     // Fundo sutil da conversa (estilo WhatsApp): um tom levemente esverdeado.
     final fundoConversa = Color.alphaBlend(
       AppColors.primary.withValues(alpha: 0.04),
@@ -331,8 +563,15 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     );
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: _construirDrawer(cs),
       appBar: AppBar(
         titleSpacing: 0,
+        leading: IconButton(
+          tooltip: 'Conversas',
+          icon: const Icon(Icons.menu),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         title: Row(
           children: [
             const DoraAvatar(tamanho: 38),
@@ -352,7 +591,7 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
                     ),
                   ),
                   Text(
-                    'Sua assistente de doacao',
+                    subtitulo,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                   ),
@@ -361,6 +600,13 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Nova conversa',
+            icon: const Icon(Icons.add_comment_outlined),
+            onPressed: _novaConversa,
+          ),
+        ],
       ),
       body: Container(
         color: fundoConversa,
@@ -372,10 +618,12 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 itemCount: itemCount,
                 itemBuilder: (context, i) {
-                  if (mostrarIndicador && i == _bolhas.length) {
+                  if (i == 0) return _bolhaBoasVindas(cs);
+                  final idx = i - 1;
+                  if (mostrarIndicador && idx == _bolhas.length) {
                     return _bolhaDigitando(cs);
                   }
-                  return _construirBolha(_bolhas[i], cs);
+                  return _construirBolha(_bolhas[idx], cs);
                 },
               ),
             ),
@@ -384,6 +632,271 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
             _campoEnvio(cs),
           ],
         ),
+      ),
+    );
+  }
+
+  // ---- Drawer / historico (estilo ChatGPT) ----
+  Widget _construirDrawer(ColorScheme cs) {
+    final q = _busca.trim().toLowerCase();
+    final filtradas = q.isEmpty
+        ? _conversas
+        : _conversas.where((c) {
+            if (c.tituloExibicao.toLowerCase().contains(q)) return true;
+            return c.mensagens.any((m) => m.texto.toLowerCase().contains(q));
+          }).toList();
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.md, AppSpacing.sm, AppSpacing.sm),
+              child: Row(
+                children: [
+                  Text(
+                    'Conversas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: 'Nova conversa',
+                    icon: const Icon(Icons.add),
+                    onPressed: _novaConversa,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: TextField(
+                controller: _buscaController,
+                onChanged: (v) => setState(() => _busca = v),
+                decoration: InputDecoration(
+                  hintText: 'Buscar conversas',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  isDense: true,
+                  filled: true,
+                  fillColor: cs.surfaceContainerHighest,
+                  border: OutlineInputBorder(
+                    borderRadius: AppRadius.brMd,
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: _busca.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          onPressed: () {
+                            _buscaController.clear();
+                            setState(() => _busca = '');
+                          },
+                        ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Expanded(
+              child: filtradas.isEmpty
+                  ? _historicoVazio(cs)
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      itemCount: filtradas.length,
+                      itemBuilder: (_, i) => _itemConversa(filtradas[i], cs),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _historicoVazio(ColorScheme cs) {
+    final vazioDeVerdade = _conversas.isEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              vazioDeVerdade ? Icons.forum_outlined : Icons.search_off,
+              size: 44,
+              color: cs.onSurfaceVariant,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              vazioDeVerdade
+                  ? 'Nenhuma conversa ainda'
+                  : 'Nenhuma conversa encontrada',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _itemConversa(ConversaDora c, ColorScheme cs) {
+    final atual = c.id == _conversa.id;
+    final data = tempoRelativo(c.atualizadoEm.toIso8601String());
+    return Material(
+      color: atual
+          ? AppColors.primary.withValues(alpha: 0.10)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: () => _abrirConversa(c),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          child: Row(
+            children: [
+              if (c.fixado)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Icon(Icons.push_pin,
+                      size: 15, color: AppColors.primary),
+                ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      c.tituloExibicao,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      data.isEmpty ? c.preview : '${c.preview}  ·  $data',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                tooltip: 'Opcoes',
+                icon: Icon(Icons.more_vert, size: 20, color: cs.onSurfaceVariant),
+                onSelected: (v) {
+                  switch (v) {
+                    case 'fixar':
+                      _alternarFixado(c);
+                      break;
+                    case 'renomear':
+                      _renomear(c);
+                      break;
+                    case 'excluir':
+                      _excluir(c);
+                      break;
+                  }
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'fixar',
+                    child: Row(
+                      children: [
+                        Icon(c.fixado
+                            ? Icons.push_pin_outlined
+                            : Icons.push_pin),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(c.fixado ? 'Desafixar' : 'Fixar'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'renomear',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_outlined),
+                        SizedBox(width: AppSpacing.sm),
+                        Text('Renomear'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'excluir',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline, color: AppColors.error),
+                        SizedBox(width: AppSpacing.sm),
+                        Text('Excluir', style: TextStyle(color: AppColors.error)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Bolha de boas-vindas da Dora — sempre no topo, nao persistida.
+  Widget _bolhaBoasVindas(ColorScheme cs) {
+    return _bolhaAssistenteTexto(
+      cs,
+      'Oi! Eu sou a Dora 💚\n\nPosso te ajudar a decidir para quem doar, '
+      'achar ONGs perto de voce ou tirar duvidas sobre como doar. Pode ate '
+      'me mandar a foto de um item que voce quer doar que eu dou uma olhada. '
+      'Como posso ajudar?',
+    );
+  }
+
+  /// Uma bolha simples de texto da Dora (sem sugestoes) — usada nas boas-vindas.
+  Widget _bolhaAssistenteTexto(ColorScheme cs, String texto) {
+    return Padding(
+      padding:
+          const EdgeInsets.symmetric(vertical: 4, horizontal: AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const DoraAvatar(tamanho: 28),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(18),
+                ),
+                border: Border.all(color: cs.outlineVariant),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Text(
+                texto,
+                style: TextStyle(color: cs.onSurface, height: 1.35),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

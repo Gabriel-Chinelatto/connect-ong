@@ -34,6 +34,14 @@ class SugestaoAssistente {
       subtitulo: (json['subtitulo'] ?? '').toString(),
     );
   }
+
+  /// Serializa para o histórico local (persistência das conversas da Dora).
+  Map<String, dynamic> toJson() => {
+        'tipo': tipo,
+        if (id != null) 'id': id,
+        'titulo': titulo,
+        'subtitulo': subtitulo,
+      };
 }
 
 /// Resposta do assistente de doacao: o texto a exibir na bolha, uma lista
@@ -47,10 +55,16 @@ class RespostaAssistente {
   /// 'ia' ou 'regras'. Usado apenas para um selo discreto ("Modo basico").
   final String modo;
 
+  /// Titulo sugerido pelo backend para a conversa (opcional). Quando presente,
+  /// nomeia a conversa no historico; quando ausente, a UI deriva o titulo da
+  /// primeira mensagem do usuario. Degrada para string vazia.
+  final String titulo;
+
   const RespostaAssistente({
     required this.resposta,
     this.sugestoes = const [],
     this.modo = 'ia',
+    this.titulo = '',
   });
 
   /// true quando o backend caiu no fallback de regras (sem IA disponivel).
@@ -70,6 +84,7 @@ class RespostaAssistente {
       resposta: (json['resposta'] ?? '').toString(),
       sugestoes: sugestoes,
       modo: (json['modo'] ?? 'ia').toString(),
+      titulo: (json['titulo'] ?? '').toString().trim(),
     );
   }
 }

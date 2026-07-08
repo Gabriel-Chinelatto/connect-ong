@@ -31,6 +31,8 @@ import 'doador/perfil_publico_doador_screen.dart';
 import 'doador/perfil_publico_ong_screen.dart';
 import 'models/usuario_logado.dart';
 import 'services/api_service.dart';
+import 'services/assistente_service.dart';
+import 'services/conversas_dora_service.dart';
 import 'services/session_service.dart';
 import 'theme/app_theme.dart';
 
@@ -56,7 +58,88 @@ Future<void> main() async {
   ));
 
   final tela = Uri.base.fragment.isEmpty ? 'home' : Uri.base.fragment;
+
+  // Para as telas da Dora, semeia algumas conversas locais para provar o
+  // historico persistente (lista + chat restaurado) sem depender de uso manual.
+  if (tela.startsWith('assistente')) {
+    await _semearConversasDora();
+  }
+
   runApp(_HarnessApp(tela: tela));
+}
+
+/// Semeia conversas de exemplo no storage local da Dora (para a verificacao
+/// visual do historico + do chat restaurado).
+Future<void> _semearConversasDora() async {
+  final s = ConversasDoraService();
+  final agora = DateTime.now();
+
+  final roupas = ConversaDora(
+    id: 'seed-roupas',
+    titulo: 'Tenho roupas para doar',
+    fixado: true,
+    atualizadoEm: agora,
+    mensagens: [
+      const MensagemDora(papel: 'user', texto: 'Tenho roupas para doar'),
+      const MensagemDora(
+        papel: 'assistente',
+        texto:
+            'Que legal! Perto de voce ha ONGs que recebem roupas. Veja estas '
+            'opcoes — e so tocar para abrir o perfil:',
+        sugestoes: [
+          SugestaoAssistente(
+            tipo: 'ONG',
+            id: 33,
+            titulo: 'Lar Viva',
+            subtitulo: 'Sorocaba - SP · recebe roupas e agasalhos',
+          ),
+          SugestaoAssistente(
+            tipo: 'NECESSIDADE',
+            id: 45,
+            titulo: 'Agasalhos de inverno',
+            subtitulo: 'Casa do Caminho',
+          ),
+        ],
+      ),
+    ],
+  );
+
+  final animais = ConversaDora(
+    id: 'seed-animais',
+    titulo: 'Quero ajudar animais',
+    atualizadoEm: agora.subtract(const Duration(hours: 3)),
+    mensagens: [
+      const MensagemDora(papel: 'user', texto: 'Quero ajudar animais'),
+      const MensagemDora(
+        papel: 'assistente',
+        texto:
+            ' Maravilha! Abrigos de animais costumam precisar de racao, '
+            'cobertores e ajuda com castracao. Quer que eu procure um perto '
+            'de voce?',
+      ),
+    ],
+  );
+
+  final comoFunciona = ConversaDora(
+    id: 'seed-como',
+    titulo: 'Como funciona a doacao?',
+    atualizadoEm: agora.subtract(const Duration(days: 2)),
+    mensagens: [
+      const MensagemDora(papel: 'user', texto: 'Como funciona a doacao?'),
+      const MensagemDora(
+        papel: 'assistente',
+        texto:
+            'E simples: voce escolhe uma necessidade, demonstra interesse e a '
+            'ONG entra em contato pelo chat para combinar a entrega. 💚',
+        modoRegras: true,
+      ),
+    ],
+  );
+
+  await s.salvar(comoFunciona);
+  await s.salvar(animais);
+  await s.salvar(roupas);
+  await s.definirUltima(roupas.id); // conversa restaurada ao abrir o chat
 }
 
 class _HarnessApp extends StatelessWidget {
@@ -106,6 +189,8 @@ class _HarnessApp extends StatelessWidget {
         );
       case 'assistente':
         return const AssistenteScreen();
+      case 'assistente-historico':
+        return const AssistenteScreen(abrirHistoricoAoIniciar: true);
       case 'home':
       default:
         return const MainShell();
