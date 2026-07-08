@@ -29,6 +29,7 @@ import 'doador/main_shell.dart';
 import 'doador/meus_matches_screen.dart';
 import 'doador/perfil_publico_doador_screen.dart';
 import 'doador/perfil_publico_ong_screen.dart';
+import 'screens/about/descricao_screen.dart';
 import 'models/usuario_logado.dart';
 import 'services/api_service.dart';
 import 'services/assistente_service.dart';
@@ -193,6 +194,8 @@ class _HarnessApp extends StatelessWidget {
         );
       case 'portal':
         return const PortalInstitucionalScreen();
+      case 'sobre':
+        return const DescricaoScreen();
       case 'assistente':
         return const AssistenteScreen();
       case 'assistente-historico':
