@@ -26,6 +26,7 @@ import '../widgets/cards/carrossel_campanhas.dart';
 import '../widgets/common/chip_foguinho.dart';
 import '../widgets/notificacao_bell.dart';
 
+import 'assistente_screen.dart';
 import 'buscar_receptor_screen.dart';
 import 'campanhas_screen.dart';
 import 'favoritos_screen.dart';
@@ -152,6 +153,18 @@ class _InicioTabState extends State<InicioTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Botao "Assistente" (estilo o botao de IA do iFood): discreto, na cor
+      // da marca, flutuando no canto inferior direito da Inicio. Abre o chat
+      // do assistente de doacao. Unico FAB desta aba (nao conflita com outros).
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab_assistente',
+        onPressed: () => _abrir(const AssistenteScreen()),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.onPrimary,
+        icon: const Icon(Icons.auto_awesome),
+        label: const Text('Assistente'),
+        tooltip: 'Assistente de doacao',
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _carregarTudo,
