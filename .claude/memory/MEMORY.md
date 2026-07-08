@@ -1,5 +1,7 @@
 # Memory Index
 
+- [Assistente de IA](connect-ong-assistente-ia.md) — **chatbot de doação (Groq gratuita + fallback por regras)**: arquitetura segura (chave no backend), grounding com dados reais, contrato `/assistente`, chave em application-local.properties, verificado ao vivo em modo:ia. Provado 2026-07-06
+
 - [Sessão 2026-07-06 (CONCLUÍDA)](connect-ong-sessao-2026-07-06.md) — **2ª rodada de feedback (13 tópicos) FECHADA**: bloqueio estilo WhatsApp (backend+2 apps), UF/cidades IBGE offline, detalhe da necessidade, privacidade real, alto contraste/nav simplificada reais, Maps+Como chegar, interesse demonstrado, Impacto 4 destinos, streak fix. Verificada visualmente + no ar. Trocou Fable→Opus no meio (handoff limpo). Restam pendências humanas (pôster/ensaio/emulador)
 
 - [Connect ONG architecture](connect-ong-architecture.md) — 3 repos + 3-platform rule (mobile=doador, desktop=ONG admin, web), API, remote MySQL

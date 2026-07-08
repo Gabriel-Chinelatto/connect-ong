@@ -1,0 +1,38 @@
+---
+name: connect-ong-assistente-ia
+description: "Assistente de doação por IA (chatbot do doador) — Groq gratuita + fallback por regras; arquitetura, chave, contrato e como operar"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 5efb506b-4e50-4863-bb56-8bc40ab1a110
+---
+
+Feature adicionada 2026-07-06 (noite, Opus): **assistente de doação por chat no app do doador**, inspirado no botão de IA do iFood. Atualiza a decisão antiga ([[connect-ong-remodel-mobile]]) de "assistente só por regras" → agora é **HÍBRIDO**: IA de verdade quando há chave, regras como fallback sempre.
+
+## Decisão: Groq (não Gemini)
+Groq tem tier GRATUITO real (sem cartão, sem cobrança por token, só rate limit). Escolhida sobre Gemini por: velocidade (LPU, resposta quase instantânea = melhor no pitch ao vivo) + limite mais que suficiente p/ feira (llama-3.1-8b-instant = 14.400 req/dia; 70b = 1.000/dia) + API OpenAI-compatível simples. Backend é AGNÓSTICO de provedor (interface `ProvedorIA`) — trocar p/ Gemini depois é implementar a interface. Console: https://console.groq.com/keys.
+
+## Arquitetura (segura)
+- Chave NUNCA no app Flutter (extraível). Fica no BACKEND. Flutter → nosso backend `/assistente` → Groq.
+- Backend (commit master `af815e3`, 123 testes, ZERO dependência nova — usa `java.net.http.HttpClient` do JDK + Jackson): `service/ProvedorIA.java` (interface), `GroqService.java` (chama `POST https://api.groq.com/openai/v1/chat/completions`), `AssistenteService.java` (orquestra IA↔fallback + grounding), `AssistenteController.java`, DTOs. SecurityConfig: `POST /assistente` na whitelist (público; se logado usa a cidade do perfil). RateLimitService: 30 msgs/IP/15min (protege a cota grátis).
+- Mobile (commit main `674db3f`, 67 testes): FAB "Assistente" (Icons.auto_awesome) na aba Início → `assistente_screen.dart` (chat com bolhas, 3 chips de pergunta pronta, "digitando…", cards de sugestão clicáveis → PerfilPublicoOngScreen / NecessidadeDetalheScreen). `services/assistente_service.dart`. Envia cidade do perfil + últimas ~6 trocas.
+
+## Grounding (a IA "conhece o projeto")
+O AssistenteService monta um system prompt descrevendo o Connect ONG + injeta DADOS REAIS (ONGs ativas + necessidades abertas, priorizando a cidade do doador, ~30-40 itens) no contexto. Pede resposta em JSON {resposta, sugestoes:[{tipo,id}]}. **Os ids das sugestões são REVALIDADOS contra o banco** (a IA não inventa cards; título/subtítulo vêm do banco). Se a IA não devolve JSON válido → usa o texto puro + busca simples p/ sugestões.
+
+## Contrato do endpoint
+`POST /assistente` body `{"mensagem":"...(obrigatória, max 1000)","historico":[{"papel":"user|assistente","texto":"..."}]?,"cidade":"?"}` → `{"resposta":"...","sugestoes":[{"tipo":"ONG|NECESSIDADE","id":123,"titulo":"...","subtitulo":"..."}],"modo":"ia|regras"}`. Vazia→400; excesso IP→429.
+
+## CHAVE — como operar
+- Configurada em `application-local.properties` (GITIGNORED, confirmado invisível ao git): `app.ia.groq.key=gsk_...` (o usuário gerou a dele 2026-07-06; se vazar/quiser zerar risco, gerar nova no console revoga a antiga).
+- Props (defaults): `app.ia.groq.modelo=llama-3.1-8b-instant`, `.url`, `.temperatura=0.4`, `.timeout-segundos=15`, `app.ia.ratelimit.max=30`. Em prod: env `APP_IA_GROQ_KEY`.
+- SEM chave OU Groq falha/timeout/429 → cai automático no modo regras (nunca quebra).
+
+## Verificado AO VIVO (2026-07-06, API 8080 real com a chave)
+- "tenho roupas e livros pra doar, não sei pra quem" (Limeira) → **modo:ia**, recomendou Lar Viva + Casa Renascer (Limeira) com necessidades reais.
+- "moro em Campinas, quero ONGs perto" → **modo:ia**, ONGs de Campinas (Instituto Criança Feliz…).
+- "como funciona pra doar?" → **modo:ia**, explicou o fluxo real (necessidade→match→chat→PIX/entrega).
+Modo regras também provado (sem chave, H2): mesmas 3 perguntas com sugestões reais.
+
+## GOTCHA operacional
+`mvnw.cmd` quebra ao FORÇAR fork com o caminho que tem espaços ("API - Chinelatto"). Para H2 use `spring-boot:test-run` com `-Dspring-boot.run.fork=false`. O `spring-boot:run` normal (porta 8080) funciona.
