@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/mensagem.dart';
@@ -56,6 +56,11 @@ class ChatScreen extends StatefulWidget {
   /// doador): a tela já abre com o envio desabilitado e o aviso inline.
   final bool bloqueadoPelaOng;
 
+  /// true quando o match já está CONCLUIDO: a doação acabou, então o chat abre
+  /// em modo SÓ LEITURA ("Histórico da conversa") — cabeçalho e rodapé
+  /// diferentes, sem campo de envio. Espelha o desktop da ONG.
+  final bool concluido;
+
   const ChatScreen({
     super.key,
     required this.interesseId,
@@ -64,6 +69,7 @@ class ChatScreen extends StatefulWidget {
     this.ongId,
     this.ongNome,
     this.bloqueadoPelaOng = false,
+    this.concluido = false,
   });
 
   @override
@@ -74,6 +80,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final MensagemService _service = MensagemService();
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
+  // Enter envia / Shift+Enter quebra linha (web/desktop) — ver [_aoTeclar].
+  late final FocusNode _campoFocus = FocusNode(onKeyEvent: _aoTeclar);
 
   List<Mensagem> _mensagens = [];
   bool _carregando = true;
@@ -110,12 +118,15 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _bloqueado = widget.bloqueadoPelaOng;
     _carregar(primeira: true);
-    _carregarStatus();
-    // Polling: busca novas mensagens a cada 2 segundos.
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
-      _carregar();
+    // Match CONCLUIDO = histórico só leitura: carrega uma vez e não fica em
+    // polling (ninguém mais escreve nessa conversa) nem mostra presença.
+    if (!widget.concluido) {
       _carregarStatus();
-    });
+      _timer = Timer.periodic(const Duration(seconds: 2), (_) {
+        _carregar();
+        _carregarStatus();
+      });
+    }
   }
 
   @override
@@ -123,7 +134,21 @@ class _ChatScreenState extends State<ChatScreen> {
     _timer?.cancel();
     _controller.dispose();
     _scroll.dispose();
+    _campoFocus.dispose();
     super.dispose();
+  }
+
+  /// Enter (sem Shift) envia; Shift+Enter deixa o campo inserir a quebra de
+  /// linha normalmente. Vale no Flutter web/desktop; em teclado de toque o
+  /// comportamento do sistema prevalece.
+  KeyEventResult _aoTeclar(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.enter &&
+        !HardwareKeyboard.instance.isShiftPressed) {
+      _enviar();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   Future<void> _carregar({bool primeira = false}) async {
@@ -497,7 +522,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   color: cs.onSurface,
                 ),
               ),
-              if (_digitando)
+              if (widget.concluido)
+                Text(
+                  'Histórico da conversa',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                )
+              else if (_digitando)
                 Text(
                   'digitando...',
                   overflow: TextOverflow.ellipsis,
@@ -568,8 +599,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
           ),
           // Preview do anexo pendente (escolhido e ainda nao enviado), com
-          // botao para remover antes de enviar. Oculto quando bloqueado.
-          if (_anexoBytes != null && !_bloqueado)
+          // botao para remover antes de enviar. Oculto quando bloqueado ou
+          // em histórico (só leitura).
+          if (_anexoBytes != null && !_bloqueado && !widget.concluido)
             Container(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.fromLTRB(
@@ -612,9 +644,44 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
             ),
+          // Match CONCLUIDO: a doação acabou. Sem campo de envio — só um
+          // rodapé discreto indicando que isto é histórico (espelha o desktop).
+          if (widget.concluido)
+            SafeArea(
+              top: false,
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: AppRadius.brMd,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_outline,
+                        size: 18, color: AppColors.primary),
+                    const SizedBox(width: AppSpacing.sm),
+                    Flexible(
+                      child: Text(
+                        'Doação concluída — histórico',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
           // Bloqueado pela ONG: no lugar do campo de envio, aviso inline —
           // nada de retry; o doador continua vendo o histórico da conversa.
-          if (_bloqueado)
+          else if (_bloqueado)
             SafeArea(
               top: false,
               child: Container(
@@ -663,8 +730,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     Expanded(
                       child: TextField(
                         controller: _controller,
+                        focusNode: _campoFocus,
                         minLines: 1,
                         maxLines: 4,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
                         decoration: InputDecoration(
                           hintText: 'Mensagem...',
                           filled: true,

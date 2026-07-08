@@ -309,6 +309,9 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
               ongId: i.ongId,
               ongNome: i.ongNome,
               bloqueadoPelaOng: i.bloqueadoPelaOng,
+              // Match concluído abre o chat como "Histórico da conversa"
+              // (só leitura, sem campo de envio).
+              concluido: i.status == 'CONCLUIDO',
             ),
       ),
     );

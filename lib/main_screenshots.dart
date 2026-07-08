@@ -21,6 +21,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'doador/assistente_screen.dart';
 import 'doador/chat_screen.dart';
 import 'doador/configuracoes_screen.dart';
 import 'doador/doar_pix_screen.dart';
@@ -96,6 +97,15 @@ class _HarnessApp extends StatelessWidget {
           meuRemetente: 'DOADOR',
           titulo: 'Fraldas geriatricas',
         );
+      case 'chat-historico':
+        return const ChatScreen(
+          interesseId: 8,
+          meuRemetente: 'DOADOR',
+          titulo: 'Fraldas geriatricas',
+          concluido: true,
+        );
+      case 'assistente':
+        return const AssistenteScreen();
       case 'home':
       default:
         return const MainShell();

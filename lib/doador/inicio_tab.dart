@@ -24,6 +24,7 @@ import '../utils/page_transition.dart';
 import '../widgets/cards/capa_categoria.dart';
 import '../widgets/cards/carrossel_campanhas.dart';
 import '../widgets/common/chip_foguinho.dart';
+import '../widgets/common/dora_avatar.dart';
 import '../widgets/notificacao_bell.dart';
 
 import 'assistente_screen.dart';
@@ -153,18 +154,6 @@ class _InicioTabState extends State<InicioTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Botao "Assistente" (estilo o botao de IA do iFood): discreto, na cor
-      // da marca, flutuando no canto inferior direito da Inicio. Abre o chat
-      // do assistente de doacao. Unico FAB desta aba (nao conflita com outros).
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_assistente',
-        onPressed: () => _abrir(const AssistenteScreen()),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        icon: const Icon(Icons.auto_awesome),
-        label: const Text('Assistente'),
-        tooltip: 'Assistente de doacao',
-      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _carregarTudo,
@@ -257,34 +246,72 @@ class _InicioTabState extends State<InicioTab> {
     );
   }
 
-  // ---- Barra de busca (leva a aba Explorar, onde a busca de verdade mora) ----
+  // ---- Barra de busca (leva a aba Explorar) + botao da Dora ao LADO (estilo
+  // o botao de IA do iFood): quadrado arredondado, na cor da marca, com a
+  // mascote como icone. Abre o chat da assistente sem cobrir conteudo. ----
   Widget _barraBusca() {
     final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: () => widget.onIrParaAba(1),
-      borderRadius: AppRadius.brXl,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: 14),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
-          borderRadius: AppRadius.brXl,
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.search, color: cs.onSurfaceVariant),
-            const SizedBox(width: AppSpacing.sm),
-            // Expanded + ellipsis: o texto encolhe em vez de estourar a
-            // largura quando a fonte é grande (bug real de overflow de 3.6px).
-            Expanded(
-              child: Text(
-                'Buscar necessidades, ONGs, categorias...',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: () => widget.onIrParaAba(1),
+            borderRadius: AppRadius.brXl,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: 14),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                borderRadius: AppRadius.brXl,
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.search, color: cs.onSurfaceVariant),
+                  const SizedBox(width: AppSpacing.sm),
+                  // Expanded + ellipsis: o texto encolhe em vez de estourar a
+                  // largura quando a fonte é grande (bug real de overflow).
+                  Expanded(
+                    child: Text(
+                      'Buscar necessidades, ONGs, categorias...',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        _botaoDora(),
+      ],
+    );
+  }
+
+  // Botao redondo da assistente Dora, ao lado da busca. Fundo verde da marca
+  // com a mascote em destaque (circulo branco atras para ela aparecer bem).
+  Widget _botaoDora() {
+    return Semantics(
+      button: true,
+      label: 'Falar com a Dora, assistente de doacao',
+      child: Tooltip(
+        message: 'Dora, sua assistente',
+        child: Material(
+          color: AppColors.primary,
+          borderRadius: AppRadius.brXl,
+          child: InkWell(
+            borderRadius: AppRadius.brXl,
+            onTap: () => _abrir(const AssistenteScreen()),
+            child: const SizedBox(
+              width: 52,
+              height: 52,
+              child: Center(
+                child: DoraAvatar(tamanho: 40, fundo: Colors.white),
+              ),
+            ),
+          ),
         ),
       ),
     );

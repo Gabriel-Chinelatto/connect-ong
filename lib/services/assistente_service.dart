@@ -84,11 +84,15 @@ class RespostaAssistente {
 class AssistenteService {
   /// Envia [mensagem] ao assistente. [historico] deve ser uma lista de
   /// `{'papel': 'user'|'assistente', 'texto': '...'}` com as ultimas trocas.
-  /// [cidade] e opcional (vem do perfil do doador).
+  /// [cidade] e opcional (vem do perfil do doador). [imagemBase64] e opcional:
+  /// quando o doador anexa uma foto para a Dora "analisar" (ex.: "isto serve
+  /// para doar?"). Backends que ainda nao reconhecem o campo simplesmente o
+  /// ignoram — a UI degrada mostrando a resposta textual normal.
   Future<RespostaAssistente> perguntar({
     required String mensagem,
     List<Map<String, String>> historico = const [],
     String? cidade,
+    String? imagemBase64,
   }) async {
     try {
       final resp = await ApiService.post(
@@ -97,6 +101,8 @@ class AssistenteService {
           'mensagem': mensagem,
           'historico': historico,
           'cidade': cidade,
+          if (imagemBase64 != null && imagemBase64.isNotEmpty)
+            'imagemBase64': imagemBase64,
         }),
       );
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
