@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/versoes.dart';
 import '../pages/login_page.dart';
 import '../screens/legal/documentos_legais_screen.dart';
 import '../services/estatistica_service.dart';
@@ -20,6 +21,11 @@ class PortalInstitucionalScreen extends StatefulWidget {
 
 class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
   EstatisticasPublicas _stats = EstatisticasPublicas.zero;
+
+  /// Quantas versões mostrar de início na seção "Versões" (as demais entram
+  /// no "Ver todas as versões").
+  static const int _versoesIniciais = 5;
+  bool _mostrarTodasVersoes = false;
 
   @override
   void initState() {
@@ -60,6 +66,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
             _secaoEquipe(),
             _secaoFaq(),
             _secaoTransparencia(),
+            _secaoVersoes(),
             _rodape(),
           ],
         ),
@@ -436,7 +443,9 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
             nome,
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w700),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary),
           ),
           const SizedBox(height: 4),
           Text(
@@ -496,7 +505,9 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                       title: Text(
                         e[0],
                         style: TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: AppColors.textPrimary),
                       ),
                       children: [
                         Align(
@@ -557,6 +568,188 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
         textStyle:
             TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       );
+
+  // --------------------------------------------------------- VERSOES
+  Widget _secaoVersoes() {
+    final total = kVersoesApp.length;
+    final visiveis = _mostrarTodasVersoes
+        ? kVersoesApp
+        : kVersoesApp.take(_versoesIniciais).toList();
+    return _conteudo(
+      child: Column(
+        children: [
+          _tituloSecao(
+              'Versões', 'A evolução do Connect ONG, versão a versão.'),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: Column(
+                children: [
+                  ...visiveis.map(_cardVersao),
+                  if (total > _versoesIniciais) ...[
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () => setState(
+                          () => _mostrarTodasVersoes = !_mostrarTodasVersoes),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 14),
+                        textStyle: TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 15),
+                      ),
+                      icon: Icon(_mostrarTodasVersoes
+                          ? Icons.expand_less
+                          : Icons.expand_more),
+                      label: Text(_mostrarTodasVersoes
+                          ? 'Ver menos'
+                          : 'Ver todas as versões'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cardVersao(VersaoApp v) {
+    final atual = v.atual;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: AppRadius.brLg,
+          border: Border.all(
+            color: atual
+                ? AppColors.primary.withValues(alpha: 0.55)
+                : AppColors.border,
+            width: atual ? 1.6 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: atual,
+            tilePadding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            iconColor: AppColors.primary,
+            collapsedIconColor: AppColors.textSecondary,
+            leading: Container(
+              width: 56,
+              height: 42,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                ),
+                borderRadius: AppRadius.brMd,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.local_offer,
+                      color: Colors.white, size: 13),
+                  const SizedBox(width: 4),
+                  Text(
+                    v.numero,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            title: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    v.titulo,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                if (atual)
+                  Container(
+                    margin: const EdgeInsets.only(left: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: AppRadius.brXl,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.rocket_launch,
+                            size: 13, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Atual',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            children: [
+              for (final m in v.mudancas)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(top: 7, right: 10),
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          m,
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   // ------------------------------------------------------------ RODAPE
   Widget _rodape() {
@@ -698,7 +891,9 @@ class _CardValor extends StatelessWidget {
           Text(
             titulo,
             style: TextStyle(
-                fontSize: 19, fontWeight: FontWeight.w700),
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary),
           ),
           const SizedBox(height: 8),
           Text(
@@ -746,7 +941,9 @@ class _CardPasso extends StatelessWidget {
           Text(
             titulo,
             style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.w700),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary),
           ),
           const SizedBox(height: 8),
           Text(

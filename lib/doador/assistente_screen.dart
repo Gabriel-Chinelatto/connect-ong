@@ -568,9 +568,9 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
       appBar: AppBar(
         titleSpacing: 0,
         leading: IconButton(
-          tooltip: 'Conversas',
-          icon: const Icon(Icons.menu),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          tooltip: 'Voltar ao início',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Row(
           children: [
@@ -601,6 +601,11 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Conversas',
+            icon: const Icon(Icons.history),
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
           IconButton(
             tooltip: 'Nova conversa',
             icon: const Icon(Icons.add_comment_outlined),

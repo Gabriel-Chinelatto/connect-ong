@@ -35,6 +35,7 @@ import 'services/assistente_service.dart';
 import 'services/conversas_dora_service.dart';
 import 'services/session_service.dart';
 import 'theme/app_theme.dart';
+import 'web/portal_institucional_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -151,10 +152,13 @@ class _HarnessApp extends StatelessWidget {
     // 'contraste' renderiza a mesma tela de Configuracoes com o tema de alto
     // contraste, para provar visualmente que ele muda (feedback do usuario).
     final contraste = tela == 'contraste';
+    // Sufixo '-dark' força o tema escuro (ex.: 'portal-dark') — usado para
+    // provar que o portal continua legível no modo escuro do app.
+    final escuro = tela.endsWith('-dark');
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(altoContraste: contraste),
-      home: _telaPorNome(tela),
+      theme: escuro ? AppTheme.dark() : AppTheme.light(altoContraste: contraste),
+      home: _telaPorNome(escuro ? tela.replaceFirst('-dark', '') : tela),
     );
   }
 
@@ -187,6 +191,8 @@ class _HarnessApp extends StatelessWidget {
           titulo: 'Fraldas geriatricas',
           concluido: true,
         );
+      case 'portal':
+        return const PortalInstitucionalScreen();
       case 'assistente':
         return const AssistenteScreen();
       case 'assistente-historico':
