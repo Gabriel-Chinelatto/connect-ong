@@ -34,5 +34,15 @@ O AssistenteService monta um system prompt descrevendo o Connect ONG + injeta DA
 - "como funciona pra doar?" → **modo:ia**, explicou o fluxo real (necessidade→match→chat→PIX/entrega).
 Modo regras também provado (sem chave, H2): mesmas 3 perguntas com sugestões reais.
 
+## 2ª rodada do assistente (2026-07-06 noite) — Dôra ganhou nome, cara, visão e localização adaptável
+- **Persona "Dôra"** (de *doar*): nome + mascote SVG original (coração verde com carinha, `assets/images/dora_mascote.svg`, widget `dora_avatar.dart`); chat reescrito estilo WhatsApp (bolhas arredondadas, avatar ao lado, chips em Wrap de pílulas); botão de acesso movido do FAB (cobria Campanhas) para AO LADO DA BUSCA na Início. Boas-vindas em 1ª pessoa. Commit mobile `5d1772a`.
+- **Localização adaptável**: a cidade DITA na mensagem vence a do perfil/cadastro. `detectarLocalizacaoNaMensagem` compara com as cidades reais das ONGs + mapa de bairros (`barao geraldo→Campinas`, extensível). Provado ao vivo: perfil Limeira + "barão geraldo" → recomendou Campinas.
+- **Grounding query-aware/escalável**: pontua ONGs/necessidades por cidade+categoria mencionadas ANTES de cortar (35 nec/20 ongs), então com centenas de ONGs as relevantes sempre entram. Grounding é AO VIVO (findAll a cada request; add/excluir/editar reflete sem redeploy; soft-deletadas fora).
+- **Cards sempre limpos**: system prompt proíbe id na prosa + `sanitizar()` remove `[id=N]`/`id=N` da resposta nos 2 modos; fallback regras devolve itens só em `sugestoes`. (Corrige o "- [id=36]..." que apareceu antes.)
+- **VISÃO (analisar foto) FUNCIONA**: campo `imagemBase64` no request; modelo **`meta-llama/llama-4-scout-17b-16e-instruct`** (o `maverick` que o agente pôs dá 404 na chave real — corrigido no commit `5982f86`; scout é o ÚNICO modelo de visão no free tier, tem descontinuação anunciada → se parar, trocar `app.ia.groq.modelo-visao`, a foto degrada p/ texto). Provado ao vivo: foto de roupas+livro → Dôra descreveu e recomendou ONGs reais (modo:ia). Backend visão commit `2947ccc`.
+- **Enter envia / Shift+Enter quebra linha** em TODOS os chats (assistente + match mobile `5d1772a`; chat ONG desktop `chat_ong_screen.dart` commit `30b6952`). Campos viraram multiline.
+- **Chat concluído = "Histórico da conversa" (só leitura)** também no DOADOR mobile (param `concluido` no chat_screen; espelha o desktop). Backend suíte 129 testes; mobile 67; desktop 37.
+- **Gerar imagem de teste p/ visão**: usei System.Drawing no PowerShell (retângulos coloridos + texto) → base64 → POST. Para diagnosticar modelo: `GET https://api.groq.com/openai/v1/models` com a chave lista os modelos REAIS da conta (foi assim que descobri maverick ausente / scout presente).
+
 ## GOTCHA operacional
 `mvnw.cmd` quebra ao FORÇAR fork com o caminho que tem espaços ("API - Chinelatto"). Para H2 use `spring-boot:test-run` com `-Dspring-boot.run.fork=false`. O `spring-boot:run` normal (porta 8080) funciona.
