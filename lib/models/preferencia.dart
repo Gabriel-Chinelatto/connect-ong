@@ -67,7 +67,11 @@ class Preferencia {
       perfilPublico: b(j['perfilPublico'], true),
       receberContatos: b(j['receberContatos'], true),
       receberSugestoes: b(j['receberSugestoes'], true),
-      doisFatores: b(j['doisFatores'], false),
+      // O backend guarda doisFatores como INTEIRO (0/1). Aceita int, bool ou
+      // string p/ robustez; o `b()` sozinho ignoraria o inteiro do GET.
+      doisFatores: j['doisFatores'] == 1 ||
+          j['doisFatores'] == '1' ||
+          j['doisFatores'] == true,
       navegacaoSimplificadaDoBackend: j.containsKey('navegacaoSimplificada'),
     );
   }
@@ -88,7 +92,8 @@ class Preferencia {
         'perfilPublico': perfilPublico,
         'receberContatos': receberContatos,
         'receberSugestoes': receberSugestoes,
-        'doisFatores': doisFatores,
+        // Backend espera INTEIRO (0/1) — enviar boolean dá 400 e quebra o Salvar.
+        'doisFatores': doisFatores ? 1 : 0,
       };
 
   Preferencia copy() => Preferencia.fromJson(toJson());
