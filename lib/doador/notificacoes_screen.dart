@@ -76,15 +76,26 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
     }
   }
 
-  // Notificacao de PRESTACAO → aba Matches / sub-aba Concluídas. Fecha esta
-  // tela (que foi empurrada por cima do shell) e pede a troca de aba pelo
-  // hook global; se o shell nao estiver montado, nao faz nada.
-  void _aoTocar(Notificacao n) {
-    if (n.tipo != 'PRESTACAO') return;
-    final irParaAba = MainShell.irParaAbaGlobal;
-    if (irParaAba == null) return;
-    Navigator.of(context).pop();
-    irParaAba(2, 2); // aba 2 = Matches; sub-aba 2 = Concluídas
+  // Tocar numa notificacao marca SO ela como lida (otimista + backend) e, se
+  // for de PRESTACAO, leva a aba Matches / sub-aba Concluídas.
+  Future<void> _aoTocar(Notificacao n) async {
+    if (!n.lida) {
+      setState(() {
+        final idx = _itens.indexWhere((x) => x.id == n.id);
+        if (idx >= 0) _itens[idx] = _itens[idx].copyWith(lida: true);
+      });
+      try {
+        await _service.marcarLida(n.id);
+      } catch (_) {
+        // rede instavel: o estado local ja mudou; recarrega no proximo refresh.
+      }
+    }
+    if (n.tipo == 'PRESTACAO') {
+      final irParaAba = MainShell.irParaAbaGlobal;
+      if (irParaAba == null || !mounted) return;
+      Navigator.of(context).pop();
+      irParaAba(2, 2); // aba 2 = Matches; sub-aba 2 = Concluídas
+    }
   }
 
   @override
@@ -151,10 +162,7 @@ class _NotificacoesScreenState extends State<NotificacoesScreen> {
                               ? null
                               : const Icon(Icons.circle,
                                   size: 10, color: AppColors.primary),
-                          onTap: n.tipo == 'PRESTACAO' &&
-                                  MainShell.irParaAbaGlobal != null
-                              ? () => _aoTocar(n)
-                              : null,
+                          onTap: () => _aoTocar(n),
                         ),
                       );
                     },
