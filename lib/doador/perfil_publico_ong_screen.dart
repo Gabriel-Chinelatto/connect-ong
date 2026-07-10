@@ -10,6 +10,7 @@ import '../services/perfil_publico_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../widgets/common/dialog_pontuacao.dart';
 import '../utils/app_links.dart';
 import '../widgets/common/chip_foguinho.dart';
 import '../widgets/common/visualizador_imagem.dart';
@@ -281,6 +282,11 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             bloqueado
                 ? null
                 : [
+                  IconButton(
+                    tooltip: 'Como funciona a transparência',
+                    onPressed: () => mostrarComoPontuar(context),
+                    icon: const Icon(Icons.info_outline),
+                  ),
                   if (_perfil != null)
                     IconButton(
                       tooltip: 'Compartilhar',

@@ -330,6 +330,26 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     );
   }
 
+  // Re-demonstra interesse numa necessidade que a ONG recusou (o backend
+  // permite: RECUSADO não bloqueia novo interesse). Recarrega a lista ao fim.
+  Future<void> _reDemonstrar(Interesse i) async {
+    if (i.necessidadeId == null) return;
+    final u = await _sessionService.obterUsuario();
+    if (u == null || !mounted) return;
+    try {
+      await _interesseService.demonstrarInteresse(
+        necessidadeId: i.necessidadeId!,
+        doadorId: u.id,
+      );
+      if (!mounted) return;
+      AppSnackbar.sucesso(context, 'Interesse enviado novamente! 💚');
+      await _carregar(silencioso: true);
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
   Future<void> _abrirAvaliar(Interesse i) async {
     if (i.ongId == null) return;
     final u = await _sessionService.obterUsuario();
@@ -868,6 +888,19 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                             Icons.chat_bubble_outline,
                             'Conversar',
                             () => _abrirChat(i),
+                          ),
+                        ),
+                      ],
+                      // RECUSADO: a ONG não pôde aceitar desta vez — o doador
+                      // pode tentar de novo aqui mesmo (o backend reabre).
+                      if (i.status == 'RECUSADO' && i.necessidadeId != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _acao(
+                            Icons.refresh,
+                            'Demonstrar novamente',
+                            () => _reDemonstrar(i),
                           ),
                         ),
                       ],
