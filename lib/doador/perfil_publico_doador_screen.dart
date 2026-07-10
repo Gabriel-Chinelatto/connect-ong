@@ -355,6 +355,28 @@ class _PerfilPublicoDoadorScreenState extends State<PerfilPublicoDoadorScreen> {
   Widget _secaoAvaliacoes(PerfilPublicoDoador p) {
     final cs = Theme.of(context).colorScheme;
     return _secao('O que as ONGs dizem', Icons.forum_outlined, [
+      // Selo de confianca: a reputacao tem lastro (o backend so aceita avaliacao
+      // de uma ONG que concluiu uma doacao com este doador).
+      Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          children: [
+            Icon(Icons.verified_user_outlined,
+                size: 14, color: cs.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Só ONGs que concluíram uma doação com este doador podem avaliar.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       for (final a in p.avaliacoes)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
