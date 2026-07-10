@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../services/notificacao_service.dart';
+import '../services/session_service.dart';
+import '../widgets/notificacao_toast.dart';
 import 'dashboard_impacto_screen.dart';
 import 'feed_necessidades_screen.dart';
 import 'inicio_tab.dart';
 import 'meus_matches_screen.dart';
+import 'notificacoes_screen.dart';
 import 'perfil_screen.dart';
 
 /// Shell principal do app do doador com 5 áreas (Início, Explorar, Matches,
@@ -39,10 +45,22 @@ class _MainShellState extends State<MainShell> {
   // (0=Ativas, 1=Aguardando, 2=Concluídas) — ex.: cards do Meu Impacto.
   final MatchesAbaController _abaMatches = MatchesAbaController();
 
+  // Polling de notificações: mostra um toast in-app quando chega uma nova
+  // (sem depender de push nativo). _ultimoIdNotif guarda a maior id já vista.
+  final NotificacaoService _notifService = NotificacaoService();
+  final SessionService _sessionService = SessionService();
+  Timer? _timerNotif;
+  int _ultimoIdNotif = 0;
+
   @override
   void initState() {
     super.initState();
     MainShell.irParaAbaGlobal = _irParaAba;
+    // 1ª leitura define a linha de base (não mostra toast das antigas); depois
+    // verifica a cada 20s e avisa só as que chegarem daqui pra frente.
+    _pollNotificacoes(inicial: true);
+    _timerNotif = Timer.periodic(
+        const Duration(seconds: 20), (_) => _pollNotificacoes());
   }
 
   @override
@@ -50,8 +68,42 @@ class _MainShellState extends State<MainShell> {
     if (MainShell.irParaAbaGlobal == _irParaAba) {
       MainShell.irParaAbaGlobal = null;
     }
+    _timerNotif?.cancel();
     _abaMatches.dispose();
     super.dispose();
+  }
+
+  Future<void> _pollNotificacoes({bool inicial = false}) async {
+    final u = await _sessionService.obterUsuario();
+    if (u == null) return;
+    try {
+      final lista = await _notifService.listar(u.id);
+      if (lista.isEmpty) return;
+      final maxId =
+          lista.map((n) => n.id).reduce((a, b) => a > b ? a : b);
+      if (inicial) {
+        _ultimoIdNotif = maxId; // linha de base, sem avisar as antigas
+        return;
+      }
+      final novas = lista.where((n) => n.id > _ultimoIdNotif).toList()
+        ..sort((a, b) => a.id.compareTo(b.id));
+      _ultimoIdNotif = maxId;
+      if (novas.isEmpty || !mounted) return;
+      // Evita uma enxurrada: no máximo 3 toasts por ciclo.
+      for (final n in novas.length > 3 ? novas.sublist(novas.length - 3) : novas) {
+        mostrarNotificacaoToast(context, n, onTap: _abrirNotificacoes);
+      }
+    } catch (_) {
+      // rede instável: tenta de novo no próximo ciclo.
+    }
+  }
+
+  void _abrirNotificacoes() {
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificacoesScreen()),
+    );
   }
 
   /// Troca a aba ativa; [subAbaMatches] (opcional) também posiciona a tela de
