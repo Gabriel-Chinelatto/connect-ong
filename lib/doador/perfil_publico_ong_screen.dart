@@ -18,6 +18,7 @@ import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
 import 'necessidade_detalhe_screen.dart';
 import 'perfil_publico_doador_screen.dart';
+import 'simular_frete_sheet.dart';
 
 /// Pagina publica de uma ONG: capa (quando cadastrada), avatar, selo de
 /// verificacao, nota, streak de 1º lugar, sobre, contato (com endereço +
@@ -706,6 +707,21 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               onPressed: () => _abrirComoChegar(p),
               icon: const Icon(Icons.directions, size: 18),
               label: const Text('Como chegar'),
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+            ),
+            // Simulador de frete: estima o custo de levar uma doação até esta
+            // ONG (distância entre cidades + peso do item pela IA).
+            TextButton.icon(
+              onPressed: () => mostrarSimularFrete(
+                context,
+                destinoCidade: p.cidade,
+                ongNome: p.nome,
+                categoriaSugerida: p.necessidades.isNotEmpty
+                    ? p.necessidades.first.categoria
+                    : null,
+              ),
+              icon: const Icon(Icons.local_shipping_outlined, size: 18),
+              label: const Text('Simular frete'),
               style: TextButton.styleFrom(foregroundColor: AppColors.primary),
             ),
           ],

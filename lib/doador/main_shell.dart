@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../services/notificacao_service.dart';
 import '../services/session_service.dart';
@@ -35,11 +36,23 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends State<MainShell>
+    with SingleTickerProviderStateMixin {
   static const double _larguraDesktop = 900;
   static const double _larguraMaxConteudo = 840;
 
   int _indice = 0;
+
+  // Anima a TROCA de aba (fade + micro-slide do conteúdo e "pulinho" no ícone
+  // selecionado), dando fluidez estilo WhatsApp no lugar do corte seco do
+  // IndexedStack. O IndexedStack continua preservando o estado de cada aba.
+  late final AnimationController _transicao = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+    value: 1,
+  );
+  late final Animation<double> _curva =
+      CurvedAnimation(parent: _transicao, curve: Curves.easeOutCubic);
 
   // Controller para outras abas pedirem uma sub-aba específica dos Matches
   // (0=Ativas, 1=Aguardando, 2=Concluídas) — ex.: cards do Meu Impacto.
@@ -69,6 +82,7 @@ class _MainShellState extends State<MainShell> {
       MainShell.irParaAbaGlobal = null;
     }
     _timerNotif?.cancel();
+    _transicao.dispose();
     _abaMatches.dispose();
     super.dispose();
   }
@@ -107,10 +121,16 @@ class _MainShellState extends State<MainShell> {
   }
 
   /// Troca a aba ativa; [subAbaMatches] (opcional) também posiciona a tela de
-  /// Matches na sub-aba pedida.
+  /// Matches na sub-aba pedida. Ao mudar de aba, dispara a animação de transição
+  /// e um leve feedback tátil (sensação premium, estilo apps nativos).
   void _irParaAba(int aba, [int? subAbaMatches]) {
     if (subAbaMatches != null) _abaMatches.irPara(subAbaMatches);
+    final mudou = aba != _indice;
     setState(() => _indice = aba);
+    if (mudou) {
+      HapticFeedback.selectionClick();
+      _transicao.forward(from: 0);
+    }
   }
 
   static const _destinos = [
@@ -120,6 +140,36 @@ class _MainShellState extends State<MainShell> {
     (Icons.insights_outlined, Icons.insights_rounded, 'Impacto'),
     (Icons.person_outline, Icons.person_rounded, 'Perfil'),
   ];
+
+  // Envolve o conteúdo da aba num fade + micro-slide de entrada, tocado a cada
+  // troca de aba (o controller vai de 0→1). Fora da troca fica estático (value=1).
+  Widget _conteudoAnimado(Widget filho) {
+    return AnimatedBuilder(
+      animation: _curva,
+      builder: (context, child) {
+        final t = _curva.value;
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * 10),
+            child: child,
+          ),
+        );
+      },
+      child: filho,
+    );
+  }
+
+  // Ícone da aba SELECIONADA (versão "cheia") com um leve "pulinho" de escala
+  // quando ela acabou de ser escolhida — só a aba ativa anima.
+  Widget _iconeSelecionado(IconData icone, int indice) {
+    if (indice != _indice) return Icon(icone);
+    return ScaleTransition(
+      scale: Tween<double>(begin: 0.8, end: 1)
+          .animate(CurvedAnimation(parent: _transicao, curve: Curves.easeOutBack)),
+      child: Icon(icone),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +183,11 @@ class _MainShellState extends State<MainShell> {
       const PerfilScreen(),
     ];
 
-    final conteudo = IndexedStack(index: _indice, children: abas);
+    // IndexedStack preserva o estado de todas as abas; o wrapper animado só
+    // dá o fade + micro-slide de entrada na aba recém-selecionada.
+    final conteudo = _conteudoAnimado(
+      IndexedStack(index: _indice, children: abas),
+    );
     final largo = MediaQuery.of(context).size.width >= _larguraDesktop;
 
     if (!largo) {
@@ -143,11 +197,11 @@ class _MainShellState extends State<MainShell> {
           selectedIndex: _indice,
           onDestinationSelected: _irParaAba,
           destinations: [
-            for (final (icone, iconeSel, rotulo) in _destinos)
+            for (final (indice, dest) in _destinos.indexed)
               NavigationDestination(
-                icon: Icon(icone),
-                selectedIcon: Icon(iconeSel),
-                label: rotulo,
+                icon: Icon(dest.$1),
+                selectedIcon: _iconeSelecionado(dest.$2, indice),
+                label: dest.$3,
               ),
           ],
         ),
@@ -165,11 +219,11 @@ class _MainShellState extends State<MainShell> {
             labelType: NavigationRailLabelType.all,
             backgroundColor: cs.surface,
             destinations: [
-              for (final (icone, iconeSel, rotulo) in _destinos)
+              for (final (indice, dest) in _destinos.indexed)
                 NavigationRailDestination(
-                  icon: Icon(icone),
-                  selectedIcon: Icon(iconeSel),
-                  label: Text(rotulo),
+                  icon: Icon(dest.$1),
+                  selectedIcon: _iconeSelecionado(dest.$2, indice),
+                  label: Text(dest.$3),
                 ),
             ],
           ),
