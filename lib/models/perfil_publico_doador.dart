@@ -100,12 +100,14 @@ class AvaliacaoDoador {
   final String ongNome;
   final int nota;
   final String? comentario;
+  final List<String> fotos; // base64 da doação recebida (pode ser vazio)
   final String? criadoEm;
 
   const AvaliacaoDoador({
     required this.ongNome,
     required this.nota,
     this.comentario,
+    this.fotos = const [],
     this.criadoEm,
   });
 
@@ -113,6 +115,7 @@ class AvaliacaoDoador {
         ongNome: j['ongNome'] ?? 'ONG',
         nota: ((j['nota'] ?? 0) as num).toInt(),
         comentario: j['comentario'] as String?,
+        fotos: (j['fotos'] as List?)?.whereType<String>().toList() ?? const [],
         criadoEm: j['criadoEm'] as String?,
       );
 }

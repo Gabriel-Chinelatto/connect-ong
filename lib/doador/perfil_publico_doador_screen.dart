@@ -407,6 +407,15 @@ class _PerfilPublicoDoadorScreenState extends State<PerfilPublicoDoadorScreen> {
                         color: cs.onSurfaceVariant,
                         height: 1.4)),
               ],
+              // Fotos da doação recebida que a ONG anexou à avaliação.
+              if (a.fotos.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [for (final b64 in a.fotos) _fotoAvaliacao(b64)],
+                ),
+              ],
               if (dataCurtaDeIso(a.criadoEm).isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(dataCurtaDeIso(a.criadoEm),
@@ -417,6 +426,34 @@ class _PerfilPublicoDoadorScreenState extends State<PerfilPublicoDoadorScreen> {
           ),
         ),
     ]);
+  }
+
+  // Miniatura de uma foto (base64) anexada pela ONG à avaliação; toca para
+  // ampliar. base64 inválido é ignorado (não quebra a lista).
+  Widget _fotoAvaliacao(String b64) {
+    final Uint8List bytes;
+    try {
+      bytes = base64Decode(b64);
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+    return GestureDetector(
+      onTap: () => showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.black,
+          insetPadding: const EdgeInsets.all(16),
+          child: InteractiveViewer(
+            child: Image.memory(bytes, fit: BoxFit.contain),
+          ),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(bytes,
+            width: 64, height: 64, fit: BoxFit.cover, gaplessPlayback: true),
+      ),
+    );
   }
 
   // Abre o perfil PÚBLICO da ONG que prestou contas (contraparte).
