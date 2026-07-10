@@ -1,3 +1,5 @@
+import 'json_utils.dart';
+
 /// Representa o usuário autenticado na sessão atual.
 ///
 /// Guarda identidade e papel ([tipo]: 'DOADOR' ou 'ONG'). É serializado para o
@@ -26,13 +28,13 @@ class UsuarioLogado {
 
     return UsuarioLogado(
 
-      id: json['id'],
+      id: asInt(json['id']),
 
-      nome: json['nome'],
+      nome: asString(json['nome']),
 
-      email: json['email'],
+      email: asString(json['email']),
 
-      tipo: json['tipo'],
+      tipo: asString(json['tipo']),
     );
   }
 

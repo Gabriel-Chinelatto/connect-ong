@@ -1,3 +1,5 @@
+import 'json_utils.dart';
+
 /// Uma necessidade publicada por uma ONG (o que ela precisa receber).
 class Necessidade {
   final int id;
@@ -36,19 +38,19 @@ class Necessidade {
 
   factory Necessidade.fromJson(Map<String, dynamic> json) {
     return Necessidade(
-      id: json['id'],
-      titulo: json['titulo'] ?? '',
-      descricao: json['descricao'] ?? '',
-      categoria: json['categoria'] ?? '',
-      urgente: json['urgente'] ?? false,
-      status: json['status'] ?? '',
-      ongId: json['ongId'],
-      ongNome: json['ongNome'],
-      ongCidade: json['ongCidade'],
-      ongVerificada: json['ongVerificada'] ?? false,
-      ongNotaMedia: (json['ongNotaMedia'] ?? 0).toDouble(),
-      ongTotalAvaliacoes: json['ongTotalAvaliacoes'] ?? 0,
-      dataCriacao: json['dataCriacao'],
+      id: asInt(json['id']),
+      titulo: asString(json['titulo']),
+      descricao: asString(json['descricao']),
+      categoria: asString(json['categoria']),
+      urgente: asBool(json['urgente']),
+      status: asString(json['status']),
+      ongId: asIntOrNull(json['ongId']),
+      ongNome: asStringOrNull(json['ongNome']),
+      ongCidade: asStringOrNull(json['ongCidade']),
+      ongVerificada: asBool(json['ongVerificada']),
+      ongNotaMedia: asDouble(json['ongNotaMedia']),
+      ongTotalAvaliacoes: asInt(json['ongTotalAvaliacoes']),
+      dataCriacao: asStringOrNull(json['dataCriacao']),
     );
   }
 }

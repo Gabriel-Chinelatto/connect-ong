@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,6 +45,39 @@ class ApiService {
 
   // Chave usada para persistir o token no SharedPreferences.
   static const String _tokenKey = 'access_token';
+
+  // ---------------------------------------------------------------------------
+  // Sessão expirada (401 global).
+  //
+  // Chaves globais do Navigator e do ScaffoldMessenger: permitem navegar e
+  // mostrar SnackBar de FORA da árvore de widgets (a partir desta camada de
+  // rede). São ligadas ao MaterialApp em main.dart.
+  // ---------------------------------------------------------------------------
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+  static final GlobalKey<ScaffoldMessengerState> messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
+  /// Callback disparado quando uma requisição AUTENTICADA recebe 401 (token
+  /// expirado/invalidado). O app registra aqui o logout + retorno ao login
+  /// (ver main.dart). Fica como callback para esta camada de rede não depender
+  /// da UI/sessão (evita import circular com SessionService).
+  static Future<void> Function()? onUnauthorized;
+
+  // Evita disparar vários logouts/navegações quando um lote de requisições
+  // recebe 401 ao mesmo tempo (ex.: a home dispara N chamadas de uma vez).
+  static bool _tratandoSessaoExpirada = false;
+
+  static Future<void> _sessaoExpirou() async {
+    if (_tratandoSessaoExpirada) return;
+    _tratandoSessaoExpirada = true;
+    try {
+      final handler = onUnauthorized;
+      if (handler != null) await handler();
+    } finally {
+      _tratandoSessaoExpirada = false;
+    }
+  }
 
   // Define (ou limpa) o token: atualiza a memória e o armazenamento local.
   static Future<void> setToken(String? token) async {
@@ -122,7 +156,15 @@ class ApiService {
   static Future<http.Response> _executar(
       Future<http.Response> Function() acao) async {
     try {
-      return await acao().timeout(timeout);
+      final resposta = await acao().timeout(timeout);
+      // Sessão expirada: um 401 numa requisição que ENVIOU token significa que
+      // o token venceu/foi invalidado -> logout global (uma única vez). Um 401
+      // SEM token (login, esqueci-senha, endpoints públicos) NÃO desloga: aí o
+      // 401 é só "credencial inválida" e o próprio fluxo trata a mensagem.
+      if (resposta.statusCode == 401 && _accessToken != null) {
+        await _sessaoExpirou();
+      }
+      return resposta;
     } on TimeoutException {
       throw Exception('O servidor demorou a responder. Tente novamente.');
     } on SocketException {

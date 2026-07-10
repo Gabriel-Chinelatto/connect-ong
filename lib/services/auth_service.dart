@@ -187,6 +187,28 @@ class AuthService {
     throw Exception(_extrairErro(response));
   }
 
+  /// Valida a sessão atual no startup: `GET /auth/me` com o token guardado.
+  ///
+  /// Retorna `true` se o token ainda é aceito (200), `false` se venceu/foi
+  /// invalidado (401) ou se não há token. Usa `http` direto (não os wrappers do
+  /// ApiService) DE PROPÓSITO: aqui a checagem é deliberada e o SplashDecider
+  /// decide a rota; não queremos disparar o logout global do interceptor no
+  /// meio da decisão. Falha de REDE devolve `true` (não desloga por Wi-Fi ruim:
+  /// a primeira chamada autenticada real trataria um 401 verdadeiro depois).
+  Future<bool> sessaoValida() async {
+    if (ApiService.accessToken == null) return false;
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/me'),
+        headers: ApiService.authHeaders(),
+      ).timeout(ApiService.timeout);
+      return response.statusCode != 401;
+    } catch (_) {
+      // Sem rede/timeout: não é sessão inválida — mantém o usuário logado.
+      return true;
+    }
+  }
+
   // Extrai a mensagem de `erro` do corpo da resposta (padrão do backend),
   // com fallback para o código HTTP quando o corpo não é o esperado.
   String _extrairErro(http.Response response) {

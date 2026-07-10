@@ -8,6 +8,7 @@ import 'doador/perfil_publico_ong_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/session_service.dart';
 import 'services/api_service.dart';
+import 'services/auth_service.dart';
 import 'config/config_controller.dart';
 import 'web/portal_institucional_screen.dart';
 
@@ -24,6 +25,23 @@ void main() async {
 
   // Carrega a preferência local "Modo Feira" (credenciais demo no login).
   await ConfigController.instance.carregarModoFeira();
+
+  // Sessão expirada (401 global): qualquer requisição autenticada que receba
+  // 401 (token vencido/invalidado) desloga e volta ao login, em vez de deixar
+  // a UI presa dando erro. Registrado aqui (uma vez) para o ApiService não
+  // depender da camada de sessão/UI diretamente.
+  ApiService.onUnauthorized = () async {
+    await SessionService().logout();
+    ApiService.messengerKey.currentState?.showSnackBar(
+      const SnackBar(
+        content: Text('Sua sessão expirou. Faça login novamente.'),
+      ),
+    );
+    ApiService.navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  };
 
   runApp(
     const MyApp(),
@@ -51,6 +69,10 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Connect Ong',
+          // Chaves globais: permitem ao ApiService navegar/avisar quando a
+          // sessão expira (401), de fora da árvore de widgets.
+          navigatorKey: ApiService.navigatorKey,
+          scaffoldMessengerKey: ApiService.messengerKey,
           theme: AppTheme.light(
             dislexia: config.fonteDislexia,
             altoContraste: config.altoContraste,
@@ -167,6 +189,21 @@ class _SplashDeciderState
         ),
       );
 
+      return;
+    }
+
+    // Token vencido/invalidado: há sessão salva, mas o token JWT pode ter
+    // expirado desde a última vez. Validamos contra /auth/me ANTES de abrir a
+    // home — assim o app não entra na MainShell só para tudo falhar com 401.
+    final sessaoOk = await AuthService().sessaoValida();
+    if (!mounted) return;
+    if (!sessaoOk) {
+      await sessionService.logout();
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
       return;
     }
 
