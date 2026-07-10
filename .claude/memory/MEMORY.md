@@ -1,6 +1,6 @@
 # Memory Index
 
-- [Auditoria final](connect-ong-auditoria-final.md) — **revisão de segurança/qualidade 2026-07-06 (2 agentes read-only)**: projeto sólido, sem Crítico; 7 achados priorizados (default do Modo Feira, privacidade contornável em GET /ongs, XFF forjável, 401 sem tratamento no mobile, fromJson int×bool, refresh sem soft-delete, POST /ongs legado) + decisões conscientes + ações do usuário (senha MySQL no git, chave Groq). **Pacote de quick wins pronto p/ aplicar no próximo chat.**
+- [Auditoria final](connect-ong-auditoria-final.md) — revisão de segurança 2026-07-06; **PACOTE DE QUICK WINS APLICADO 2026-07-10** (itens 1,2,4,5,6: Modo Feira off por padrão, privacidade real em GET /ongs, 401 global+validação de sessão no mobile, fromJson tolerante, refresh barra soft-delete). Backend 135 verdes, apps analyze limpo, 3 commits+push. ⚠️ **NOVA ação de feira: `APP_DEMO_ENABLED=true` na máquina da feira** (senão codigoDemo não aparece). Restam achados 3 (XFF) e 7 (POST /ongs) + ações humanas (senha MySQL no git).
 
 - [Assistente de IA](connect-ong-assistente-ia.md) — **chatbot de doação (Groq gratuita + fallback por regras)**: arquitetura segura (chave no backend), grounding com dados reais, contrato `/assistente`, chave em application-local.properties, verificado ao vivo em modo:ia. Provado 2026-07-06
 
