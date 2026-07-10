@@ -9,10 +9,18 @@ class Interesse {
   final int? ongId;
   final String? ongNome;
 
+  /// Data em que o interesse foi criado (ISO-8601). Usada para ordenar e para
+  /// mostrar "há N dias esperando" nos que aguardam aceite.
+  final String? dataCriacao;
+
   /// Data em que a doação foi concluída (ISO-8601), enviada pelo backend
   /// quando o status é CONCLUIDO. Nula nos demais status ou em backends
   /// antigos (a UI degrada mostrando o card sem a data).
   final String? dataConclusao;
+
+  /// Há quantos dias o doador espera o aceite (só em PENDENTE; null nos demais
+  /// status). Calculado no servidor a partir da dataCriacao.
+  final int? diasEsperando;
 
   /// true quando a ONG deste match bloqueou o doador logado: o chat abre com
   /// o envio desabilitado. Ausente no JSON (backend antigo) = false.
@@ -27,7 +35,9 @@ class Interesse {
     this.doadorNome,
     this.ongId,
     this.ongNome,
+    this.dataCriacao,
     this.dataConclusao,
+    this.diasEsperando,
     this.bloqueadoPelaOng = false,
   });
 
@@ -41,7 +51,9 @@ class Interesse {
       doadorNome: json['doadorNome'],
       ongId: json['ongId'],
       ongNome: json['ongNome'],
+      dataCriacao: json['dataCriacao'],
       dataConclusao: json['dataConclusao'],
+      diasEsperando: (json['diasEsperando'] as num?)?.toInt(),
       bloqueadoPelaOng: json['bloqueadoPelaOng'] ?? false,
     );
   }

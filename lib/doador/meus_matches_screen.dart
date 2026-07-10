@@ -247,7 +247,10 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
   List<Interesse> get _aguardando =>
       _matches
           .where((i) => i.status == 'PENDENTE' || i.status == 'RECUSADO')
-          .toList();
+          .toList()
+        // Mais recente no topo; o pedido há mais tempo fica embaixo (datas ISO
+        // ordenam lexicograficamente).
+        ..sort((a, b) => (b.dataCriacao ?? '').compareTo(a.dataCriacao ?? ''));
 
   List<Interesse> get _concluidas {
     final lista =
@@ -878,6 +881,26 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                      // Há quantos dias este pedido aguarda o aceite da ONG.
+                      if (i.status == 'PENDENTE' &&
+                          i.diasEsperando != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.hourglass_bottom,
+                                size: 13, color: cs.onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(
+                              i.diasEsperando! <= 0
+                                  ? 'Aguardando desde hoje'
+                                  : 'Esperando há ${i.diasEsperando} '
+                                      '${i.diasEsperando == 1 ? "dia" : "dias"}',
+                              style: TextStyle(
+                                  fontSize: 12, color: cs.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ],
                       if (aceito) ...[
                         const SizedBox(height: AppSpacing.sm),
                         // ATIVAS: só "Conversar" (prestação e avaliação são da
