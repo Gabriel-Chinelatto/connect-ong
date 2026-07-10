@@ -1,5 +1,7 @@
 # Memory Index
 
+- [Auditoria final](connect-ong-auditoria-final.md) — **revisão de segurança/qualidade 2026-07-06 (2 agentes read-only)**: projeto sólido, sem Crítico; 7 achados priorizados (default do Modo Feira, privacidade contornável em GET /ongs, XFF forjável, 401 sem tratamento no mobile, fromJson int×bool, refresh sem soft-delete, POST /ongs legado) + decisões conscientes + ações do usuário (senha MySQL no git, chave Groq). **Pacote de quick wins pronto p/ aplicar no próximo chat.**
+
 - [Assistente de IA](connect-ong-assistente-ia.md) — **chatbot de doação (Groq gratuita + fallback por regras)**: arquitetura segura (chave no backend), grounding com dados reais, contrato `/assistente`, chave em application-local.properties, verificado ao vivo em modo:ia. Provado 2026-07-06
 
 - [Sessão 2026-07-06 (CONCLUÍDA)](connect-ong-sessao-2026-07-06.md) — **2ª rodada de feedback (13 tópicos) FECHADA**: bloqueio estilo WhatsApp (backend+2 apps), UF/cidades IBGE offline, detalhe da necessidade, privacidade real, alto contraste/nav simplificada reais, Maps+Como chegar, interesse demonstrado, Impacto 4 destinos, streak fix. Verificada visualmente + no ar. Trocou Fable→Opus no meio (handoff limpo). Restam pendências humanas (pôster/ensaio/emulador)
