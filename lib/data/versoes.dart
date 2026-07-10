@@ -27,9 +27,25 @@ class VersaoApp {
 /// Changelog do Connect ONG — da mais recente (topo) para a mais antiga.
 const List<VersaoApp> kVersoesApp = [
   VersaoApp(
+    numero: 'v1.8',
+    titulo: 'Revisão final de segurança',
+    atual: true,
+    mudancas: [
+      'Sessão protegida: se o acesso expirar, o app volta ao login '
+          'automaticamente, sem telas travadas',
+      'Privacidade real em toda a busca: telefone e e-mail da ONG só '
+          'aparecem quando ela permite',
+      'Modo demonstração desligado por padrão (ligado só no computador da feira)',
+      'Proteção contra abuso reforçada: limite por origem real de acesso '
+          'em contribuições, cadastro e recuperação de senha',
+      'Contas encerradas não conseguem mais renovar o acesso',
+      'App mais robusto: leitura de dados tolerante a formatos, evitando '
+          'travamentos',
+    ],
+  ),
+  VersaoApp(
     numero: 'v1.7',
     titulo: 'Assistente com Inteligência Artificial',
-    atual: true,
     mudancas: [
       'Dôra, assistente de doação com IA gratuita que conversa e recomenda '
           'ONGs reais',
