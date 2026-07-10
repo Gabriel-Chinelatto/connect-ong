@@ -130,4 +130,28 @@ class AssistenteService {
       throw Exception(ApiService.mensagemAmigavel(e));
     }
   }
+
+  /// Sugestões PROATIVAS para o doador logado (sem digitar nada): o backend usa
+  /// a cidade e o histórico do doador (via token) para sugerir ONGs/necessidades
+  /// ("Perto de você" / "Com base no que você costuma doar"). Reusa o mesmo
+  /// formato [RespostaAssistente] (texto + cards). Chamado em `POST
+  /// /assistente/sugestoes`. Falha de rede vira mensagem amigável.
+  Future<RespostaAssistente> sugestoesParaMim({String? cidade}) async {
+    try {
+      final resp = await ApiService.post(
+        '/assistente/sugestoes',
+        body: jsonEncode({
+          if (cidade != null && cidade.isNotEmpty) 'cidade': cidade,
+        }),
+      );
+      if (resp.statusCode < 200 || resp.statusCode >= 300) {
+        throw Exception('Sugestões indisponíveis no momento.');
+      }
+      final json =
+          jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      return RespostaAssistente.fromJson(json);
+    } catch (e) {
+      throw Exception(ApiService.mensagemAmigavel(e));
+    }
+  }
 }

@@ -13,6 +13,7 @@ import '../theme/app_radius.dart';
 import '../widgets/common/dialog_pontuacao.dart';
 import '../utils/app_links.dart';
 import '../widgets/common/chip_foguinho.dart';
+import '../widgets/common/resumo_impacto_ia.dart';
 import '../widgets/common/visualizador_imagem.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
@@ -319,6 +320,9 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                       _linhaUltimoReinado(_perfil!.ultimoReinadoDias!),
                     _statsRow(_perfil!),
                     _secaoSobre(_perfil!),
+                    // Resumo do impacto gerado por IA (degrada para nada se
+                    // indisponível). Usa a id da ONG carregada.
+                    ResumoImpactoIa(ongId: _perfil!.id),
                     _secaoContato(_perfil!),
                     if (_fotosLocalBytes.isNotEmpty) _secaoFotosLocal(),
                     if (_perfil!.campanhas.isNotEmpty)

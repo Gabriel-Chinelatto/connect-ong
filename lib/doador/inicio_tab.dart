@@ -36,6 +36,7 @@ import 'mural_impacto_screen.dart';
 import 'necessidade_detalhe_screen.dart';
 import 'perfil_publico_ong_screen.dart';
 import 'ranking_transparencia_screen.dart';
+import 'sugestoes_para_voce.dart';
 import 'timeline_atividades_screen.dart';
 
 /// Aba INÍCIO do shell do doador — home CURADA (Fase 3).
@@ -170,6 +171,8 @@ class _InicioTabState extends State<InicioTab> {
               const SizedBox(height: AppSpacing.lg),
               _acessoRapido(),
               const SizedBox(height: AppSpacing.xl),
+              // Sugestões da IA por perfil/cidade (some sozinha se não houver).
+              const SugestoesParaVoce(),
               if (_carregando)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
