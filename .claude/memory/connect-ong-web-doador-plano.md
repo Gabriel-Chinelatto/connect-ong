@@ -12,6 +12,9 @@ metadata:
 ## Objetivo
 A **WEB** deve ser um lugar de tela do **DOADOR**, com **visual muito chamativo** (o usuário enfatizou o apelo visual) e as **funcionalidades do doador**. Regra de plataforma passa a ser: **mobile + web = DOADOR; desktop = ONG** (antes a web era só um portal institucional). Ver as 3-plataformas em [[connect-ong-architecture]].
 
+## ⚠️ REQUISITO INEGOCIÁVEL (reforçado pelo usuário em 2026-07-13)
+A web **NÃO é uma vitrine/demonstração** — tem que ter **FUNCIONALIDADES REAIS**, TODAS as que o mobile do doador tem (login/cadastro real, Explorar/feed com filtros, demonstrar interesse, matches, chat com a ONG, doar via PIX, cadastrar doação, Dora/IA, simular frete, resumo de impacto, sugestões, favoritos, campanhas, ranking, impacto, perfil/config, avaliar ONG, notificações, prestações etc. — o inventário completo em [[connect-ong-inventario-doador]]). A diferença para o mobile é SÓ o **impacto visual** (telas largas, layout mais rico), não o escopo. Nada de botão que não faz nada. Como o app do doador já roda na web e fala com o mesmo backend real, isso é totalmente viável — reaproveitar a lógica/serviços existentes e investir no visual responsivo por cima.
+
 ## Contexto importante (facilita muito o trabalho)
 - **O app do doador JÁ compila e roda na web** (foi rodado no Chrome, `flutter run -d chrome`, em :5011 nesta sessão) e o `lib/doador/main_shell.dart` **já é responsivo** (usa `NavigationRail` em telas ≥900px e limita a largura do conteúdo a 840px). Ou seja, a base para "web = doador" já existe — falta polir o VISUAL para telas largas e o fluxo de entrada.
 - **Estado atual da web (o que o amigo começou, "mal feito mas com base")**: existe UMA tela web dedicada — `lib/web/portal_institucional_screen.dart` — uma landing institucional (hero, faixa de estatísticas públicas, sobre, como funciona, ODS, equipe, FAQ, transparência, versões/changelog, rodapé) com botão "Entrar" → `LoginPage`.

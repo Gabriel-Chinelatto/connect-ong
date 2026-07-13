@@ -1,6 +1,6 @@
 # Memory Index
 
-- [⏳ TAREFA: Web = Doador](connect-ong-web-doador-plano.md) — **PENDENTE, fazer quando o usuário mandar**: construir a WEB como experiência do DOADOR (visual MUITO chamativo) com as funcionalidades do doador. Nova regra: **mobile+web=doador, desktop=ONG**. Base atual = só a landing `portal_institucional_screen.dart` ("mal feita, mas tem base"); **o app do doador já roda na web e o shell já é responsivo** → base pronta, falta polir visual+fluxo. Analisar o projeto e traçar a rota na hora, usando o inventário abaixo.
+- [⏳ TAREFA: Web = Doador](connect-ong-web-doador-plano.md) — **PENDENTE, fazer quando o usuário mandar**: construir a WEB como experiência do DOADOR com **FUNCIONALIDADES REAIS (TODAS as do mobile, não só demonstração)** e **visual MUITO mais impactante**. Nova regra: **mobile+web=doador, desktop=ONG**. Base atual = só a landing `portal_institucional_screen.dart` ("mal feita, mas tem base"); **o app do doador já roda na web e o shell já é responsivo** → base pronta, falta escopo completo + polir visual/fluxo. Analisar o projeto e traçar a rota na hora, usando o inventário abaixo.
 
 - [Inventário do Doador](connect-ong-inventario-doador.md) — **catálogo COMPLETO de todas as telas (27), serviços (26), IA e endpoints do doador** — referência para replicar/portar na web. Consolidado em 2026-07-13.
 
