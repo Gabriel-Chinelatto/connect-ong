@@ -113,7 +113,7 @@ class _SugestoesParaVoceState extends State<SugestoesParaVoce> {
         ],
         const SizedBox(height: AppSpacing.md),
         SizedBox(
-          height: 116,
+          height: 150,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _sugestoes.length,

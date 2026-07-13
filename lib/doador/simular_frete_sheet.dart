@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../services/frete_service.dart';
 import '../services/perfil_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../utils/categorias.dart';
 
 /// Abre a folha (bottom sheet) de SIMULAÇÃO DE FRETE para levar uma doação até
 /// a ONG [ongNome] em [destinoCidade]. Estima o custo com base na distância
@@ -47,8 +47,11 @@ class _SimularFreteSheet extends StatefulWidget {
 
 class _SimularFreteSheetState extends State<_SimularFreteSheet> {
   final _itemCtrl = TextEditingController();
-  final _qtdCtrl = TextEditingController();
   final _origemCtrl = TextEditingController();
+
+  // Categoria escolhida pelo doador (tópico) — remove a ambiguidade e melhora a
+  // estimativa de peso da IA. Opcional; se null, a IA deduz pelo texto.
+  String? _categoria;
 
   final FreteService _service = FreteService();
 
@@ -65,13 +68,15 @@ class _SimularFreteSheetState extends State<_SimularFreteSheet> {
   @override
   void initState() {
     super.initState();
+    // Pré-seleciona a categoria sugerida (1ª necessidade da ONG), se houver.
+    final sug = widget.categoriaSugerida;
+    if (sug != null && sug.isNotEmpty) _categoria = Categorias.normalizar(sug);
     _carregarOrigem();
   }
 
   @override
   void dispose() {
     _itemCtrl.dispose();
-    _qtdCtrl.dispose();
     _origemCtrl.dispose();
     super.dispose();
   }
@@ -119,14 +124,12 @@ class _SimularFreteSheetState extends State<_SimularFreteSheet> {
       _resultado = null;
     });
     try {
-      final qtd = int.tryParse(_qtdCtrl.text.trim());
       final r = await _service.estimar(
         origemCidade: origem,
         origemUf: _ufDoador,
         destinoCidade: widget.destinoCidade,
         item: _itemCtrl.text.trim(),
-        categoria: widget.categoriaSugerida,
-        quantidade: qtd,
+        categoria: _categoria,
       );
       if (!mounted) return;
       setState(() => _resultado = r);
@@ -204,21 +207,47 @@ class _SimularFreteSheetState extends State<_SimularFreteSheet> {
               minLines: 1,
               maxLines: 2,
               decoration: const InputDecoration(
-                labelText: 'O que você vai enviar',
+                labelText: 'O que você vai enviar (com a quantidade)',
                 prefixIcon: Icon(Icons.inventory_2_outlined),
                 hintText: 'Ex.: 10 sacos de arroz de 1 kg',
+                helperText: 'Inclua a quantidade no texto (ex.: 5 cobertores).',
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _qtdCtrl,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Quantidade (opcional)',
-                prefixIcon: Icon(Icons.tag_outlined),
-                hintText: 'Ex.: 10',
-              ),
+            const SizedBox(height: 16),
+            // Seletor de categoria (tópico): remove a ambiguidade e melhora a
+            // estimativa de peso — a categoria escolhida é a que vale.
+            Text(
+              'Categoria',
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final c in Categorias.todas)
+                  ChoiceChip(
+                    label: Text(c.rotulo),
+                    avatar: Icon(
+                      c.icone,
+                      size: 18,
+                      color: _categoria == c.valor ? Colors.white : c.cor,
+                    ),
+                    selected: _categoria == c.valor,
+                    selectedColor: AppColors.primary,
+                    labelStyle: TextStyle(
+                      color: _categoria == c.valor
+                          ? Colors.white
+                          : cs.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    onSelected: (v) =>
+                        setState(() => _categoria = v ? c.valor : null),
+                  ),
+              ],
             ),
 
             if (_erro != null) ...[
