@@ -324,9 +324,25 @@ class _SimularFreteSheetState extends State<_SimularFreteSheet> {
   }
 
   Widget _resultadoView(FreteEstimativa r, ColorScheme cs) {
+    // Verificação de categoria: se o que a IA detectou no texto do item diverge
+    // da categoria escolhida, avisa (sem bloquear — o cálculo já foi feito).
+    final escolhida = _categoria;
+    final detectada = r.categoriaDetectada;
+    final divergeCategoria = escolhida != null &&
+        escolhida.isNotEmpty &&
+        detectada.isNotEmpty &&
+        Categorias.normalizar(escolhida) != Categorias.normalizar(detectada);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (divergeCategoria) ...[
+          _avisoCategoria(
+            Categorias.rotulo(detectada),
+            Categorias.rotulo(escolhida),
+          ),
+          const SizedBox(height: 12),
+        ],
         // Resumo: rota + distância + peso.
         Wrap(
           spacing: 8,
@@ -429,6 +445,34 @@ class _SimularFreteSheetState extends State<_SimularFreteSheet> {
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: m.ehLocal ? AppColors.primary : cs.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Banner de aviso quando a categoria escolhida não parece combinar com o item.
+  Widget _avisoCategoria(String detectada, String escolhida) {
+    const cor = Color(0xFFF59E0B); // âmbar de alerta
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cor.withValues(alpha: 0.12),
+        borderRadius: AppRadius.brMd,
+        border: Border.all(color: cor.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded, size: 18, color: cor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'O que você descreveu parece ser da categoria "$detectada", '
+              'mas você escolheu "$escolhida". Confirme se está correto.',
+              style: const TextStyle(fontSize: 12.5, height: 1.35),
             ),
           ),
         ],

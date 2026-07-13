@@ -39,6 +39,12 @@ class FreteEstimativa {
   final double pesoKg;
   final bool pesoEstimado;
   final String categoria;
+
+  /// Categoria que o TEXTO do item sugere (independente da escolhida). Quando
+  /// difere de [categoria], o app avisa que a categoria escolhida talvez não
+  /// combine com o item. Vazio quando o backend não conseguiu inferir.
+  final String categoriaDetectada;
+
   final String itemResumo;
   final List<ModalidadeFrete> modalidades;
   final String aviso;
@@ -51,6 +57,7 @@ class FreteEstimativa {
     required this.pesoKg,
     required this.pesoEstimado,
     required this.categoria,
+    required this.categoriaDetectada,
     required this.itemResumo,
     required this.modalidades,
     required this.aviso,
@@ -68,6 +75,7 @@ class FreteEstimativa {
       pesoKg: ((j['pesoKg'] ?? 0) as num).toDouble(),
       pesoEstimado: j['pesoEstimado'] ?? false,
       categoria: (j['categoria'] ?? '').toString(),
+      categoriaDetectada: (j['categoriaDetectada'] ?? '').toString(),
       itemResumo: (j['itemResumo'] ?? '').toString(),
       modalidades: brutas
           .whereType<Map>()

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 
 import 'pages/login_page.dart';
@@ -69,6 +70,10 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Connect Ong',
+          // Permite ARRASTAR listas (inclusive as horizontais) com o mouse/
+          // trackpad no desktop e na web — sem isso, os carrosséis não rolam
+          // de lado no navegador (só com toque).
+          scrollBehavior: const _ArrastarComMouse(),
           // Chaves globais: permitem ao ApiService navegar/avisar quando a
           // sessão expira (401), de fora da árvore de widgets.
           navigatorKey: ApiService.navigatorKey,
@@ -101,6 +106,22 @@ class MyApp extends StatelessWidget {
       },
     );
   }
+}
+
+/// ScrollBehavior que adiciona o MOUSE (e trackpad/stylus) aos dispositivos de
+/// arraste — assim, no desktop e na web, dá para arrastar listas horizontais
+/// (carrosséis) com o mouse, além do toque. Mantém o comportamento padrão do
+/// Material no resto.
+class _ArrastarComMouse extends MaterialScrollBehavior {
+  const _ArrastarComMouse();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
 }
 
 /// Entrada da versão WEB: mostra o portal institucional e, se a URL de

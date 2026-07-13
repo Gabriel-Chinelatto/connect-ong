@@ -22,6 +22,7 @@ class SugestoesParaVoce extends StatefulWidget {
 
 class _SugestoesParaVoceState extends State<SugestoesParaVoce> {
   final AssistenteService _service = AssistenteService();
+  final ScrollController _scroll = ScrollController();
   bool _carregando = true;
   String _frase = '';
   List<SugestaoAssistente> _sugestoes = const [];
@@ -30,6 +31,12 @@ class _SugestoesParaVoceState extends State<SugestoesParaVoce> {
   void initState() {
     super.initState();
     _carregar();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _carregar() async {
@@ -113,12 +120,18 @@ class _SugestoesParaVoceState extends State<SugestoesParaVoce> {
         ],
         const SizedBox(height: AppSpacing.md),
         SizedBox(
-          height: 150,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _sugestoes.length,
-            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
-            itemBuilder: (_, i) => _card(_sugestoes[i], cs),
+          height: 160,
+          child: Scrollbar(
+            controller: _scroll,
+            thumbVisibility: true,
+            child: ListView.separated(
+              controller: _scroll,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(bottom: 10),
+              itemCount: _sugestoes.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
+              itemBuilder: (_, i) => _card(_sugestoes[i], cs),
+            ),
           ),
         ),
         // Espaço para a próxima seção (só existe quando a seção aparece).

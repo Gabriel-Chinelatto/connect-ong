@@ -27,9 +27,25 @@ class VersaoApp {
 /// Changelog do Connect ONG — da mais recente (topo) para a mais antiga.
 const List<VersaoApp> kVersoesApp = [
   VersaoApp(
+    numero: 'v1.9',
+    titulo: 'Frete inteligente e mais IA',
+    atual: true,
+    mudancas: [
+      'Navegação mais fluida: transição suave ao trocar de aba, com resposta '
+          'ao toque (sensação de app nativo)',
+      'Simulador de frete no perfil da ONG: estime quanto custaria enviar sua '
+          'doação, por distância e peso, escolhendo a categoria do item',
+      'A IA estima o peso do que você vai doar e avisa se a categoria escolhida '
+          'não parece combinar com o item',
+      'Resumo de impacto da ONG escrito por IA no perfil (a partir de dados reais)',
+      '"Sugestões para você": recomendações de doação por perfil e cidade',
+      'A ONG escreve o texto "Sobre" com ajuda da IA e vai ajustando até ficar '
+          'do jeito dela',
+    ],
+  ),
+  VersaoApp(
     numero: 'v1.8',
     titulo: 'Revisão final de segurança',
-    atual: true,
     mudancas: [
       'Sessão protegida: se o acesso expirar, o app volta ao login '
           'automaticamente, sem telas travadas',
