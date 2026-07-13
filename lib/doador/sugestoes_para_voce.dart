@@ -120,14 +120,15 @@ class _SugestoesParaVoceState extends State<SugestoesParaVoce> {
         ],
         const SizedBox(height: AppSpacing.md),
         SizedBox(
-          height: 160,
+          height: 174,
           child: Scrollbar(
             controller: _scroll,
             thumbVisibility: true,
             child: ListView.separated(
               controller: _scroll,
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(bottom: 10),
+              // Folga entre os cards e a barra de rolagem (não ficar colada).
+              padding: const EdgeInsets.only(bottom: 18),
               itemCount: _sugestoes.length,
               separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
               itemBuilder: (_, i) => _card(_sugestoes[i], cs),
