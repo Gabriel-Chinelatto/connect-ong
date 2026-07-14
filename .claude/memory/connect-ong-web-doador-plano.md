@@ -1,35 +1,100 @@
 ---
 name: connect-ong-web-doador-plano
-description: TAREFA PENDENTE — construir a WEB como experiência do DOADOR (visual chamativo). Analisar projeto e traçar rota quando o usuário mandar.
+description: WEB do DOADOR — DECISÃO NOVA (2026-07-13) = repo separado em HTML/CSS/JS puro (NÃO Flutter). Base real entregue; falta 2ª leva de features.
 metadata: 
   node_type: memory
   type: project
   originSessionId: e54bdb36-998f-43b3-8c56-301ef4baf242
 ---
 
-**Tarefa combinada em 2026-07-13, a executar QUANDO o usuário pedir** ("agora faça a web"). Não começar antes de ele mandar.
+## ✅ FEATURES EXCLUSIVAS DA WEB — FEITAS (2026-07-14, commit `c72b0ed`, v2.0)
+O usuário mandou "continue a web / faça as features exclusivas de web". Entreguei 5 recursos que **só fazem sentido na web** (para NÃO parecer cópia do mobile), todos **verificados ao vivo** (Chrome headless + backend real, screenshots conferidos):
+1. **⭐ Mapa interativo de ONGs** (`#/mapa`) — Leaflet + OpenStreetMap (CDN no `index.html`). Geocoder **offline** por cidade em `assets/dados/cidades_coords.json` (capitais + interior de SP + ~130 cidades; chave = `UI.chaveCat(cidade)` sem acento e sem sufixo `" - SP"`, função `chaveCidade`). Pins clicáveis abrem `abrirPerfilOng` (botão `data-perfil-ong` dentro do popup, pega na delegação global). Dispersão espiral determinística p/ ONGs na mesma cidade. Filtro por nome/cidade. ONG verificada = anel laranja (`.co-pin.verificada`). Verificado: 20/20 ONGs no mapa (região Campinas/Limeira).
+2. **Comparador de ONGs** (`#/comparar`) — até 3 ONGs lado a lado (nota, `transparenciaScore`/nível, prestações, necessidades abertas, campanhas, verificada) com selos de destaque (melhor nota / mais transparente / mais prestações). **Deep-link compartilhável** `?comparar=18,21,22` (feature de web). Usa `/ongs` + `/ongs/{id}/perfil-publico` (cache em `state.perfisComp`).
+3. **⭐ Modo Quiosque/Apresentação** (`#/showcase`) — sobreposição **tela cheia** (`#view-showcase`, tratada como caso especial em `irPara`, NÃO é uma VIEW normal). Números animados (rAF, `animarNumero`), ranking de transparência, **ticker** de `/atividades` (marquee CSS `.marquee-x`). Auto-refresh 25s, sai no **Esc** ou botão X. Layout robusto a alturas curtas (`overflow-y-auto` + tamanhos compactos).
+4. **Relatório de impacto imprimível/PDF** (botão na tela **Impacto** + ação no cmdk) — `gerarRelatorio()` monta `#print-root` e chama `window.print()`; CSS `@media print` esconde tudo menos o relatório. Métricas + doações concluídas + PIX + conquistas.
+5. **Command palette (Ctrl/Cmd+K)** + botão **"Buscar"** no header — navega telas/ONGs/necessidades/ações (Modo Quiosque, cadastrar doação, gerar relatório, notificações). Teclado ↑/↓/Enter/Esc.
+Extras: menu ganhou grupo **"🌐 Exclusivo da web"** (grupo `g:'w'` em `ROTAS`) — sinal visual de que a web é distinta. Changelog **v2.0 "Recursos exclusivos da web"** (topo de `KVERSOES`, marcado `atual`).
 
-## Objetivo
-A **WEB** deve ser um lugar de tela do **DOADOR**, com **visual muito chamativo** (o usuário enfatizou o apelo visual) e as **funcionalidades do doador**. Regra de plataforma passa a ser: **mobile + web = DOADOR; desktop = ONG** (antes a web era só um portal institucional). Ver as 3-plataformas em [[connect-ong-architecture]].
+**⚠️ RISCO FEIRA REFORÇADO:** agora o mapa depende de **Leaflet (unpkg) + tiles OSM** além de Tailwind/Fonts/Phosphor — TUDO via CDN. **Sem internet o mapa quebra** (o `viewMapa` já cai num `erroBox` gracioso se `L` estiver indefinido) e o visual perde Tailwind. Se a feira for offline, **vendorizar** (Tailwind buildado + fontes/ícones/Leaflet locais + tiles offline ou trocar o mapa por imagem estática).
 
-## ⚠️ REQUISITO INEGOCIÁVEL (reforçado pelo usuário em 2026-07-13)
-A web **NÃO é uma vitrine/demonstração** — tem que ter **FUNCIONALIDADES REAIS**, TODAS as que o mobile do doador tem (login/cadastro real, Explorar/feed com filtros, demonstrar interesse, matches, chat com a ONG, doar via PIX, cadastrar doação, Dora/IA, simular frete, resumo de impacto, sugestões, favoritos, campanhas, ranking, impacto, perfil/config, avaliar ONG, notificações, prestações etc. — o inventário completo em [[connect-ong-inventario-doador]]). A diferença para o mobile é SÓ o **impacto visual** (telas largas, layout mais rico), não o escopo. Nada de botão que não faz nada. Como o app do doador já roda na web e fala com o mesmo backend real, isso é totalmente viável — reaproveitar a lógica/serviços existentes e investir no visual responsivo por cima.
+**AINDA FALTA (do plano original, precisa de decisão/backend):** o **Chat "Sobre o Desenvolvimento"** (ideia do usuário, ⭐) — NÃO foi feito porque exige um **endpoint novo no backend** (`POST /assistente-dev` que injeta um doc de conhecimento como grounding no Groq; a chave fica no backend). É trabalho cross-repo (repo da API). Combinar com o usuário se implementa no backend; ele quer isso **nos 3 frontends**. Ver [[connect-ong-assistente-ia]] p/ o padrão seguro. Também pendente (opcional): PWA/instalar, drag&drop de foto, página pública/SEO.
 
-## Contexto importante (facilita muito o trabalho)
-- **O app do doador JÁ compila e roda na web** (foi rodado no Chrome, `flutter run -d chrome`, em :5011 nesta sessão) e o `lib/doador/main_shell.dart` **já é responsivo** (usa `NavigationRail` em telas ≥900px e limita a largura do conteúdo a 840px). Ou seja, a base para "web = doador" já existe — falta polir o VISUAL para telas largas e o fluxo de entrada.
-- **Estado atual da web (o que o amigo começou, "mal feito mas com base")**: existe UMA tela web dedicada — `lib/web/portal_institucional_screen.dart` — uma landing institucional (hero, faixa de estatísticas públicas, sobre, como funciona, ODS, equipe, FAQ, transparência, versões/changelog, rodapé) com botão "Entrar" → `LoginPage`.
-- **Entrada web** em `lib/main.dart`: `kIsWeb ? EntradaWeb() : SplashDecider()`. `EntradaWeb` mostra o portal institucional e trata deep-link `/#/ong/<id>` (link compartilhado de ONG). Após login na web, cai no fluxo do doador (`MainShell`).
-- Já habilitei arraste de listas horizontais com mouse na web (scrollBehavior global em main.dart).
+**COMO VERIFIQUEI (gotcha útil p/ próxima vez):** telas autenticadas no Chrome headless = **perfil persistente** (`--user-data-dir`). Passo 1: uma página `_seed.html` (ignorada pelo `.gitignore` `__*.html`… na real usei `_seed`/`_synccheck` com 1 underscore, apaguei manualmente) faz `POST /usuarios/login` demo e grava `co_token`/`co_user`/`co_refresh` no localStorage. Passo 2: reusa o MESMO `--user-data-dir` e navega `index.html#/rota` (auto-login pega o hash em `aoEntrar`→`irPara`). `--virtual-time-budget=8000` p/ dar tempo de dados+tiles. Servir por HTTP em **localhost** (mesma origem p/ o localStorage casar, e CORS casa `localhost:*`). Screenshots dos números do quiosque pegam a **animação no meio** (frame intermediário, não é bug).
 
-## Rota de ataque provável (definir os detalhes na hora, analisando o código)
-Quando mandar: analisar o projeto e o inventário do doador ([[connect-ong-inventario-doador]]) e decidir. Linhas gerais prováveis:
-1. Transformar a web na experiência do doador reaproveitando as telas já responsivas, com um **hero/landing chamativo** (grid responsivo, max-width, tipografia forte, imagens/SVG originais da marca, animações sutis) e **CTA forte "Doar agora"** que leva ao app do doador (login/cadastro).
-2. Decidir o papel do `portal_institucional_screen`: vira a landing de topo (marketing + transparência) com entrada clara para o doador, OU é substituído/absorvido. Manter a seção de transparência/estatísticas (bom para a banca).
-3. Garantir que as funcionalidades do doador ficam BOAS em telas largas: feed/Explorar em grid, Dora, **simular frete**, matches/chat, impacto, perfil público da ONG, PIX, sugestões IA — sem parecer "app de celular esticado".
-4. Não quebrar o mobile (mesma base de código; usar breakpoints/responsividade). Manter design system (`AppColors`/`AppRadius`/`AppSpacing`), dark mode, acessibilidade, PT-BR.
+## ▶️ (HISTÓRICO) PONTO DE PARTIDA DESTA SESSÃO (registrado fim do dia 2026-07-13)
+**Comando do usuário p/ retomar:** ele vai abrir um chat novo e dar um comando curto tipo *"continue a web / faça as features exclusivas de web"*. Este bloco foi o ponto de partida (JÁ ATENDIDO acima).
 
-## Restrições / lembretes
-- É para **fins demonstrativos na feira** (FECITEC / [[connect-ong-milestones]]) — priorizar impacto visual e as funcionalidades que impressionam a banca ([[connect-ong-banca-feedback]]: hero = match + chat + IA).
-- Regras de entrega ([[connect-ong-delivery-rules]]): 3 frontends, commits por membro, RESTful.
-- Preferências: gráficos em SVG/imagens free ([[preferencia-graficos]]); tudo em português ([[preferencia-idioma]]); auto-commit+push por checkpoint ([[git-workflow-preferences]]); sem prompts de permissão ([[permissoes-projeto]]).
-- Backend/apps: apps apontam `localhost:8080`; reiniciar o backend após mudanças; IA ativa com chave em `application-local.properties` (na feira sem chave cai em modo regras).
+**ESTADO ATUAL:** a web (repo `connect-ong-web`, pasta `connect-ong-web-main`) é um **port fiel e COMPLETO do doador do mobile**, verificado ao vivo. Último commit **`2ba018e`**. Roda com `python -m http.server 5050` na pasta + backend em `localhost:8080` (contas demo: `demo.joao@connectong.com`/`demo123`). Tudo do mobile foi portado (7 ondas + rodada de polish — ver seções abaixo). Bugs recentes do usuário JÁ corrigidos em `2ba018e`: filtro de categoria (faltava handler `data-cat`), favoritos (shape `{alvoNome,alvoId}` → enriquece com `/ongs`), config falso "não salvas" (comparar só campos de pref + confirmar ao sair), sidebar cortava o perfil (nav agora rola), logo real (`assets/img/logo.jpg`) + mascote da Dora (`dora_mascote.svg`), telas ONGs/Favoritos/Itens mais bonitas, seção **Versões** (changelog) no Sobre.
+
+**PENDÊNCIAS pequenas ainda abertas:** (1) **frete** — endpoint OK e modal funciona; o usuário pediu "conferir se está tudo certo" → validar o cálculo ao vivo (origem cidade do doador vazia se o perfil não tiver cidade). (2) **Vendorizar CDN** (Tailwind/Fonts/Phosphor) se a feira for offline. (3) O tema às vezes renderiza claro em screenshot por causa do cache local vs pref do backend (cosmético).
+
+## 🎯 GRANDE PEDIDO DO USUÁRIO (o mais importante p/ a próxima sessão)
+Ele NÃO quer que a web pareça "só uma cópia do mobile" (mesma sensação ruim que o desktop deu no começo). Quer **features que façam sentido EXCLUSIVAMENTE na web**. Minha opinião + sugestões priorizadas (implementar as marcadas ⭐ primeiro):
+- ⭐ **Mapa interativo de ONGs/necessidades** (Leaflet + OpenStreetMap, tudo via CDN, sem chave): pins clicáveis → perfil da ONG; filtra por categoria/cidade. A tela larga brilha; impossível fazer bem no mobile. Alto impacto na banca. (Precisa de coords — usar cidade→lat/long via um JSON offline ou Nominatim; ou centralizar por cidade do endereço.)
+- ⭐ **Modo Apresentação / Quiosque para a FECITEC**: um `#/showcase` em tela cheia que roda sozinho — estatísticas públicas (`/publico/estatisticas`) animando, ticker ao vivo de `/atividades`, ranking girando. Perfeito para o estande; grita "web". Baixo esforço, alto efeito.
+- ⭐ **Chat "Sobre o Desenvolvimento" (IDEIA DO USUÁRIO)**: um chatbot (Groq) na seção Versões/Sobre alimentado com **como o projeto foi feito** (stack, métodos, o que cada versão entregou, decisões). Pergunta "quando foi feita a função X e que método usou?" → responde. **Como fazer:** criar um doc de conhecimento (markdown curado do changelog + arquitetura + este histórico) e um endpoint backend novo tipo `POST /assistente-dev` que injeta esse doc como grounding no Groq (a chave fica no backend — NÃO expor no front). O usuário quer isso **nos 3 frontends**. Ver [[connect-ong-assistente-ia]] p/ o padrão seguro já existente.
+- **Comparador de ONGs lado a lado**: seleciona 2–3 ONGs → tabela comparando transparência/score/nota/prestações. Ferramenta de decisão, só faz sentido em tela larga.
+- **Relatório de impacto imprimível/PDF** (`window.print` + CSS de impressão): "Seu ano em doações" — comprovantes + impacto. Web-nativo.
+- **Command palette (Ctrl/Cmd+K) + atalhos de teclado** + busca global: recurso de "power user" de web.
+- **Página pública/SEO da ONG e da campanha** (deep-link `#/ong/{id}` já existe): virar a "porta de entrada" pública compartilhável (a web = alcance público; o mobile = app pessoal). Opengraph/preview.
+- **Arrastar-e-soltar foto** para cadastrar doação/anexo (drag&drop nativo do navegador).
+- **PWA "instalar" + notificações do navegador** (opcional; borra a fronteira com mobile, deixar por último).
+
+**ROTA DE ATAQUE sugerida p/ a próxima sessão (ordem):** 1) validar frete ao vivo; 2) ⭐ Modo Quiosque `#/showcase` (rápido, alto efeito na feira); 3) ⭐ Mapa interativo de ONGs; 4) ⭐ Chat de Desenvolvimento (precisa do endpoint backend `/assistente-dev` + doc de grounding — combinar com o usuário se faz no backend também); 5) Comparador de ONGs; 6) Relatório PDF/print; 7) Command palette. Commit por feature (padrão [[git-workflow-preferences]]). Verificar ao vivo com Chrome headless + screenshots (padrão das ondas). Se feira offline: vendorizar CDN antes.
+
+## VIRADA IMPORTANTE (2026-07-13): a web NÃO é mais Flutter-web
+O usuário decidiu fazer a WEB num **repositório SEPARADO, em HTML/CSS/JS puro** (não o build Flutter do doador). Motivos que validei com ele: (1) a regra de entrega exige **3 frontends DISTINTOS** — mobile e desktop já são Flutter, então web em HTML/JS conta como tecnologia realmente distinta e impressiona mais a banca; (2) mais liberdade visual ("muito chamativo"); (3) ele entende/mantém melhor. Custo aceito: reconstruir as features em JS (no Flutter viriam de graça), mas viável porque a **API já está pronta e o CORS já libera qualquer `localhost`** (`SecurityConfig.corsConfigurationSource`, `allowedOriginPatterns` cobre `localhost:*`).
+
+## Onde fica
+- **Repo:** `https://github.com/Gabriel-Chinelatto/connect-ong-web` (branch `main`). **É o 4º repo** — separado dos 3 de [[connect-ong-architecture]].
+- **Pasta local:** `C:\Users\01gabriel.MAQCHINELATTO\connect-ong-web-main` (veio de ZIP "Download ZIP", sufixo `-main`; eu fiz `git init` + `remote add origin` + aliniei ao `origin/main`). Auto-commit+push aqui também ([[git-workflow-preferences]]).
+- O `portal_institucional_screen.dart` (Flutter) fica de legado — **não é mais** o caminho da web.
+
+## Estado do amigo (ponto de partida, commit `73cec76`)
+Era **UM `index.html`** (42 KB), tudo junto (Tailwind CDN + JS inline): maquete 100% FALSA — login com `setTimeout`, dados chumbados, `alert()` no form, fotos unsplash/pravatar. Design bom (paleta da marca verde `#008542`/laranja `#ff7b00`, fontes Inter/Montserrat/Permanent Marker, login split-screen). Decisão: **manter a casca visual, jogar fora a lógica falsa.**
+
+## O QUE JÁ FIZ (commit `aaac7c5`, 2026-07-13) — base REAL entregue e verificada ao vivo
+Reescrevi em **arquitetura separada** (exigência do usuário: nada de tudo-num-arquivo):
+- `index.html` (só marcação: login/cadastro + shell do app com sidebar) · `css/styles.css` · `js/api.js` (camada REST + sessão JWT no localStorage, 401 global) · `js/ui.js` (helpers: toast, avatar em iniciais, chip de categoria, brl) · `js/app.js` (roteador SPA + telas).
+- **Features REAIS ligadas no backend:** login+cadastro (`/usuarios/login`,`/registro`), Explorar (`/necessidades`+`/categorias`, busca+filtro), detalhe+demonstrar interesse (`POST /interesses`), Matches 3 abas Ativas/Aguardando/Concluídas (`/interesses?doadorId=`, `/{id}/concluir`), chat real (`/mensagens` GET/POST com polling 4s), Campanhas (`/campanhas`) + **PIX 2 fases** (`/campanhas/{id}/contribuir`), **Dora IA** (`/assistente`) + Sugestões no Início (`/assistente/sugestoes`), estatísticas públicas no login (`/publico/estatisticas`).
+- **Verificado ao vivo** servindo com `python -m http.server 5050` e Chrome **headless** (`--headless=new --screenshot`/`--dump-dom`): login JWT, 19 necessidades, 15 interesses (todos os status), 6 sugestões de IA, 7 mensagens de chat — tudo via CORS do navegador. Screenshots do login e do dashboard conferidos (visual chamativo, dados reais).
+- **Contas demo:** `demo.joao@connectong.com` / `demo123` (botão "Entrar com a conta de demonstração"). App bloqueia login de conta ONG (web = só doador).
+
+## Como rodar / verificar (gotchas)
+- **Precisa servir por HTTP** (não `file://`): CORS do backend casa `localhost:*`, mas origem `file://` = `null` e é bloqueada. Usar Live Server (VS Code) ou `python -m http.server`. Node NÃO está instalado nesta máquina; Python 3.13 e Chrome estão (`C:\Program Files\Google\Chrome\Application\chrome.exe`).
+- Backend tem que estar de pé em `localhost:8080` (reiniciar após mudanças — ver [[connect-ong-architecture]]). Dá pra apontar outro host com `?api=http://...` na URL.
+- Falta o arquivo `logo.png` do amigo — resolvido com **SVG inline** num `<template id="tpl-logo">` (sempre aparece).
+
+## 2ª LEVA CONCLUÍDA (2026-07-13, commits `234ec27` + `b45794f`) — todas as levas feitas de uma vez
+O usuário mandou "seguir até a última leva sem interrupção, commitar quando necessário, rodar no final". Feito e verificado ao vivo (Chrome headless + janela visível):
+- **ONGs** (busca `/ongs`) + **Perfil Público rico** (`/ongs/{id}/perfil-publico`, flat: nome/cidade/descricao/telefone/email/endereco/verificada/notaMedia + arrays necessidades/campanhas/avaliacoes/prestacoes + `transparenciaScore`/`nivelTransparencia`): nível Ouro/Prata/Bronze, Sobre, contato, **link do Google Maps**, necessidades clicáveis, avaliações.
+- **Favoritar/desfavoritar** ONG (`/favoritos?usuarioId=`, `/favoritos/ids?usuarioId=&tipo=ONG`, POST `{usuarioId,tipo:'ONG',alvoId}`, DELETE por query) + aba Favoritos.
+- **Avaliar ONG** estilo Uber (POST `/avaliacoes {ongId,doadorId,nota,comentario}`, seletor de estrelas).
+- **Impacto** (métricas derivadas dos interesses) + **Conquistas** (`/conquistas/doador/{id}`).
+- **Ranking** (`/publico/ranking?limite=`) com medalhas/níveis.
+- **Minhas doações** (`/doacoes/minhas`, usa token) + **cadastrar** (POST `/doacoes` com entidade Doacao {nome,descricao,categoria,quantidade,urgente,tipo}).
+- **Notificações**: sino no header com contador (`/notificacoes?usuarioId=`, `/nao-lidas` → `{naoLidas:n}`), marcar 1 (`/{id}/lida`) e todas (`/marcar-todas?usuarioId=`).
+- **Ajustes/acessibilidade** client-side (localStorage `co_prefs`): tamanho de fonte, alto contraste, reduzir animações + sair.
+- **Responsivo**: no celular (<768px) a sidebar some e vira **nav inferior fixa** (5 rotas principais); Início tem **acesso rápido** para as secundárias; trava `overflow-x` no `#view-app main`. Sem overflow real em 390px (medido: docScrollWidth=viewport).
+
+**GOTCHA de bash na descoberta:** `UID` é readonly no bash (id do SO) — não usar como variável; usei `DID=18`. **Screenshots headless em window-size pequeno (390) cortam ~10% à direita** — é artefato do `--screenshot` headless, NÃO overflow (confirmar medindo `getBoundingClientRect`/`documentElement.scrollWidth`, não pelo print).
+
+## Como rodei pro usuário ver
+`python -m http.server 5050` (na pasta `connect-ong-web-main`) + `Start-Process chrome http://127.0.0.1:5050/`. Backend em 8080. Conta demo: botão "Entrar com a conta de demonstração".
+
+## PORT FIEL EM 7 ONDAS (2026-07-13) — feedback grande do usuário "quero exatamente todas as funcionalidades do mobile"
+Depois da 2ª leva, o usuário listou ~20 problemas e pediu paridade EXATA com o mobile. Estratégia que funcionou: **ler o código-fonte real do mobile Flutter** (está no repo `connect-ong`, primary working dir) via subagentes Explore (catálogo de telas + inventário de endpoints/segurança), e portar fielmente. Executado sem parar, commit por onda:
+- **Onda A** (`34e5aad`): +25 endpoints na api.js; **foto de perfil real** (GET /usuarios/{id}/perfil→fotoBase64, `avatar()` aceita foto); **filtro corrigido** (normalização canônica de categoria = utils/categorias.dart: chave sem acento/lower, casa "Alimento"→"Alimentos"); **botão interesse 3 estados** + ordenação do feed; **cadastro** com UF(27)+cidade IBGE (`assets/dados/municipios_por_uf.json` copiado do mobile), confirmar+ver senha, LGPD, esqueci-senha 2 fases; **fix logout** (botão preso no spinner → reset de forms + limpa caches).
+- **Onda B** (`2eb0b0c`): **Config idêntica ao mobile** persistindo em /preferencias (campos exatos: tema CLARO/ESCURO/AUTOMATICO, tamanhoFonte PEQUENA/MEDIA/GRANDE, altoContraste, fonteDislexia, navegacaoSimplificada, 5 notif, 5 privacidade, doisFatores INT 0/1); **TEMA ESCURO real** (CSS remapeia utilidades Tailwind sob `body.tema-escuro`); editar perfil (foto via canvas 800px→base64); **institucional Sobre** (logo real, estatísticas, missão/visão/valores, ODS, equipe 4 integrantes com foto, FAQ); perfil público do doador.
+- **Onda C** (`1946735`): **perfil ONG completo** — capa (capaBase64) com overlay, **botões em linha própria (fix overflow)**, transparência Ouro/Prata/Bronze+streak, **resumo IA** (/ia/resumo-impacto), contato + Abrir no Maps + Como chegar + **Simular frete** (/frete/estimar), fotos do local + visualizador, denunciar (/denuncias), deep-link `#/ong/{id}`.
+- **Onda D** (`d612b08`): **Matches agrupados por ONG** (fix "tudo jogado"), avaliar nas concluídas, prestação por match; **chat completo** — foto (anexoBase64), digitando (/mensagens/digitando), visto por último (/mensagens/status epoch), reações (/mensagens/{id}/reacao), confirmação de leitura, bloqueio (403), concluído=só-leitura.
+- **Onda E** (`360dc27`): **Dora com histórico** (localStorage `dora_conversas_v2`, espelha conversas_dora_service: nova/abrir/renomear/fixar/excluir, fixadas primeiro), layout ChatGPT (sidebar+drawer), **cards clicáveis** de sugestão que navegam, **análise de foto** (imagemBase64), chips iniciais, selo "Modo básico".
+- **Onda F** (`0751e65`): **PIX com comprovante** (gerar-codigo real → POST /doacoes-financeiras → comprovante); **Minhas Doações editar/excluir** itens (fix "escrevi errado") + **histórico em dinheiro** (/doacoes-financeiras, fix "não apareciam"); **Impacto navegável** (cards com data-rota) + total doado.
+- **Onda G** (`e63b0cb`): timeline de **Atividades** (/atividades); **auditoria: 27/27 endpoints de leitura testados ao vivo (0 falhas), 13 rotas sem erro**.
+
+**Como testei:** subagentes Explore (catálogo mobile + inventário backend), depois harness HTML servido em :5050 + Chrome headless (`--dump-dom`/`--screenshot`) chamando a API real; screenshots conferidos a cada onda. GOTCHA reforçado: `Date.now()` OK aqui, mas no mobile o histórico da Dora usa contador; e o DoraStore usa contador monotônico (não Date.now) por hábito. **Segurança do front:** todo dado do backend/usuário passa por `UI.esc()` (anti-XSS); JWT no localStorage (padrão SPA demo). **Achados de backend (do subagente, NÃO deste repo):** switch `app.security.enforce`, mass-assignment em POST /doacoes e PUT /preferencias (sem DTO/@Valid), IDOR-leitura em /conquistas/{id} — anotar no repo da API.
+
+## AINDA falta (menor, decisão do usuário)
+- Prestações de contas por match (endpoint é `/prestacoes?interesseId=` — por match, não por ONG; o perfil-público já traz o array agregado). Simular frete (mobile tem; não portei). Chat com anexo/foto (só texto na web). Editar perfil próprio.
+- **Risco feira:** Tailwind/Fonts/Phosphor vêm de **CDN** → sem internet o visual quebra. Se a feira for offline, **vendorizar** (Tailwind buildado local + fontes/ícones locais). Conversado, deixado pra depois.
