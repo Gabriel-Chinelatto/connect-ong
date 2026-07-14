@@ -7,6 +7,22 @@ metadata:
   originSessionId: e54bdb36-998f-43b3-8c56-301ef4baf242
 ---
 
+## ⏸️ LEMBRETE — O QUE FALTA (parado em 2026-07-14 a pedido do usuário: "hoje não vou conseguir fazer isso")
+**TUDO do código está PRONTO, verificado e commitado.** O que resta é **só o usuário conectar 2 contas grátis** para o app ganhar um **endereço fixo e profissional** (hoje roda num túnel `cloudflared` com URL feia e temporária). Config e guia JÁ preparados por mim.
+
+**➡️ PASSOS QUE FALTAM (o usuário faz, pelo navegador, ~15 min):**
+1. **Render (backend)** — criar conta grátis (render.com, login GitHub) → New Web Service → repo **`connect-ong-api`** → **Root Directory** = `API - Chinelatto - att2/API - Chinelatto/API - Chinelatto` → **Name** = `connect-ong-api` → **Env vars** (valores estão no `application-local.properties`): `DB_PASSWORD`, `APP_JWT_SECRET`, `APP_IA_GROQ_KEY`, `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD`, `APP_DEMO_ENABLED=true`.
+2. **Netlify (site)** — criar conta grátis (netlify.com, login GitHub) → Import repo **`connect-ong-web`** → Deploy → renomear site p/ `connectong` → vira `https://connectong.netlify.app`.
+3. Se o nome do serviço do Render for diferente de `connect-ong-api`, ajustar a URL no `netlify.toml` (repo web) e commitar.
+
+**⚠️ 2 RISCOS a verificar quando retomar:** (a) o **MySQL da escola (`143.106.241.3`) pode não aceitar conexão de fora do campus** → se o Render der erro de conexão, migrar p/ MySQL grátis na nuvem (Liquibase recria schema; `APP_DEMO_ENABLED`/`/demo/seed` popula demo). PODE JÁ TESTAR isso antes (conectar no MySQL de fora). (b) Render free **dorme ~15min** (cold start ~30s) → acordar antes da demo ou UptimeRobot.
+
+**Guia detalhado:** `COMO-HOSPEDAR.md` no repo `connect-ong-web`. **Config já commitada:** `netlify.toml` (proxy same-origin, web `ce72214`) + `server.port=${PORT:8080}` (backend `5c03e9c`). Detalhes completos na seção "▶️ DEPLOY GRÁTIS PREPARADO" mais abaixo.
+
+**Enquanto isso (opcional):** o app está no ar num túnel HTTPS (`python serve.py 8090` + `cloudflared tunnel --url http://localhost:8090`, `cloudflared.exe` está no scratchpad) — funciona em qualquer rede, mas a URL muda a cada start. Para rodar de novo: ver `COMO-PUBLICAR.md`.
+
+---
+
 ## ✅ FEATURES EXCLUSIVAS DA WEB — FEITAS (2026-07-14, commit `c72b0ed`, v2.0)
 O usuário mandou "continue a web / faça as features exclusivas de web". Entreguei 5 recursos que **só fazem sentido na web** (para NÃO parecer cópia do mobile), todos **verificados ao vivo** (Chrome headless + backend real, screenshots conferidos):
 1. **⭐ Mapa interativo de ONGs** (`#/mapa`) — Leaflet + OpenStreetMap (CDN no `index.html`). Geocoder **offline** por cidade em `assets/dados/cidades_coords.json` (capitais + interior de SP + ~130 cidades; chave = `UI.chaveCat(cidade)` sem acento e sem sufixo `" - SP"`, função `chaveCidade`). Pins clicáveis abrem `abrirPerfilOng` (botão `data-perfil-ong` dentro do popup, pega na delegação global). Dispersão espiral determinística p/ ONGs na mesma cidade. Filtro por nome/cidade. ONG verificada = anel laranja (`.co-pin.verificada`). Verificado: 20/20 ONGs no mapa (região Campinas/Limeira).
