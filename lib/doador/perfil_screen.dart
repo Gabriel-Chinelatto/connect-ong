@@ -11,6 +11,7 @@ import '../services/session_service.dart';
 import '../config/config_controller.dart';
 import '../pages/login_page.dart';
 import '../screens/about/descricao_screen.dart';
+import '../screens/about/desenvolvimento_chat_screen.dart';
 import '../screens/about/integrantes_projeto_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
@@ -222,6 +223,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   _secao('Sobre o projeto', [
                     _item(Icons.info_outline_rounded, 'Sobre o Connect ONG',
                         () => _abrir(const DescricaoScreen())),
+                    _item(Icons.code_rounded, 'Sobre o Desenvolvimento',
+                        () => _abrir(const DesenvolvimentoChatScreen())),
                     _item(Icons.groups_rounded, 'Integrantes do projeto',
                         () => _abrir(const IntegrantesProjetoScreen())),
                   ]),
