@@ -7,7 +7,20 @@ metadata:
   originSessionId: e54bdb36-998f-43b3-8c56-301ef4baf242
 ---
 
-## ⏸️ LEMBRETE — O QUE FALTA (parado em 2026-07-14 a pedido do usuário: "hoje não vou conseguir fazer isso")
+## 🚀 HOSPEDADO E NO AR (2026-07-14) — URL FIXA E PROFISSIONAL, DEPLOY CONCLUÍDO
+**A web está PUBLICADA de verdade, de graça, com HTTPS e endereço fixo. Funciona de qualquer celular/rede.**
+- **🌐 Site (front): `https://connectong.netlify.app`** — Netlify, repo `connect-ong-web` (deploy automático a cada push na `main`).
+- **⚙️ API (backend): `https://connect-ong-api.onrender.com`** — Render (Docker, plano Free), repo `connect-ong-api` (branch `master`), Root Dir `API - Chinelatto - att2/API - Chinelatto/API - Chinelatto`.
+- **Arquitetura:** o `netlify.toml` faz **proxy same-origin** (`/* → connect-ong-api.onrender.com/:splat`, status 200, force=false) → o front chama a API por caminho **relativo** (`BASE=''`) → **sem CORS**. HTTPS libera microfone/PWA/notificações/Web Share.
+- **✅ Banco:** o MySQL da escola **aceita conexão de qualquer host** — confirmado no próprio banco: `SHOW GRANTS FOR CURRENT_USER()` → `'cl203161'@'%'` (GRANT ALL em `cl203161`.*), conectando de IP residencial (189.1.182.133, fora da UNICAMP). **Render conecta sem problema** (risco descartado, não precisa migrar de banco).
+- **Env vars no Render:** `DB_PASSWORD` (senha da escola), `APP_JWT_SECRET` + `APP_ADMIN_PASSWORD` = **valores NOVOS de produção** (gerados aleatórios, ≠ dos `dev-local-*` do `application-local.properties`), `APP_IA_GROQ_KEY` (mesma chave Groq), `APP_ADMIN_EMAIL=admin@connectong.com.br`, `APP_DEMO_ENABLED=true`. **NÃO** setar profile `local` no Render.
+- **Verificado ao vivo na URL final:** site+manifest+sw 200, `/publico/estatisticas` com dados reais (20 ONGs, R$825), login demo OK, `/assistente-dev` respondeu `modo: ia` (Groq OK), TLS válido, e a **página pública da ONG** (`#/ong/12`, o destino do QR) renderiza com dados reais.
+- ⚠️ **Render Free dorme após ~15min** → 1ª visita leva ~30-60s p/ acordar. Antes da banca/feira, abrir o site 1 min antes (ou usar UptimeRobot p/ pingar). O resto fica rápido.
+- ⚠️ **Segredos expostos no chat** (a pedido do usuário, p/ preencher o Render): senha do MySQL e chave Groq. **Rotacionar quando puder** (já era pendência antiga do projeto).
+- **Deploy contínuo:** `git push` na `main` (web) → Netlify redeploya sozinho; push na `master` (API) → Render rebuilda sozinho.
+- **Opcional futuro:** domínio próprio (`connectong.com.br`, ~R$40/ano no registro.br) → Netlify → Domain management → Add a domain (HTTPS automático).
+
+## ~~⏸️ LEMBRETE — O QUE FALTAVA~~ (RESOLVIDO ACIMA — deploy feito em 2026-07-14)
 **TUDO do código está PRONTO, verificado e commitado.** O que resta é **só o usuário conectar 2 contas grátis** para o app ganhar um **endereço fixo e profissional** (hoje roda num túnel `cloudflared` com URL feia e temporária). Config e guia JÁ preparados por mim.
 
 **➡️ PASSOS QUE FALTAM (o usuário faz, pelo navegador, ~15 min):**
