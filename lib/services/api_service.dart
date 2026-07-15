@@ -22,12 +22,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   // Endereço base da API (backend Spring Boot).
   // Centralizado aqui para que todas as telas e serviços usem a mesma URL.
-
-  // CHROME / WINDOWS / DESKTOP
-  static const String baseUrl = 'http://localhost:8080';
-
-  // ANDROID EMULATOR (descomente ao rodar no emulador Android)
-  // static const String baseUrl = 'http://10.0.2.2:8080';
+  //
+  // PADRÃO = API NA NUVEM (Render): funciona no CELULAR DE VERDADE, em qualquer
+  // rede, sem precisar rodar o backend no computador. (Com `localhost` o app num
+  // celular real nunca funcionaria: localhost seria o próprio telefone.)
+  //
+  // Para desenvolver com o backend local (bem mais rápido, sem latência),
+  // rode passando a variável:
+  //   flutter run --dart-define=API_BASE=http://localhost:8080     (Windows/Chrome)
+  //   flutter run --dart-define=API_BASE=http://10.0.2.2:8080      (emulador Android)
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE',
+    defaultValue: 'https://connect-ong-api.onrender.com',
+  );
 
   // ---------------------------------------------------------------------------
   // Armazém central do token JWT.
