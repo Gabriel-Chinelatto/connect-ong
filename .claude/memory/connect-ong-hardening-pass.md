@@ -30,7 +30,7 @@ Tinha app_colors/app_theme mas as telas NÃO usavam o tema (~89 Colors.* hardcod
 - **Login**: Enter entra, autofocus, mostrar senha; `auth_service` relança falha de conexão (era `catch→null` que virava "login inválido" com servidor fora do ar). Future.wait na carga do painel + tela de erro com retry. e.toString() cru → mensagemAmigavel.
 
 ## PENDÊNCIAS (não feitas — decisão/ação do usuário; ver [[connect-ong-deferred]])
-1. **Rotacionar senha do MySQL da escola** (`cl*28032008`@143.106.241.3) e limpar histórico do git (BFG) — a senha ainda é recuperável em commits antigos. AÇÃO MANUAL.
+1. **Rotacionar senha do MySQL da escola** (usuário `cl203161`@143.106.241.3 — senha só no `application-local.properties`, gitignored; NÃO escrever aqui: repo PÚBLICO) e limpar histórico do git (BFG) — a senha antiga é recuperável em commits antigos do repo público. **URGENTE**: grant é `@'%'` (aceita qualquer host). AÇÃO MANUAL.
 2. **Papel ROLE_ADMIN** p/ conceder selo "verificada": o fix impede estranho verificar, mas ainda permite a ONG se auto-verificar (não há admin no sistema).
 3. Menores: consentimento LGPD no cadastro mobile, limpar Colors.* restantes em `perfil_publico_ong_screen` (desktop), snackbars do painel desktop ainda com Colors.red/orange.
 4. ~~rate-limiting no login / enumeração de e-mail / esqueci-senha~~ → **RESOLVIDOS no backend em 2026-07-03** (ver seção abaixo); falta só as TELAS de "esqueci a senha" no mobile/desktop consumirem o contrato.
