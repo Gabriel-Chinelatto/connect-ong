@@ -1,6 +1,6 @@
 ---
 name: connect-ong-web-doador-plano
-description: WEB do DOADOR — DECISÃO NOVA (2026-07-13) = repo separado em HTML/CSS/JS puro (NÃO Flutter). Base real entregue; falta 2ª leva de features.
+description: WEB do DOADOR (HTML/CSS/JS puro, repo separado) — PRONTA e NO AR em https://connectong.netlify.app (API no Render). Estado atual, decisões, otimizações e o que falta.
 metadata: 
   node_type: memory
   type: project
@@ -39,22 +39,6 @@ metadata:
 - **Deploy contínuo:** `git push` na `main` (web) → Netlify redeploya sozinho; push na `master` (API) → Render rebuilda sozinho.
 - **Opcional futuro:** domínio próprio (`connectong.com.br`, ~R$40/ano no registro.br) → Netlify → Domain management → Add a domain (HTTPS automático).
 
-## ~~⏸️ LEMBRETE — O QUE FALTAVA~~ (RESOLVIDO ACIMA — deploy feito em 2026-07-14)
-**TUDO do código está PRONTO, verificado e commitado.** O que resta é **só o usuário conectar 2 contas grátis** para o app ganhar um **endereço fixo e profissional** (hoje roda num túnel `cloudflared` com URL feia e temporária). Config e guia JÁ preparados por mim.
-
-**➡️ PASSOS QUE FALTAM (o usuário faz, pelo navegador, ~15 min):**
-1. **Render (backend)** — criar conta grátis (render.com, login GitHub) → New Web Service → repo **`connect-ong-api`** → **Root Directory** = `API - Chinelatto - att2/API - Chinelatto/API - Chinelatto` → **Name** = `connect-ong-api` → **Env vars** (valores estão no `application-local.properties`): `DB_PASSWORD`, `APP_JWT_SECRET`, `APP_IA_GROQ_KEY`, `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD`, `APP_DEMO_ENABLED=true`.
-2. **Netlify (site)** — criar conta grátis (netlify.com, login GitHub) → Import repo **`connect-ong-web`** → Deploy → renomear site p/ `connectong` → vira `https://connectong.netlify.app`.
-3. Se o nome do serviço do Render for diferente de `connect-ong-api`, ajustar a URL no `netlify.toml` (repo web) e commitar.
-
-**⚠️ 2 RISCOS a verificar quando retomar:** (a) o **MySQL da escola (`143.106.241.3`) pode não aceitar conexão de fora do campus** → se o Render der erro de conexão, migrar p/ MySQL grátis na nuvem (Liquibase recria schema; `APP_DEMO_ENABLED`/`/demo/seed` popula demo). PODE JÁ TESTAR isso antes (conectar no MySQL de fora). (b) Render free **dorme ~15min** (cold start ~30s) → acordar antes da demo ou UptimeRobot.
-
-**Guia detalhado:** `COMO-HOSPEDAR.md` no repo `connect-ong-web`. **Config já commitada:** `netlify.toml` (proxy same-origin, web `ce72214`) + `server.port=${PORT:8080}` (backend `5c03e9c`). Detalhes completos na seção "▶️ DEPLOY GRÁTIS PREPARADO" mais abaixo.
-
-**Enquanto isso (opcional):** o app está no ar num túnel HTTPS (`python serve.py 8090` + `cloudflared tunnel --url http://localhost:8090`, `cloudflared.exe` está no scratchpad) — funciona em qualquer rede, mas a URL muda a cada start. Para rodar de novo: ver `COMO-PUBLICAR.md`.
-
----
-
 ## ✅ FEATURES EXCLUSIVAS DA WEB — FEITAS (2026-07-14, commit `c72b0ed`, v2.0)
 O usuário mandou "continue a web / faça as features exclusivas de web". Entreguei 5 recursos que **só fazem sentido na web** (para NÃO parecer cópia do mobile), todos **verificados ao vivo** (Chrome headless + backend real, screenshots conferidos):
 1. **⭐ Mapa interativo de ONGs** (`#/mapa`) — Leaflet + OpenStreetMap (CDN no `index.html`). Geocoder **offline** por cidade em `assets/dados/cidades_coords.json` (capitais + interior de SP + ~130 cidades; chave = `UI.chaveCat(cidade)` sem acento e sem sufixo `" - SP"`, função `chaveCidade`). Pins clicáveis abrem `abrirPerfilOng` (botão `data-perfil-ong` dentro do popup, pega na delegação global). Dispersão espiral determinística p/ ONGs na mesma cidade. Filtro por nome/cidade. ONG verificada = anel laranja (`.co-pin.verificada`). Verificado: 20/20 ONGs no mapa (região Campinas/Limeira).
@@ -86,7 +70,7 @@ O usuário mandou "verificação final de todo web e corrija todo erro/ambiguida
 Verificadas ao vivo (Chrome headless + screenshots), commit por feature:
 - **Dora por voz** (`8fa8f60`) — Web Speech API: microfone no form da Dora **dita** a pergunta (`SpeechRecognition` pt-BR, resultados parciais, pulso vermelho `.dora-mic.ouvindo`) e envia sozinho; botão de alto-falante no cabeçalho **liga/desliga a leitura** das respostas (`speechSynthesis`, voz pt-BR, `falarTexto()` chamado no fim de `enviarDora`). Somem sozinhos se o navegador não suportar (`VOZ.suportaRec/suportaFala`). ⚠️ áudio real só num navegador com microfone (headless mostra os botões mas não grava).
 - **"Connect ONG Wrapped"** (`72beed7`) — botão "Meu cartão de impacto" na tela **Impacto**: `desenharCartao()` desenha um `<canvas>` 1080×1350 estilo Spotify Wrapped (gradiente da marca, logo, nome, número herói de doações concluídas, métricas ONGs/R$/conquistas, frase) → modal com **Baixar** (PNG via `toBlob`) e **Compartilhar** (Web Share API com `File`; fallback download). Logo carregado de `assets/img/logo.jpg` (mesma origem, canvas não fica "tainted").
-- **QR Code no estande** (`7f9da02`) — o botão **Compartilhar** do perfil da ONG (`compartilharOng`) agora abre modal com **QR Code** (lib `qrcodejs` via cdnjs) do deep-link `#/ong/{id}` + link copiável + Web Share. ⚠️ **p/ o QR funcionar no celular do avaliador, servir a web pelo IP de LAN** (ex.: `python -m http.server 5050 --bind 0.0.0.0` e abrir por `http://192.168.x.x:5050`) — o QR codifica `location.origin`, então localhost só abre na própria máquina. Fallback gracioso se a lib não carregar.
+- **QR Code no estande** (`7f9da02`) — o botão **Compartilhar** do perfil da ONG (`compartilharOng`) agora abre modal com **QR Code** (lib `qrcodejs` via cdnjs) do deep-link `#/ong/{id}` + link copiável + Web Share. O QR codifica `location.origin` → **hoje sai automaticamente com `https://connectong.netlify.app` e abre em QUALQUER celular/rede** (a antiga dica de servir por IP de LAN ficou obsoleta com a hospedagem). Fallback gracioso se a lib não carregar.
 - **PWA** (`2cd2d82`) — `manifest.json` (standalone, tema #008542, ícone logo.jpg 500×500) + `sw.js` (service worker: cacheia a casca do MESMO domínio p/ abrir **offline**; NÃO intercepta a API :8080, CDNs nem POST) registrado no `init` (`registrarPWA`); botão **"Instalar app"** na sidebar (`#btn-instalar`, aparece no `beforeinstallprompt`); **notificações do navegador** (banner "Ativar alertas" no sino → `Notification.requestPermission`, pref `co_webpush`; `atualizarSino` dispara `new Notification` quando o contador de não-lidas sobe). Verificado: `SWCHECK ok`, manifest válido. Changelog **v2.1** "Voz, cartão de impacto, QR e PWA".
 
 **Gotcha de verificação:** SW não aparece no headless com `--virtual-time-budget` curto (instalação é async real) — confirmar lendo o resultado do `.register().then()` (não `getRegistration()` logo após). `speechSynthesis`/`webkitSpeechRecognition` EXISTEM no Chrome headless (os botões aparecem no screenshot).
@@ -107,26 +91,14 @@ Usuário testou o túnel HTTPS e aprovou ("DEU TUDO CERTO!"), com ajustes:
 - **Dora "sumiu a conversa":** causa = localStorage é **por-origem** (ele testou localhost→192.168→túnel, cada um c/ storage separado; e cada URL nova do trycloudflare = origem nova = storage zerado). Num **endereço fixo** persiste. Robusteci o id da conversa (`doraNova` usa sufixo `Math.random().toString(36)`) p/ nunca colidir/sobrescrever.
 - (Commit anterior `e496ed1`) tema escuro dos cards da Dora + Avaliar-só-se-doou.
 
-## ▶️ DEPLOY GRÁTIS PREPARADO (2026-07-14) — usuário escolheu Netlify + Render
-Preparei os arquivos p/ hospedagem permanente grátis (commits: web `ce72214`, backend `5c03e9c`). **Falta o usuário conectar as contas** (não dá pra fazer sozinho):
-- **Backend `application.properties`:** adicionado `server.port=${PORT:8080}` (Render injeta `$PORT`). Já usava env vars `DB_URL`(default MySQL escola 143.106.241.3)/`DB_USERNAME`(cl203161)/`DB_PASSWORD`; Dockerfile multi-stage pronto. Secrets a setar no Render (nomes das chaves do `application-local.properties`): **`DB_PASSWORD`, `APP_JWT_SECRET`(obrigatório, sem default), `APP_IA_GROQ_KEY`, `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD`, `APP_DEMO_ENABLED=true`**. Root Directory no Render = `API - Chinelatto - att2/API - Chinelatto/API - Chinelatto` (onde está o Dockerfile). NÃO usar profile `local` no Render (lê application.properties + env). Nome do serviço = `connect-ong-api` → URL `https://connect-ong-api.onrender.com`.
-- **Front `netlify.toml`** (novo, na web): `publish="."` + redirect `/* -> https://connect-ong-api.onrender.com/:splat` status 200 force=false → **proxy same-origin** (estáticos servidos primeiro; resto vai pro backend) = **sem CORS**. Front usa `BASE=''` (relativo) → casa com isso.
-- **Guia `COMO-HOSPEDAR.md`** (na web): passo a passo Render+Netlify + tabela de env vars.
-- ⚠️ **2 RISCOS a avisar:** (1) o **MySQL da escola pode recusar conexão de fora do campus** → Render não conecta → migrar p/ MySQL grátis na nuvem (Liquibase cria o schema; `/demo/seed`/`APP_DEMO_ENABLED` popula demo). (2) **Render free dorme ~15min** → cold start ~30s (acordar antes da demo ou UptimeRobot).
-
-## ⏳ URL PROFISSIONAL — DECISÃO TOMADA (Netlify+Render), aguardando o usuário conectar contas
-Ele quer um endereço bonito (o `xxx.trycloudflare.com` é feio e EFÊMERO — muda a cada start, e zera o localStorage/Dora). **Solução free permanente = hospedar de vez:** front em **Cloudflare Pages/Netlify** (subdomínio tipo `connectong.pages.dev`/`.netlify.app`, ou domínio próprio) + backend em **Render** (Dockerfile já existe no repo da API; free tier, cold start ~30s) + proxy same-origin (Netlify `_redirects`/Pages Functions p/ evitar CORS). **Precisa das CONTAS grátis do usuário** (não dá pra criar sozinho). Combinar: eu preparo os arquivos de config e guio o connect (~10-15 min). Domínio próprio (`.com.br`) é pago (~R$40/ano). **AINDA opcional:** drag&drop de foto, push real (backend), SEO/OpenGraph da página pública.
-
-**COMO VERIFIQUEI (gotcha útil p/ próxima vez):** telas autenticadas no Chrome headless = **perfil persistente** (`--user-data-dir`). Passo 1: uma página `_seed.html` (ignorada pelo `.gitignore` `__*.html`… na real usei `_seed`/`_synccheck` com 1 underscore, apaguei manualmente) faz `POST /usuarios/login` demo e grava `co_token`/`co_user`/`co_refresh` no localStorage. Passo 2: reusa o MESMO `--user-data-dir` e navega `index.html#/rota` (auto-login pega o hash em `aoEntrar`→`irPara`). `--virtual-time-budget=8000` p/ dar tempo de dados+tiles. Servir por HTTP em **localhost** (mesma origem p/ o localStorage casar, e CORS casa `localhost:*`). Screenshots dos números do quiosque pegam a **animação no meio** (frame intermediário, não é bug).
-
-## ▶️ (HISTÓRICO) PONTO DE PARTIDA DESTA SESSÃO (registrado fim do dia 2026-07-13)
+## (HISTÓRICO) Ponto de partida da sessão de 2026-07-13
 **Comando do usuário p/ retomar:** ele vai abrir um chat novo e dar um comando curto tipo *"continue a web / faça as features exclusivas de web"*. Este bloco foi o ponto de partida (JÁ ATENDIDO acima).
 
-**ESTADO ATUAL:** a web (repo `connect-ong-web`, pasta `connect-ong-web-main`) é um **port fiel e COMPLETO do doador do mobile**, verificado ao vivo. Último commit **`2ba018e`**. Roda com `python -m http.server 5050` na pasta + backend em `localhost:8080` (contas demo: `demo.joao@connectong.com`/`demo123`). Tudo do mobile foi portado (7 ondas + rodada de polish — ver seções abaixo). Bugs recentes do usuário JÁ corrigidos em `2ba018e`: filtro de categoria (faltava handler `data-cat`), favoritos (shape `{alvoNome,alvoId}` → enriquece com `/ongs`), config falso "não salvas" (comparar só campos de pref + confirmar ao sair), sidebar cortava o perfil (nav agora rola), logo real (`assets/img/logo.jpg`) + mascote da Dora (`dora_mascote.svg`), telas ONGs/Favoritos/Itens mais bonitas, seção **Versões** (changelog) no Sobre.
+**ESTADO NAQUELE DIA (13/07 — HOJE ESTÁ HOSPEDADO, ver o topo do arquivo):** a web (repo `connect-ong-web`, pasta `connect-ong-web-main`) era um **port fiel e COMPLETO do doador do mobile**, verificado ao vivo. Commit **`2ba018e`**. ⚠️ *Rodava* com `python -m http.server 5050` + backend em `localhost:8080` — **esse jeito NÃO funciona mais** (a base virou relativa; usar `serve.py` ou a URL hospedada). Contas demo: `demo.joao@connectong.com`/`demo123`. Tudo do mobile foi portado (7 ondas + rodada de polish — ver seções abaixo). Bugs recentes do usuário JÁ corrigidos em `2ba018e`: filtro de categoria (faltava handler `data-cat`), favoritos (shape `{alvoNome,alvoId}` → enriquece com `/ongs`), config falso "não salvas" (comparar só campos de pref + confirmar ao sair), sidebar cortava o perfil (nav agora rola), logo real (`assets/img/logo.jpg`) + mascote da Dora (`dora_mascote.svg`), telas ONGs/Favoritos/Itens mais bonitas, seção **Versões** (changelog) no Sobre.
 
 **PENDÊNCIAS pequenas ainda abertas:** (1) **frete** — endpoint OK e modal funciona; o usuário pediu "conferir se está tudo certo" → validar o cálculo ao vivo (origem cidade do doador vazia se o perfil não tiver cidade). (2) **Vendorizar CDN** (Tailwind/Fonts/Phosphor) se a feira for offline. (3) O tema às vezes renderiza claro em screenshot por causa do cache local vs pref do backend (cosmético).
 
-## 🎯 GRANDE PEDIDO DO USUÁRIO (o mais importante p/ a próxima sessão)
+## (HISTÓRICO — JÁ ATENDIDO) 🎯 O grande pedido do usuário: "que a web não pareça cópia do mobile"
 Ele NÃO quer que a web pareça "só uma cópia do mobile" (mesma sensação ruim que o desktop deu no começo). Quer **features que façam sentido EXCLUSIVAMENTE na web**. Minha opinião + sugestões priorizadas (implementar as marcadas ⭐ primeiro):
 - ⭐ **Mapa interativo de ONGs/necessidades** (Leaflet + OpenStreetMap, tudo via CDN, sem chave): pins clicáveis → perfil da ONG; filtra por categoria/cidade. A tela larga brilha; impossível fazer bem no mobile. Alto impacto na banca. (Precisa de coords — usar cidade→lat/long via um JSON offline ou Nominatim; ou centralizar por cidade do endereço.)
 - ⭐ **Modo Apresentação / Quiosque para a FECITEC**: um `#/showcase` em tela cheia que roda sozinho — estatísticas públicas (`/publico/estatisticas`) animando, ticker ao vivo de `/atividades`, ranking girando. Perfeito para o estande; grita "web". Baixo esforço, alto efeito.
@@ -158,9 +130,13 @@ Reescrevi em **arquitetura separada** (exigência do usuário: nada de tudo-num-
 - **Verificado ao vivo** servindo com `python -m http.server 5050` e Chrome **headless** (`--headless=new --screenshot`/`--dump-dom`): login JWT, 19 necessidades, 15 interesses (todos os status), 6 sugestões de IA, 7 mensagens de chat — tudo via CORS do navegador. Screenshots do login e do dashboard conferidos (visual chamativo, dados reais).
 - **Contas demo:** `demo.joao@connectong.com` / `demo123` (botão "Entrar com a conta de demonstração"). App bloqueia login de conta ONG (web = só doador).
 
-## Como rodar / verificar (gotchas)
-- **Precisa servir por HTTP** (não `file://`): CORS do backend casa `localhost:*`, mas origem `file://` = `null` e é bloqueada. Usar Live Server (VS Code) ou `python -m http.server`. Node NÃO está instalado nesta máquina; Python 3.13 e Chrome estão (`C:\Program Files\Google\Chrome\Application\chrome.exe`).
-- Backend tem que estar de pé em `localhost:8080` (reiniciar após mudanças — ver [[connect-ong-architecture]]). Dá pra apontar outro host com `?api=http://...` na URL.
+## Como rodar / verificar (ATUALIZADO 2026-07-14 — leia antes de rodar qualquer coisa)
+- **USO NORMAL: NÃO PRECISA RODAR NADA.** A web está hospedada: abra **https://connectong.netlify.app** (API no Render). `git push` na `main` → Netlify redeploya sozinho; push na `master` do backend → Render rebuilda (leva ~5-10 min; ao medir/testar depois de um push, **espere o deploy** — é fácil confundir "não melhorou" com "ainda é a versão antiga").
+- ⚠️ **`python -m http.server` sozinho NÃO FUNCIONA MAIS.** Desde que `api.js` passou a usar **base relativa (mesma origem)**, servir só os estáticos dá 404 nas chamadas de API. Para rodar local, use **uma** das opções:
+  1. `python serve.py 8090` (na pasta da web) + backend local em 8080 → abre `http://localhost:8090` (o serve.py serve os estáticos E faz proxy da API na mesma origem, sem CORS). Pode apontar p/ a nuvem: `python serve.py 8090 https://connect-ong-api.onrender.com`.
+  2. Estático simples + `?api=http://localhost:8080` na URL (o `baseValida` aceita localhost/LAN e recusa host público).
+- **Ferramentas nesta máquina:** Python 3.13 e Chrome (`C:\Program Files\Google\Chrome\Application\chrome.exe`); **Node NÃO** está instalado. `pymysql` instalado (útil p/ conferir o banco direto). `cloudflared.exe` ficou no scratchpad (não é mais necessário — era do túnel temporário).
+- **Verificação headless autenticada:** ver o gotcha do `--user-data-dir` persistente + página `_seed.html` na seção de features exclusivas.
 - Falta o arquivo `logo.png` do amigo — resolvido com **SVG inline** num `<template id="tpl-logo">` (sempre aparece).
 
 ## 2ª LEVA CONCLUÍDA (2026-07-13, commits `234ec27` + `b45794f`) — todas as levas feitas de uma vez
@@ -176,9 +152,6 @@ O usuário mandou "seguir até a última leva sem interrupção, commitar quando
 - **Responsivo**: no celular (<768px) a sidebar some e vira **nav inferior fixa** (5 rotas principais); Início tem **acesso rápido** para as secundárias; trava `overflow-x` no `#view-app main`. Sem overflow real em 390px (medido: docScrollWidth=viewport).
 
 **GOTCHA de bash na descoberta:** `UID` é readonly no bash (id do SO) — não usar como variável; usei `DID=18`. **Screenshots headless em window-size pequeno (390) cortam ~10% à direita** — é artefato do `--screenshot` headless, NÃO overflow (confirmar medindo `getBoundingClientRect`/`documentElement.scrollWidth`, não pelo print).
-
-## Como rodei pro usuário ver
-`python -m http.server 5050` (na pasta `connect-ong-web-main`) + `Start-Process chrome http://127.0.0.1:5050/`. Backend em 8080. Conta demo: botão "Entrar com a conta de demonstração".
 
 ## PORT FIEL EM 7 ONDAS (2026-07-13) — feedback grande do usuário "quero exatamente todas as funcionalidades do mobile"
 Depois da 2ª leva, o usuário listou ~20 problemas e pediu paridade EXATA com o mobile. Estratégia que funcionou: **ler o código-fonte real do mobile Flutter** (está no repo `connect-ong`, primary working dir) via subagentes Explore (catálogo de telas + inventário de endpoints/segurança), e portar fielmente. Executado sem parar, commit por onda:

@@ -7,6 +7,15 @@ metadata:
   originSessionId: fd5869c2-ce42-4ab3-b411-545f30b4d907
 ---
 
+## 🚀 EM PRODUÇÃO (desde 2026-07-14) — a app está HOSPEDADA e no ar
+- **Web (doador): `https://connectong.netlify.app`** — Netlify (grátis), repo **`connect-ong-web`** (4º repo, HTML/CSS/JS puro, pasta local `C:\Users\01gabriel.MAQCHINELATTO\connect-ong-web-main`). Deploy automático a cada `git push` na `main`.
+- **API: `https://connect-ong-api.onrender.com`** — Render (Docker, Free), repo `connect-ong-api` (`master`). Deploy automático no push (rebuild leva ~5-10 min).
+- **Sem CORS:** o `netlify.toml` faz proxy same-origin (`/*` → Render) e o front usa caminho relativo.
+- **Mobile e desktop** também apontam para a API na nuvem por padrão (`String.fromEnvironment('API_BASE')`); p/ dev local: `flutter run --dart-define=API_BASE=http://localhost:8080`.
+- **NÃO precisa rodar nada localmente** para usar/demonstrar. ⚠️ Render Free **dorme após ~15min** (1ª visita ~30-60s) — há um pingador (GitHub Actions `manter-acordado.yml` no repo web) a cada 10 min.
+- ⚠️ **Os 3 repos são PÚBLICOS no GitHub** — nunca commitar segredo (a senha do MySQL vazou no histórico; ver [[connect-ong-deferred]]). Segredos de produção ficam em `C:\Users\01gabriel.MAQCHINELATTO\CONNECT-ONG-SEGREDOS.txt` (fora de repo).
+- **Detalhes completos** (env vars do Render, decisões, otimizações): [[connect-ong-web-doador-plano]].
+
 Connect ONG is a donation platform (academic TCC) with three separate repos under GitHub user `Gabriel-Chinelatto`:
 
 - **Mobile** (most complete): `C:\Users\01gabriel.MAQCHINELATTO\connect-ong` — Flutter, repo `connect-ong`, branch `main`. Roles DOADOR/ONG, session persisted via shared_preferences.
