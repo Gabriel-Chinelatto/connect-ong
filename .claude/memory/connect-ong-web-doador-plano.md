@@ -5,7 +5,22 @@ metadata:
   node_type: memory
   type: project
   originSessionId: e54bdb36-998f-43b3-8c56-301ef4baf242
+  modified: 2026-07-29T11:37:29.760Z
 ---
+
+## 🐛 RODADA DE BUGS DO TESTE (2026-07-14) — feedback do usuário testando o web hospedado
+Corrigidos (web commits `2b11a79`, `b53e997`, `2590490`; API `be76588`), todos verificados:
+- **🔴 CRÍTICO (achado numa revisão, o usuário nem viu): o Service Worker cacheava as RESPOSTAS DA API.** Depois que front+API viraram MESMA ORIGEM (proxy Netlify), o guard antigo `url.origin !== location.origin` parou de proteger → GETs de `/ongs`, `/publico/*`, `/necessidades`, `/mensagens` (poll do chat!), `/notificacoes/nao-lidas` caíam no cache-first → **dados congelados/velhos** (chat travava, badge do sino congelava, match novo não aparecia). **Fix (`sw.js` v3):** função `ehEstatico()` — só `/`, `/index.html`, `/css/`, `/js/`, `/assets/`, `manifest`, `sw` são cacheáveis; qualquer outra rota same-origin (a API) passa DIRETO sem cache. Assets agora **network-first** (após deploy a 1ª visita já pega o código novo).
+- **Logout:** o ícone de sair da sidebar abria os Ajustes (não deslogava). Agora é `#btn-logout` próprio → `fazerLogout()` (limpa sessão + TODO o estado em memória). O "logout ao salvar config" era **token velho** (PUT /preferencias retorna 200 com token válido — testado).
+- **Comparar:** a ONG aparece embaixo já no 1º clique (mostra 1 coluna + dica; selos "melhor" só com 2+).
+- **Mapa escuro:** trocado o filtro `invert` (cores erradas) por **tiles CartoDB dark** de verdade (claro = voyager). Some o CSS `.leaflet-tile-pane` invert.
+- **Cards de ONG:** anel branco do avatar corrigido no escuro (`body.tema-escuro .border-white`); **capa** mostrada na miniatura (API `be76588` inclui `capaBase64` na listagem, `dto.setCapaBase64`); **preview flutuante** ao pausar o mouse ~1,2s (`ligarHoverOng`/`resumoOngHtml`, fecha no scroll/troca de rota).
+- **Quiosque:** cards e ranking reagem ao hover (`.qk-tile`/`.qk-rank`).
+- **PWA instalável:** gerei **ícones PNG 192/512 + maskable** (via screenshot do logo em `_icon.html`; o Chrome só oferece instalar com PNG adequado — o jpg 500×500 não disparava `beforeinstallprompt`). `apple-touch-icon`, sw cache v3, pingador a cada 5min (era 10).
+- **Chat (revisão):** reagir/ampliar imagem abriam no modal ÚNICO e **destruíam o chat** (parava o poller). Agora usam `abrirCamada()` — camada sobreposta (z-96) que não toca o modal de baixo.
+- **Favorito:** estrela preserva o tamanho ao alternar (antes só olhava `text-xl` e encolhia).
+- ⚠️ **"Abriu na home e não no login"** = comportamento ESPERADO (sessão persistida, tipo app instalado). Não é bug; se o usuário quiser sempre pedir login ao reabrir, mudar o `init`.
+- **Revisão geral (subagente) confirmou:** rotas/z-index/timers OK, XSS coberto (tudo passa por `UI.esc`), `fazerLogout`/`tabelaComparar(1)`/`viewMapa cleanup`/`registrarPWA` OK. Achados menores NÃO feitos (baixo/decisão): CSS-injection teórica via `capaBase64` em `url()` (ONG-controlado, sem CSP), `co_instalado` nunca limpo (cosmético), deep-link `?comparar=` sem UI de compartilhar.
 
 ## 🚀 HOSPEDADO E NO AR (2026-07-14) — URL FIXA E PROFISSIONAL, DEPLOY CONCLUÍDO
 **A web está PUBLICADA de verdade, de graça, com HTTPS e endereço fixo. Funciona de qualquer celular/rede.**
