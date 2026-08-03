@@ -24,6 +24,11 @@ void main() async {
   // Carrega o token JWT salvo para reenviá-lo nas requisições autenticadas.
   await ApiService.carregarToken();
 
+  // Acorda o servidor o quanto antes (o plano gratuito do Render hiberna após
+  // ~15 min parado e a primeira requisição pode levar mais de um minuto).
+  // Não é aguardado: só adianta o trabalho enquanto a UI já aparece.
+  ApiService.acordarServidor();
+
   // Carrega a preferência local "Modo Feira" (credenciais demo no login).
   await ConfigController.instance.carregarModoFeira();
 

@@ -124,7 +124,50 @@ class ApiService {
   // erros de rede viram mensagens legíveis em vez de SocketException crua.
   // ---------------------------------------------------------------------------
 
-  static const Duration timeout = Duration(seconds: 12);
+  /// Espera normal, com a API já no ar e respondendo.
+  static const Duration _timeoutNormal = Duration(seconds: 12);
+
+  /// Espera quando a API pode estar HIBERNANDO. O backend roda no plano
+  /// gratuito do Render, que desliga o serviço depois de ~15 min sem acesso:
+  /// a primeira requisição precisa aguardar o servidor subir do zero (medido
+  /// em 2026-08-03: 95s). Com o timeout fixo de 12s essa primeira tela sempre
+  /// falhava com "TimeoutException" — inclusive na frente da banca.
+  static const Duration _timeoutAcordando = Duration(seconds: 100);
+
+  /// Depois deste tempo sem NENHUMA resposta, voltamos a tratar a API como
+  /// possivelmente adormecida (o Render dorme com ~15 min de ociosidade).
+  static const Duration _janelaAcordada = Duration(minutes: 12);
+
+  static DateTime? _ultimaResposta;
+
+  /// true quando ainda não houve resposta nesta sessão (ou faz tempo demais).
+  static bool get apiPodeEstarDormindo {
+    final ultima = _ultimaResposta;
+    return ultima == null ||
+        DateTime.now().difference(ultima) > _janelaAcordada;
+  }
+
+  /// Timeout ADAPTATIVO: generoso enquanto o servidor pode estar acordando,
+  /// curto depois que ele provou estar no ar. Como todos os serviços leem
+  /// `ApiService.timeout`, a regra vale para o app inteiro.
+  static Duration get timeout =>
+      apiPodeEstarDormindo ? _timeoutAcordando : _timeoutNormal;
+
+  /// Registra que a API respondeu (chamado por quem fala com o backend sem
+  /// passar por [_executar], como o login e as estatísticas públicas).
+  static void registrarResposta() => _ultimaResposta = DateTime.now();
+
+  /// Dispara uma requisição pública barata só para ACORDAR o servidor, o mais
+  /// cedo possível (chamada no `main`). Erros são ignorados de propósito: é um
+  /// aquecimento, não um passo obrigatório da inicialização.
+  static void acordarServidor() async {
+    try {
+      await http.get(_uri('/publico/estatisticas')).timeout(_timeoutAcordando);
+      registrarResposta();
+    } catch (_) {
+      // Aquecimento: se falhar, a própria tela tenta de novo e mostra o erro.
+    }
+  }
 
   static Uri _uri(String caminho) => Uri.parse('$baseUrl$caminho');
 
@@ -164,6 +207,7 @@ class ApiService {
       Future<http.Response> Function() acao) async {
     try {
       final resposta = await acao().timeout(timeout);
+      registrarResposta();
       // Sessão expirada: um 401 numa requisição que ENVIOU token significa que
       // o token venceu/foi invalidado -> logout global (uma única vez). Um 401
       // SEM token (login, esqueci-senha, endpoints públicos) NÃO desloga: aí o
@@ -173,7 +217,7 @@ class ApiService {
       }
       return resposta;
     } on TimeoutException {
-      throw Exception('O servidor demorou a responder. Tente novamente.');
+      throw Exception(_mensagemDemora());
     } on SocketException {
       throw Exception('Sem conexão. Verifique sua internet.');
     } on http.ClientException {
@@ -181,11 +225,19 @@ class ApiService {
     }
   }
 
+  /// Mensagem de demora: se o servidor ainda não respondeu nenhuma vez, o mais
+  /// provável é que ele esteja saindo da hibernação — explicar isso evita que
+  /// o usuário ache que o app quebrou.
+  static String _mensagemDemora() => apiPodeEstarDormindo
+      ? 'O servidor estava em repouso e ainda está iniciando. '
+          'Aguarde alguns segundos e tente de novo.'
+      : 'O servidor demorou a responder. Tente novamente.';
+
   /// Converte qualquer erro capturado em uma mensagem amigável para o usuário.
   /// Usar em catches de UI no lugar de expor `e.toString()` cru.
   static String mensagemAmigavel(Object erro) {
     if (erro is TimeoutException) {
-      return 'O servidor demorou a responder. Tente novamente.';
+      return _mensagemDemora();
     }
     if (erro is SocketException || erro is http.ClientException) {
       return 'Sem conexão. Verifique sua internet.';

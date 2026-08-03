@@ -314,8 +314,15 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
       cor: Colors.white,
       child: Column(
         children: [
-          _tituloSecao('Transparência em números',
-              'Dados públicos da plataforma, atualizados em tempo real.'),
+          _tituloSecao(
+              'Transparência em números',
+              _statsCarregadas
+                  ? 'Dados públicos da plataforma, atualizados em tempo real.'
+                  // O servidor gratuito hiberna: a 1ª visita pode levar até um
+                  // minuto. Dizer isso é melhor do que a pessoa achar que os
+                  // números não existem.
+                  : 'Buscando os dados no servidor… se ele estava em repouso, '
+                      'isso pode levar alguns segundos.'),
           Wrap(
             spacing: 18,
             runSpacing: 18,

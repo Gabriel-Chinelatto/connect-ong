@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
+import '../services/api_service.dart';
 import '../services/login_service.dart';
 import '../services/estatistica_service.dart';
 import '../config/config_controller.dart';
@@ -137,10 +138,9 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      AppSnackbar.erro(
-        context,
-        e.toString().replaceAll('Exception: ', ''),
-      );
+      // mensagemAmigavel: sem isto o usuário via o erro cru
+      // ("TimeoutException after 0:00:12: Future not completed").
+      AppSnackbar.erro(context, ApiService.mensagemAmigavel(e));
     } finally {
       if (mounted) setState(() => carregando = false);
     }

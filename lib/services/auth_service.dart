@@ -42,6 +42,9 @@ class AuthService {
       }),
     ).timeout(ApiService.timeout);
 
+    // A API respondeu: o timeout adaptativo volta ao tempo curto.
+    ApiService.registrarResposta();
+
     if (response.statusCode == 200) {
 
       final resp = jsonDecode(

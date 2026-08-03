@@ -80,6 +80,8 @@ class EstatisticaService {
     final response =
         await http.get(Uri.parse(_url), headers: ApiService.authHeaders())
             .timeout(ApiService.timeout);
+    // A API respondeu: o timeout adaptativo volta ao tempo curto.
+    ApiService.registrarResposta();
     if (response.statusCode == 200) {
       final stats = EstatisticasPublicas.fromJson(
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>,
