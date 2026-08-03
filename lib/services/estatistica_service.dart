@@ -49,18 +49,51 @@ class EstatisticasPublicas {
 
 /// Servico de transparencia/impacto: carrega os numeros publicos agregados
 /// da plataforma (GET /publico/estatisticas) usados nos paineis de impacto.
+///
+/// CACHE (2026-08): os mesmos numeros aparecem no portal, no login e no Mural,
+/// e cada ida ao banco custa ~600ms (backend nos EUA + MySQL no Brasil — ver
+/// a regra de performance do projeto). Por isso a resposta fica guardada por
+/// [_validade]: navegar entre essas telas passa a ser instantaneo. Chamadas
+/// simultaneas compartilham a MESMA requisicao (nao dispara duas).
+/// Use `carregar(forcar: true)` no "puxar para atualizar".
 class EstatisticaService {
   static final String _url = '${ApiService.baseUrl}/publico/estatisticas';
 
-  Future<EstatisticasPublicas> carregar() async {
+  static const Duration _validade = Duration(minutes: 2);
+
+  static EstatisticasPublicas? _cache;
+  static DateTime? _quando;
+  static Future<EstatisticasPublicas>? _emVoo;
+
+  /// Ultimo valor conhecido (para pintar a tela na hora enquanto atualiza).
+  static EstatisticasPublicas? get cacheAtual => _cache;
+
+  Future<EstatisticasPublicas> carregar({bool forcar = false}) {
+    final valido = _cache != null &&
+        _quando != null &&
+        DateTime.now().difference(_quando!) < _validade;
+    if (!forcar && valido) return Future.value(_cache);
+    return _emVoo ??= _buscar().whenComplete(() => _emVoo = null);
+  }
+
+  Future<EstatisticasPublicas> _buscar() async {
     final response =
         await http.get(Uri.parse(_url), headers: ApiService.authHeaders())
             .timeout(ApiService.timeout);
     if (response.statusCode == 200) {
-      return EstatisticasPublicas.fromJson(
+      final stats = EstatisticasPublicas.fromJson(
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>,
       );
+      _cache = stats;
+      _quando = DateTime.now();
+      return stats;
     }
     throw Exception('Erro ao carregar estatísticas');
+  }
+
+  /// Limpa o cache (ex.: ao trocar de conta).
+  static void invalidar() {
+    _cache = null;
+    _quando = null;
   }
 }

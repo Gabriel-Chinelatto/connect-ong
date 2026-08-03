@@ -62,8 +62,21 @@ class IntegrantesProjetoScreen extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(24),
+                  // cacheWidth: as fotos originais têm centenas de KB; sem
+                  // isto o app decodifica a imagem inteira só para mostrar
+                  // 82px, e a tela abre com engasgo.
                   child: Image.asset(integrante['foto']!,
-                      width: 82, height: 82, fit: BoxFit.cover),
+                      width: 82,
+                      height: 82,
+                      cacheWidth: 246,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                            width: 82,
+                            height: 82,
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            child: const Icon(Icons.person,
+                                color: AppColors.primary),
+                          )),
                 ),
                 const SizedBox(width: 18),
                 Expanded(

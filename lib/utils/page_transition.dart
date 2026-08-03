@@ -19,10 +19,12 @@ class PageTransition {
         ConfigController.instance.navegacaoSimplificada;
 
     return PageRouteBuilder<T>(
+      // 220ms (era 300ms): a tela nova aparece na hora, sem perder a suavidade.
+      // Abrir uma tela era a interação que mais dava sensação de lentidão.
       transitionDuration:
-          Duration(milliseconds: simplificada ? 120 : 300),
+          Duration(milliseconds: simplificada ? 120 : 220),
       reverseTransitionDuration:
-          Duration(milliseconds: simplificada ? 100 : 250),
+          Duration(milliseconds: simplificada ? 100 : 180),
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curvedAnimation = CurvedAnimation(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config/config_controller.dart';
 import '../data/versoes.dart';
 import '../pages/login_page.dart';
 import '../screens/legal/documentos_legais_screen.dart';
@@ -7,10 +8,18 @@ import '../services/estatistica_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_theme.dart';
+import '../utils/formatters.dart';
+import '../utils/page_transition.dart';
 
 /// Portal institucional publico (face web do Connect ONG).
 /// Apresenta missao, estatisticas publicas (transparencia), ODS, como
 /// funciona, equipe, FAQ e os documentos legais (LGPD).
+///
+/// CHAMADAS PARA AÇÃO (revisão 2026-08): existe UM caminho de login (o botão
+/// "Entrar" do topo). O herói traz a ação de valor ("Quero doar") e um atalho
+/// que ROLA até "Como funciona" — antes eram três botões colados fazendo a
+/// mesma coisa, o que confundia quem chegava.
 class PortalInstitucionalScreen extends StatefulWidget {
   const PortalInstitucionalScreen({super.key});
 
@@ -20,63 +29,118 @@ class PortalInstitucionalScreen extends StatefulWidget {
 }
 
 class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
-  EstatisticasPublicas _stats = EstatisticasPublicas.zero;
+  // Já começa com o último valor conhecido (cache do serviço): voltar ao
+  // portal não pisca mais "0" enquanto a API responde.
+  EstatisticasPublicas _stats =
+      EstatisticaService.cacheAtual ?? EstatisticasPublicas.zero;
+  bool _statsCarregadas = EstatisticaService.cacheAtual != null;
 
   /// Quantas versões mostrar de início na seção "Versões" (as demais entram
   /// no "Ver todas as versões").
   static const int _versoesIniciais = 5;
   bool _mostrarTodasVersoes = false;
 
+  /// Âncoras das seções (o herói e o topo rolam até elas).
+  final GlobalKey _kComoFunciona = GlobalKey();
+  final GlobalKey _kEquipe = GlobalKey();
+  final GlobalKey _kVersoes = GlobalKey();
+
+  /// Tema CLARO fixo do portal, criado uma vez (montar um ThemeData a cada
+  /// rebuild custa caro por causa da fonte).
+  ThemeData? _temaPortal;
+  List<bool>? _configTema;
+
   @override
   void initState() {
     super.initState();
     EstatisticaService().carregar().then((s) {
-      if (mounted) setState(() => _stats = s);
-    }).catchError((_) {/* mantem zeros se a API estiver fora */});
+      if (mounted) {
+        setState(() {
+          _stats = s;
+          _statsCarregadas = true;
+        });
+      }
+    }).catchError((_) {/* mantem os traços se a API estiver fora */});
   }
 
   void _entrar() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
+    Navigator.push(context, PageTransition.fade(const LoginPage()));
   }
 
   void _abrirDoc(DocumentoLegal tipo) {
     Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => DocumentosLegaisScreen(tipo: tipo)),
+        context, PageTransition.fade(DocumentosLegaisScreen(tipo: tipo)));
+  }
+
+  void _rolarAte(GlobalKey chave) {
+    final ctx = chave.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
     );
+  }
+
+  /// O portal é a vitrine pública: fica SEMPRE claro, mesmo com o app no tema
+  /// escuro. Envolver a árvore num tema claro (em vez de só pintar os fundos)
+  /// garante que nenhum texto herde o branco do tema escuro e suma.
+  ThemeData _tema() {
+    final c = ConfigController.instance;
+    final atual = [c.fonteDislexia, c.altoContraste, c.navegacaoSimplificada];
+    if (_temaPortal == null ||
+        _configTema == null ||
+        _configTema![0] != atual[0] ||
+        _configTema![1] != atual[1] ||
+        _configTema![2] != atual[2]) {
+      _configTema = atual;
+      _temaPortal = AppTheme.light(
+        dislexia: c.fonteDislexia,
+        altoContraste: c.altoContraste,
+        navegacaoSimplificada: c.navegacaoSimplificada,
+      );
+    }
+    return _temaPortal!;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Portal público sempre claro, nas cores do design system.
-      backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _AppBarTopo(onEntrar: _entrar),
-            _hero(),
-            _faixaEstatisticas(),
-            _secaoSobre(),
-            _secaoComoFunciona(),
-            _secaoOds(),
-            _secaoEquipe(),
-            _secaoFaq(),
-            _secaoTransparencia(),
-            _secaoVersoes(),
-            _rodape(),
-          ],
+    return Theme(
+      data: _tema(),
+      child: Scaffold(
+        // Portal público sempre claro, nas cores do design system.
+        backgroundColor: AppColors.background,
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              _AppBarTopo(
+                onEntrar: _entrar,
+                onComoFunciona: () => _rolarAte(_kComoFunciona),
+                onEquipe: () => _rolarAte(_kEquipe),
+                onVersoes: () => _rolarAte(_kVersoes),
+              ),
+              _hero(),
+              _faixaEstatisticas(),
+              _secaoSobre(),
+              _secaoComoFunciona(),
+              _secaoOds(),
+              _secaoEquipe(),
+              _secaoFaq(),
+              _secaoTransparencia(),
+              _secaoVersoes(),
+              _rodape(),
+            ],
+          ),
         ),
       ),
     );
   }
 
   // Limita a largura do conteudo e centraliza (responsivo).
-  Widget _conteudo({required Widget child, Color? cor, EdgeInsets? padding}) {
+  Widget _conteudo(
+      {required Widget child, Color? cor, EdgeInsets? padding, Key? chave}) {
     return Container(
+      key: chave,
       width: double.infinity,
       color: cor,
       padding: padding ??
@@ -168,28 +232,33 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                 ),
               ),
               const SizedBox(height: 34),
+              // UMA ação principal (leva ao login/cadastro) + UM atalho que
+              // apenas rola a página. O login "puro" fica só no topo.
               Wrap(
                 spacing: 16,
                 runSpacing: 16,
                 alignment: WrapAlignment.center,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _entrar,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 18),
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: AppRadius.brMd),
-                      textStyle: TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 16),
+                  _Elevavel(
+                    child: ElevatedButton.icon(
+                      onPressed: _entrar,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.primary,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 30, vertical: 18),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadius.brMd),
+                        textStyle: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 16),
+                      ),
+                      icon: const Icon(Icons.favorite_rounded),
+                      label: const Text('Quero doar'),
                     ),
-                    icon: const Icon(Icons.login),
-                    label: const Text('Entrar no app'),
                   ),
                   OutlinedButton.icon(
-                    onPressed: _entrar,
+                    onPressed: () => _rolarAte(_kComoFunciona),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Colors.white70),
@@ -197,13 +266,23 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
                           horizontal: 30, vertical: 18),
                       shape: const RoundedRectangleBorder(
                           borderRadius: AppRadius.brMd),
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 16),
                     ),
-                    icon: const Icon(Icons.favorite_outline),
-                    label: const Text('Quero doar'),
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    label: const Text('Como funciona'),
                   ),
                 ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'É gratuito para doadores e para ONGs. Criar a conta leva menos '
+                'de um minuto.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
               ),
             ],
           ),
@@ -214,17 +293,21 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
 
   // -------------------------------------------------- ESTATISTICAS (live)
   Widget _faixaEstatisticas() {
+    // Enquanto a API não responde, mostra "—" em vez de zeros: o backend
+    // gratuito hiberna e podia levar até um minuto exibindo "0 ONGs".
+    String n(int v) => _statsCarregadas ? v.toString() : '—';
     final itens = <List<dynamic>>[
-      [Icons.diversity_3, _stats.totalOngs.toString(), 'ONGs cadastradas'],
-      [Icons.people_alt, _stats.totalDoadores.toString(), 'Doadores'],
-      [Icons.campaign, _stats.totalNecessidades.toString(), 'Necessidades'],
-      [Icons.handshake, _stats.totalMatches.toString(), 'Conexões (matches)'],
+      [Icons.diversity_3, n(_stats.totalOngs), 'ONGs cadastradas'],
+      [Icons.people_alt, n(_stats.totalDoadores), 'Doadores'],
+      [Icons.campaign, n(_stats.totalNecessidades), 'Necessidades'],
+      [Icons.handshake, n(_stats.totalMatches), 'Conexões (matches)'],
       [
         Icons.attach_money,
-        'R\$ ${_stats.valorTotalDoado.toStringAsFixed(0)}',
+        // Mesma formatação de dinheiro do resto do app (R$ 1.234,50).
+        _statsCarregadas ? formatarReais(_stats.valorTotalDoado) : '—',
         'Doado via PIX'
       ],
-      [Icons.fact_check, _stats.totalPrestacoes.toString(), 'Prestações de contas'],
+      [Icons.fact_check, n(_stats.totalPrestacoes), 'Prestações de contas'],
     ];
 
     return _conteudo(
@@ -248,32 +331,41 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
   }
 
   Widget _cardEstatistica(IconData icone, String numero, String rotulo) {
-    return Container(
-      width: 240,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
-        borderRadius: AppRadius.brLg,
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
-      ),
-      child: Column(
-        children: [
-          Icon(icone, color: AppColors.primary, size: 34),
-          const SizedBox(height: 12),
-          Text(
-            numero,
-            style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            rotulo,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-          ),
-        ],
+    return _Elevavel(
+      subida: 5,
+      child: Container(
+        // 300px: com a largura máxima de 1100 cabem exatamente 3 por linha,
+        // então os 6 números fecham 3+3. Com 240 dava 4+2 e a faixa ficava
+        // visivelmente torta.
+        width: 300,
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: AppRadius.brLg,
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+        ),
+        child: Column(
+          children: [
+            Icon(icone, color: AppColors.primary, size: 34),
+            const SizedBox(height: 12),
+            // Os números entram animados quando a API responde (de 0 até o
+            // valor), em vez de "pularem" na tela.
+            _NumeroAnimado(
+              texto: numero,
+              style: const TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              rotulo,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 14, color: AppColors.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -321,6 +413,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
   // ----------------------------------------------------- COMO FUNCIONA
   Widget _secaoComoFunciona() {
     return _conteudo(
+      chave: _kComoFunciona,
       cor: Colors.white,
       child: Column(
         children: [
@@ -396,6 +489,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
       ['Abner Viola', 'Front-end', 'assets/images/abner.jpg'],
     ];
     return _conteudo(
+      chave: _kEquipe,
       cor: Colors.white,
       child: Column(
         children: [
@@ -415,45 +509,51 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
   }
 
   Widget _cardIntegrante(String nome, String papel, String foto) {
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceMuted,
-        borderRadius: AppRadius.brLg,
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(60),
-            child: Image.asset(
-              foto,
-              width: 90,
-              height: 90,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const CircleAvatar(
-                radius: 45,
-                backgroundColor: AppColors.primary,
-                child: Icon(Icons.person, color: Colors.white, size: 40),
+    return _Elevavel(
+      subida: 5,
+      child: Container(
+        width: 220,
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: AppRadius.brLg,
+        ),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(60),
+              child: Image.asset(
+                foto,
+                width: 90,
+                height: 90,
+                fit: BoxFit.cover,
+                // Cache no tamanho exibido: evita decodificar a foto inteira
+                // (as imagens da equipe são grandes) e deixa a página leve.
+                cacheWidth: 270,
+                errorBuilder: (_, _, _) => const CircleAvatar(
+                  radius: 45,
+                  backgroundColor: AppColors.primary,
+                  child: Icon(Icons.person, color: Colors.white, size: 40),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            nome,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            papel,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: AppColors.primary),
-          ),
-        ],
+            const SizedBox(height: 14),
+            Text(
+              nome,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              papel,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: AppColors.primary),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -576,6 +676,7 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
         ? kVersoesApp
         : kVersoesApp.take(_versoesIniciais).toList();
     return _conteudo(
+      chave: _kVersoes,
       child: Column(
         children: [
           _tituloSecao(
@@ -801,12 +902,94 @@ class _PortalInstitucionalScreenState extends State<PortalInstitucionalScreen> {
 
 // ============================================================ COMPONENTES
 
-class _AppBarTopo extends StatelessWidget {
-  final VoidCallback onEntrar;
-  const _AppBarTopo({required this.onEntrar});
+/// Número da faixa de transparência: troca com um fade + leve subida quando a
+/// API responde (antes o valor pulava de 0 para o real, sem transição).
+class _NumeroAnimado extends StatelessWidget {
+  final String texto;
+  final TextStyle style;
+  const _NumeroAnimado({required this.texto, required this.style});
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 420),
+      transitionBuilder: (filho, anim) => FadeTransition(
+        opacity: anim,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.35),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+          child: filho,
+        ),
+      ),
+      child: Text(texto, key: ValueKey(texto), style: style),
+    );
+  }
+}
+
+/// Faz um card REAGIR ao mouse: sobe alguns pixels e ganha uma sombra verde.
+/// Cada card é um StatefulWidget próprio, então o hover só reconstrói ele —
+/// a página inteira não repinta (isso é o que mantém a rolagem leve).
+class _Elevavel extends StatefulWidget {
+  final Widget child;
+
+  /// Quantos pixels o card sobe no hover.
+  final double subida;
+
+  const _Elevavel({required this.child, this.subida = 6});
+
+  @override
+  State<_Elevavel> createState() => _ElevavelState();
+}
+
+class _ElevavelState extends State<_Elevavel> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, _hover ? -widget.subida : 0, 0),
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.brLg,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: _hover ? 0.22 : 0.0),
+              blurRadius: _hover ? 24 : 0,
+              offset: Offset(0, _hover ? 12 : 0),
+            ),
+          ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Barra do topo: marca à esquerda, atalhos de navegação (só em telas largas)
+/// e o ÚNICO botão de login do portal.
+class _AppBarTopo extends StatelessWidget {
+  final VoidCallback onEntrar;
+  final VoidCallback onComoFunciona;
+  final VoidCallback onEquipe;
+  final VoidCallback onVersoes;
+
+  const _AppBarTopo({
+    required this.onEntrar,
+    required this.onComoFunciona,
+    required this.onEquipe,
+    required this.onVersoes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Em telas estreitas (celular) só cabem marca + Entrar.
+    final bool largo = MediaQuery.of(context).size.width >= 860;
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -818,11 +1001,11 @@ class _AppBarTopo extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.volunteer_activism,
+                  Icon(Icons.volunteer_activism,
                       color: AppColors.primary, size: 26),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Text(
                     'Connect ONG',
                     style: TextStyle(
@@ -832,18 +1015,84 @@ class _AppBarTopo extends StatelessWidget {
                   ),
                 ],
               ),
-              ElevatedButton(
-                onPressed: onEntrar,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                  shape: const RoundedRectangleBorder(
-                      borderRadius: AppRadius.brMd),
-                  textStyle: TextStyle(fontWeight: FontWeight.w600),
+              Row(
+                children: [
+                  if (largo) ...[
+                    _LinkTopo(texto: 'Como funciona', onTap: onComoFunciona),
+                    _LinkTopo(texto: 'Equipe', onTap: onEquipe),
+                    _LinkTopo(texto: 'Versões', onTap: onVersoes),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  ElevatedButton.icon(
+                    onPressed: onEntrar,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 22, vertical: 14),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.brMd),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    icon: const Icon(Icons.login_rounded, size: 18),
+                    label: const Text('Entrar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Link de navegação do topo, com sublinhado que cresce no hover.
+class _LinkTopo extends StatefulWidget {
+  final String texto;
+  final VoidCallback onTap;
+  const _LinkTopo({required this.texto, required this.onTap});
+
+  @override
+  State<_LinkTopo> createState() => _LinkTopoState();
+}
+
+class _LinkTopoState extends State<_LinkTopo> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 160),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: _hover ? AppColors.primary : AppColors.textSecondary,
                 ),
-                child: const Text('Entrar'),
+                child: Text(widget.texto),
+              ),
+              const SizedBox(height: 4),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                height: 2,
+                width: _hover ? 22 : 0,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.all(Radius.circular(2)),
+                ),
               ),
             ],
           ),
@@ -862,46 +1111,51 @@ class _CardValor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 320,
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadius.brLg,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: AppRadius.brMd,
+    return _Elevavel(
+      child: Container(
+        width: 320,
+        // Altura mínima igual nos três: sem isto o card do meio ficava mais
+        // alto que os vizinhos (o texto é maior) e a linha ficava desalinhada.
+        constraints: const BoxConstraints(minHeight: 230),
+        padding: const EdgeInsets.all(26),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: AppRadius.brLg,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
-            child: Icon(icone, color: AppColors.primary, size: 26),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            titulo,
-            style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            texto,
-            style:
-                TextStyle(color: AppColors.textSecondary, height: 1.55),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: AppRadius.brMd,
+              ),
+              child: Icon(icone, color: AppColors.primary, size: 26),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              titulo,
+              style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              texto,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, height: 1.55),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -916,42 +1170,44 @@ class _CardPasso extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 300,
-      padding: const EdgeInsets.all(26),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceMuted,
-        borderRadius: AppRadius.brLg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: AppColors.primary,
-            child: Text(
-              numero,
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18),
+    return _Elevavel(
+      child: Container(
+        width: 300,
+        padding: const EdgeInsets.all(26),
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: AppRadius.brLg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColors.primary,
+              child: Text(
+                numero,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            titulo,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            texto,
-            style:
-                TextStyle(color: AppColors.textSecondary, height: 1.55),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              titulo,
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              texto,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, height: 1.55),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -966,34 +1222,37 @@ class _CardOds extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 230,
-      height: 140,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cor,
-        borderRadius: AppRadius.brLg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'ODS $numero',
-            style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                fontWeight: FontWeight.w600),
-          ),
-          Text(
-            titulo,
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                height: 1.2),
-          ),
-        ],
+    return _Elevavel(
+      subida: 8,
+      child: Container(
+        width: 230,
+        height: 140,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: cor,
+          borderRadius: AppRadius.brLg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'ODS $numero',
+              style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600),
+            ),
+            Text(
+              titulo,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2),
+            ),
+          ],
+        ),
       ),
     );
   }

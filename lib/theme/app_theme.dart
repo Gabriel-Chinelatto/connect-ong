@@ -97,20 +97,20 @@ class AppTheme {
               outlineVariant: corBorda,
             )
           : scheme,
-      // Navegacao simplificada: troca de tela em fade CURTO (sem deslizes
-      // longos) para reduzir movimento. Vale para todos os MaterialPageRoute.
-      pageTransitionsTheme: navegacaoSimplificada
-          ? const PageTransitionsTheme(
-              builders: {
-                TargetPlatform.android: _TransicaoFadeCurta(),
-                TargetPlatform.iOS: _TransicaoFadeCurta(),
-                TargetPlatform.windows: _TransicaoFadeCurta(),
-                TargetPlatform.macOS: _TransicaoFadeCurta(),
-                TargetPlatform.linux: _TransicaoFadeCurta(),
-                TargetPlatform.fuchsia: _TransicaoFadeCurta(),
-              },
-            )
-          : null,
+      // TRANSICAO DE TELA (vale para todo MaterialPageRoute do app):
+      // - navegacao simplificada: fade CURTO (~120ms), sem deslocamento;
+      // - padrao: fade + micro-deslize de 220ms.
+      // O padrao do Material 3 (ZoomPageTransitionsBuilder) faz escala com
+      // camada de composicao a cada frame — na web isso pesa e da a sensacao
+      // de "demorou para abrir". Este e mais leve e mais rapido.
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          for (final p in TargetPlatform.values)
+            p: navegacaoSimplificada
+                ? const _TransicaoFadeCurta()
+                : const _TransicaoRapida(),
+        },
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -199,6 +199,40 @@ class AppTheme {
                     : (escuro ? Colors.white60 : AppColors.textSecondary)),
           );
         }),
+      ),
+    );
+  }
+}
+
+/// Transicao PADRAO de rota do app: fade + micro-deslize horizontal em 220ms.
+/// Substitui o Zoom do Material 3, que e mais pesado (escala com camada de
+/// composicao) e mais lento — sobretudo na web.
+class _TransicaoRapida extends PageTransitionsBuilder {
+  const _TransicaoRapida();
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 220);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 180);
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final curva = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: curva,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.025, 0),
+          end: Offset.zero,
+        ).animate(curva),
+        child: child,
       ),
     );
   }

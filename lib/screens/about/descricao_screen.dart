@@ -42,7 +42,10 @@ class _DescricaoScreenState extends State<DescricaoScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(32),
                 child: Image.asset('assets/images/logo.jpg',
-                    width: 135, height: 135, fit: BoxFit.cover),
+                    width: 135,
+                    height: 135,
+                    cacheWidth: 405,
+                    fit: BoxFit.cover),
               ),
             ),
             const SizedBox(height: 24),
@@ -85,11 +88,17 @@ class _DescricaoScreenState extends State<DescricaoScreen> {
               icon: Icons.dashboard_outlined,
               child: Column(
                 children: const [
-                  'Cadastro de doações',
-                  'Busca de receptores',
-                  'Gerenciamento de ONGs',
-                  'Sistema intuitivo e responsivo',
-                  'Interface moderna e acessível',
+                  'Match entre doador e ONG: demonstre interesse numa '
+                      'necessidade e converse pelo chat até a entrega',
+                  'Doação em dinheiro via PIX, com prestação de contas '
+                      'publicada pela ONG',
+                  'Dora, assistente de IA que entende o que você quer doar '
+                      '(inclusive por foto) e recomenda ONGs reais',
+                  'Ranking de transparência, avaliações e selo de verificação',
+                  'Simulador de frete e "Como chegar" no mapa, pelo endereço '
+                      'exato da ONG',
+                  'Acessibilidade real: tema escuro, alto contraste, fonte '
+                      'para dislexia e navegação simplificada',
                 ].map((t) => _bullet(cs, t)).toList(),
               ),
             ),

@@ -565,16 +565,26 @@ class _InicioTabState extends State<InicioTab> {
         children: [
           Row(
             children: [
-              _selo(o.nivel),
-              // Foguinho 🔥 no card da ONG que é a atual #1 do ranking.
-              if (o.diasNoTopo != null) ...[
-                const SizedBox(width: 6),
-                Flexible(
-                    child: ChipFoguinho(dias: o.diasNoTopo!, compacto: true)),
-              ],
-              const Spacer(),
-              if (o.verificada)
+              // Selo + foguinho ficam num grupo Expanded: assim todo o espaço
+              // livre é deles (antes um Spacer disputava o espaço com o chip,
+              // que era espremido e perdia o número da sequência).
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(child: _selo(o.nivel)),
+                    // Foguinho 🔥 no card da ONG que é a atual #1 do ranking.
+                    if (o.diasNoTopo != null) ...[
+                      const SizedBox(width: 6),
+                      ChipFoguinho(dias: o.diasNoTopo!, compacto: true),
+                    ],
+                  ],
+                ),
+              ),
+              if (o.verificada) ...[
+                const SizedBox(width: 4),
                 const Icon(Icons.verified, size: 16, color: AppColors.primary),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -683,9 +693,15 @@ class _InicioTabState extends State<InicioTab> {
         children: [
           Icon(Icons.workspace_premium, size: 13, color: cor),
           const SizedBox(width: 3),
-          Text(nivel,
-              style: TextStyle(
-                  color: cor, fontSize: 10, fontWeight: FontWeight.w700)),
+          // Ellipsis aqui (e não no foguinho ao lado): se faltar espaço, quem
+          // encolhe é o rótulo do nível, não o número da sequência.
+          Flexible(
+            child: Text(nivel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    color: cor, fontSize: 10, fontWeight: FontWeight.w700)),
+          ),
         ],
       ),
     );

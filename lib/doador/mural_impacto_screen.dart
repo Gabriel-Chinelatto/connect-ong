@@ -31,13 +31,14 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
     _carregar();
   }
 
-  Future<void> _carregar() async {
+  /// [forcar] = veio do "puxar para atualizar": ignora o cache de 2 min.
+  Future<void> _carregar({bool forcar = false}) async {
     setState(() {
       _carregando = true;
       _erro = false;
     });
     try {
-      final s = await _service.carregar();
+      final s = await _service.carregar(forcar: forcar);
       if (!mounted) return;
       setState(() {
         _stats = s;
@@ -73,7 +74,7 @@ class _MuralImpactoScreenState extends State<MuralImpactoScreen> {
           : _erro
               ? _vazio()
               : RefreshIndicator(
-                  onRefresh: _carregar,
+                  onRefresh: () => _carregar(forcar: true),
                   color: AppColors.primary,
                   child: ListView(
                     physics: const BouncingScrollPhysics(),

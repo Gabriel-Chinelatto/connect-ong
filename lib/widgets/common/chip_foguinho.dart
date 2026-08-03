@@ -58,18 +58,34 @@ class ChipFoguinho extends StatelessWidget {
             Icon(Icons.local_fire_department_rounded,
                 size: compacto ? 15 : 17, color: Colors.white),
             const SizedBox(width: 3),
-            Flexible(
-              child: Text(
+            // O NÚMERO nunca pode ser cortado: no modo compacto ele É a
+            // informação (sem ele sobra só uma chama sem sentido). Por isso
+            // vai como texto rígido — quem chama garante o espaço. Só a
+            // frase longa (modo normal) usa Flexible + reticências.
+            if (compacto)
+              Text(
                 texto,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                softWrap: false,
+                style: const TextStyle(
                   color: Colors.white,
-                  fontSize: compacto ? 12 : 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
+              )
+            else
+              Flexible(
+                child: Text(
+                  texto,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),

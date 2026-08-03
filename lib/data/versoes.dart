@@ -27,9 +27,49 @@ class VersaoApp {
 /// Changelog do Connect ONG — da mais recente (topo) para a mais antiga.
 const List<VersaoApp> kVersoesApp = [
   VersaoApp(
+    numero: 'v2.2',
+    titulo: 'Endereço no mapa e app mais rápido',
+    atual: true,
+    mudancas: [
+      'A ONG digita o endereço e escolhe a sugestão pronta — o sistema '
+          'confirma que o lugar existe e guarda a localização exata',
+      'Mapa e "Como chegar" abrem no ponto exato da ONG (antes caíam no '
+          'centro da cidade)',
+      'Telas até 6x mais rápidas: as consultas ao banco foram reduzidas e '
+          'agora carregam de uma vez só',
+      'Correções de layout: cartão do PIX, cards do ranking e textos que '
+          'estouravam em telas pequenas',
+      'Atualização automática da versão web (nada mais fica preso numa '
+          'versão antiga guardada pelo navegador)',
+    ],
+  ),
+  VersaoApp(
+    numero: 'v2.1',
+    titulo: 'Plataforma no ar e mais transparência',
+    mudancas: [
+      'Connect ONG publicado na internet: dá para usar de qualquer '
+          'celular ou computador, sem instalar nada',
+      'Chat "Sobre o Desenvolvimento": pergunte como o projeto foi feito e '
+          'uma IA responde com base na documentação real',
+      'Portal público com os números da plataforma atualizados em tempo real',
+      'Instale o Connect ONG como aplicativo (PWA) e receba avisos de match',
+      'Página pública da ONG com QR Code para abrir direto no celular',
+    ],
+  ),
+  VersaoApp(
+    numero: 'v2.0',
+    titulo: 'Uma web com cara de web',
+    mudancas: [
+      'Mapa interativo de ONGs: veja quem precisa de ajuda perto de você',
+      'Comparador de ONGs lado a lado, com link para compartilhar',
+      'Modo Quiosque em tela cheia, para eventos e feiras',
+      'Relatório de impacto para imprimir ou salvar em PDF',
+      'Busca rápida pelo teclado (Ctrl + K) e fale com a Dora por voz',
+    ],
+  ),
+  VersaoApp(
     numero: 'v1.9',
     titulo: 'Frete inteligente e mais IA',
-    atual: true,
     mudancas: [
       'Navegação mais fluida: transição suave ao trocar de aba, com resposta '
           'ao toque (sensação de app nativo)',

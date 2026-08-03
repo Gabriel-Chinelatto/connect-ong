@@ -48,7 +48,9 @@ class _MainShellState extends State<MainShell>
   // IndexedStack. O IndexedStack continua preservando o estado de cada aba.
   late final AnimationController _transicao = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 260),
+    // 200ms: rápido o bastante para o toque parecer instantâneo (a 260ms a
+    // troca de aba dava sensação de atraso, principalmente no navegador).
+    duration: const Duration(milliseconds: 200),
     value: 1,
   );
   late final Animation<double> _curva =
@@ -143,20 +145,20 @@ class _MainShellState extends State<MainShell>
 
   // Envolve o conteúdo da aba num fade + micro-slide de entrada, tocado a cada
   // troca de aba (o controller vai de 0→1). Fora da troca fica estático (value=1).
+  //
+  // Fade/Slide Transition em vez de AnimatedBuilder + Opacity/Transform: assim
+  // a animação roda só na camada de pintura, sem reconstruir widgets a cada
+  // frame — a troca de aba fica visivelmente mais leve na web.
   Widget _conteudoAnimado(Widget filho) {
-    return AnimatedBuilder(
-      animation: _curva,
-      builder: (context, child) {
-        final t = _curva.value;
-        return Opacity(
-          opacity: t,
-          child: Transform.translate(
-            offset: Offset(0, (1 - t) * 10),
-            child: child,
-          ),
-        );
-      },
-      child: filho,
+    return FadeTransition(
+      opacity: _curva,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.012),
+          end: Offset.zero,
+        ).animate(_curva),
+        child: filho,
+      ),
     );
   }
 

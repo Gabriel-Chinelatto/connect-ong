@@ -106,12 +106,15 @@ class _DesenvolvimentoChatScreenState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      // Cores do TEMA (claro/escuro). Antes eram fixas e claras: no tema
+      // escuro o texto herdava o branco do tema sobre fundo claro e sumia.
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Sobre o Desenvolvimento'),
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
         elevation: 0,
       ),
       body: Column(
@@ -135,10 +138,11 @@ class _DesenvolvimentoChatScreenState
   }
 
   Widget _bolhaBoas() {
+    final cs = Theme.of(context).colorScheme;
     return _balao(
       alinhado: Alignment.centerLeft,
-      cor: AppColors.surface,
-      corTexto: AppColors.textPrimary,
+      cor: cs.surface,
+      corTexto: cs.onSurface,
       filho: const Text(
         'Oi! 👋 Posso explicar como o Connect ONG foi desenvolvido: tecnologias, '
         'métodos, decisões e o histórico de versões. O que você quer saber?',
@@ -148,6 +152,7 @@ class _DesenvolvimentoChatScreenState
   }
 
   Widget _chipsIniciais() {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.xs),
       child: Wrap(
@@ -158,12 +163,12 @@ class _DesenvolvimentoChatScreenState
             ActionChip(
               label: Text(c),
               onPressed: () => _enviar(c),
-              backgroundColor: AppColors.surface,
-              labelStyle: const TextStyle(
-                  color: AppColors.textPrimary,
+              backgroundColor: cs.surface,
+              labelStyle: TextStyle(
+                  color: cs.onSurface,
                   fontWeight: FontWeight.w600,
                   fontSize: 13),
-              side: const BorderSide(color: AppColors.border),
+              side: BorderSide(color: cs.outlineVariant),
               shape: const StadiumBorder(),
             ),
         ],
@@ -172,6 +177,7 @@ class _DesenvolvimentoChatScreenState
   }
 
   Widget _bolha(_Msg m) {
+    final cs = Theme.of(context).colorScheme;
     if (m.papel == _Papel.usuario) {
       return _balao(
         alinhado: Alignment.centerRight,
@@ -181,14 +187,17 @@ class _DesenvolvimentoChatScreenState
       );
     }
     if (m.papel == _Papel.erro) {
+      final escuro = Theme.of(context).brightness == Brightness.dark;
       return _balao(
         alinhado: Alignment.centerLeft,
-        cor: const Color(0xFFFDECEA),
-        corTexto: AppColors.error,
+        cor: escuro ? const Color(0xFF4A2320) : const Color(0xFFFDECEA),
+        corTexto: escuro ? const Color(0xFFFFB4AB) : AppColors.error,
         filho: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 18, color: AppColors.error),
+            Icon(Icons.error_outline,
+                size: 18,
+                color: escuro ? const Color(0xFFFFB4AB) : AppColors.error),
             const SizedBox(width: AppSpacing.xs),
             Flexible(child: Text(m.texto)),
           ],
@@ -197,8 +206,8 @@ class _DesenvolvimentoChatScreenState
     }
     return _balao(
       alinhado: Alignment.centerLeft,
-      cor: AppColors.surface,
-      corTexto: AppColors.textPrimary,
+      cor: cs.surface,
+      corTexto: cs.onSurface,
       filho: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -209,14 +218,14 @@ class _DesenvolvimentoChatScreenState
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceMuted,
+                  color: cs.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
-                child: const Text('Modo básico',
+                child: Text('Modo básico',
                     style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textSecondary)),
+                        color: cs.onSurfaceVariant)),
               ),
             ),
         ],
@@ -225,10 +234,11 @@ class _DesenvolvimentoChatScreenState
   }
 
   Widget _digitando() {
+    final cs = Theme.of(context).colorScheme;
     return _balao(
       alinhado: Alignment.centerLeft,
-      cor: AppColors.surface,
-      corTexto: AppColors.textSecondary,
+      cor: cs.surface,
+      corTexto: cs.onSurfaceVariant,
       filho: Row(
         mainAxisSize: MainAxisSize.min,
         children: const [
@@ -267,8 +277,8 @@ class _DesenvolvimentoChatScreenState
             bottomRight:
                 Radius.circular(ehDireita ? AppRadius.sm : AppRadius.lg),
           ),
-          border: cor == AppColors.surface
-              ? Border.all(color: AppColors.border)
+          border: cor == Theme.of(context).colorScheme.surface
+              ? Border.all(color: Theme.of(context).colorScheme.outlineVariant)
               : null,
         ),
         child: DefaultTextStyle.merge(
@@ -280,13 +290,14 @@ class _DesenvolvimentoChatScreenState
   }
 
   Widget _campoEnvio() {
+    final cs = Theme.of(context).colorScheme;
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.border)),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          border: Border(top: BorderSide(color: cs.outlineVariant)),
         ),
         child: Row(
           children: [
@@ -295,13 +306,22 @@ class _DesenvolvimentoChatScreenState
                 controller: _controller,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _enviar(),
+                // Cor EXPLÍCITA do que é digitado: sem isto, no tema escuro o
+                // texto saía branco sobre um campo claro (ficava invisível).
+                style: TextStyle(color: cs.onSurface, fontSize: 14),
+                cursorColor: AppColors.primary,
                 decoration: InputDecoration(
                   hintText: 'Pergunte sobre o desenvolvimento…',
+                  hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
                   filled: true,
-                  fillColor: AppColors.background,
+                  fillColor: cs.surfaceContainerHighest,
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
                   border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                     borderSide: BorderSide.none,
                   ),
