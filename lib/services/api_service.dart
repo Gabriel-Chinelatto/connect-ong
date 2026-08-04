@@ -172,10 +172,14 @@ class ApiService {
   static Uri _uri(String caminho) => Uri.parse('$baseUrl$caminho');
 
   static Future<http.Response> get(String caminho, {bool auth = true}) {
-    return _executar(() => http.get(
-          _uri(caminho),
-          headers: auth ? authHeaders() : null,
-        ));
+    // GET é idempotente: repetir é seguro (não cria nem altera nada).
+    return _executar(
+      () => http.get(
+        _uri(caminho),
+        headers: auth ? authHeaders() : null,
+      ),
+      idempotente: true,
+    );
   }
 
   static Future<http.Response> post(String caminho, {Object? body}) {
@@ -201,28 +205,69 @@ class ApiService {
         ));
   }
 
-  // Aplica o timeout e converte falhas de rede em Exception com mensagem
-  // amigável (as demais respostas HTTP seguem para o serviço tratar o status).
+  /// Status que indicam servidor INDISPONÍVEL (não é culpa do que foi pedido):
+  /// 502/504 aparecem enquanto o host ainda está subindo ou está sem instância;
+  /// 503 é o "indisponível" padrão. Vale a pena tentar de novo — em 2026-08-04
+  /// o Render devolveu 502 em 100% das chamadas e as telas simplesmente diziam
+  /// "Não foi possível carregar", sem nenhuma nova tentativa.
+  static bool servidorIndisponivel(int status) =>
+      status == 502 || status == 503 || status == 504;
+
+  /// Quantas tentativas EXTRAS uma requisição idempotente faz antes de desistir.
+  static const int _tentativasExtras = 2;
+
+  // Aplica o timeout, tenta de novo quando é seguro e converte falhas de rede
+  // em Exception com mensagem amigável (as demais respostas HTTP seguem para o
+  // serviço tratar o status).
   static Future<http.Response> _executar(
-      Future<http.Response> Function() acao) async {
-    try {
-      final resposta = await acao().timeout(timeout);
-      registrarResposta();
-      // Sessão expirada: um 401 numa requisição que ENVIOU token significa que
-      // o token venceu/foi invalidado -> logout global (uma única vez). Um 401
-      // SEM token (login, esqueci-senha, endpoints públicos) NÃO desloga: aí o
-      // 401 é só "credencial inválida" e o próprio fluxo trata a mensagem.
-      if (resposta.statusCode == 401 && _accessToken != null) {
-        await _sessaoExpirou();
+    Future<http.Response> Function() acao, {
+    bool idempotente = false,
+  }) async {
+    // Só repetimos requisições idempotentes (GET). Repetir um POST poderia
+    // criar a mesma doação/interesse duas vezes.
+    final int maxTentativas = idempotente ? 1 + _tentativasExtras : 1;
+    Object? ultimoErro;
+
+    for (int tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+      try {
+        final resposta = await acao().timeout(timeout);
+        registrarResposta();
+        // Sessão expirada: um 401 numa requisição que ENVIOU token significa que
+        // o token venceu/foi invalidado -> logout global (uma única vez). Um 401
+        // SEM token (login, esqueci-senha, endpoints públicos) NÃO desloga: aí o
+        // 401 é só "credencial inválida" e o próprio fluxo trata a mensagem.
+        if (resposta.statusCode == 401 && _accessToken != null) {
+          await _sessaoExpirou();
+        }
+        if (servidorIndisponivel(resposta.statusCode)) {
+          if (tentativa < maxTentativas) {
+            await Future.delayed(Duration(seconds: tentativa));
+            continue;
+          }
+          throw Exception(
+            'O servidor está fora do ar no momento (erro '
+            '${resposta.statusCode}). Tente de novo em instantes.',
+          );
+        }
+        return resposta;
+      } on TimeoutException catch (e) {
+        ultimoErro = e;
+      } on SocketException catch (e) {
+        ultimoErro = e;
+      } on http.ClientException catch (e) {
+        ultimoErro = e;
       }
-      return resposta;
-    } on TimeoutException {
-      throw Exception(_mensagemDemora());
-    } on SocketException {
-      throw Exception('Sem conexão. Verifique sua internet.');
-    } on http.ClientException {
-      throw Exception('Não foi possível conectar ao servidor.');
+      // Falha de rede: espera 1s, 2s… e tenta de novo (quando é seguro).
+      if (tentativa < maxTentativas) {
+        await Future.delayed(Duration(seconds: tentativa));
+      }
     }
+
+    if (ultimoErro is TimeoutException) throw Exception(_mensagemDemora());
+    if (ultimoErro is SocketException) {
+      throw Exception('Sem conexão. Verifique sua internet.');
+    }
+    throw Exception('Não foi possível conectar ao servidor.');
   }
 
   /// Mensagem de demora: se o servidor ainda não respondeu nenhuma vez, o mais

@@ -34,4 +34,21 @@ void main() {
     // O que o usuário via antes desta correção era exatamente isto:
     expect(acordada, isNot(contains('TimeoutException')));
   });
+
+  // Em 2026-08-04 o Render ficou sem deploy ativo e devolveu 502 em 100% das
+  // chamadas; as telas diziam "Não foi possível carregar" sem tentar de novo.
+  group('servidor indisponível (5xx de infraestrutura)', () {
+    test('502, 503 e 504 contam como servidor fora do ar', () {
+      expect(ApiService.servidorIndisponivel(502), isTrue);
+      expect(ApiService.servidorIndisponivel(503), isTrue);
+      expect(ApiService.servidorIndisponivel(504), isTrue);
+    });
+
+    test('erros do próprio pedido NÃO entram na regra (não repetir)', () {
+      for (final status in [200, 201, 400, 401, 403, 404, 409, 500]) {
+        expect(ApiService.servidorIndisponivel(status), isFalse,
+            reason: 'status $status não é indisponibilidade de servidor');
+      }
+    });
+  });
 }
