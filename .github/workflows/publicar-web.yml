@@ -9,8 +9,10 @@ name: Publicar app do doador (web)
 # - `--base-href /connect-ong/`: o Pages serve o site numa SUBPASTA com o nome
 #   do repositorio. Sem isso o app carrega em branco (procura os arquivos na
 #   raiz do dominio).
-# - `MODO_FEIRA_PADRAO=false`: a versao publica NAO exibe as credenciais de
-#   demonstracao na tela de login. Quem apresenta liga nas Configuracoes.
+# - Modo Feira fica LIGADO (padrao do app): a tela de login exibe as credenciais
+#   de demonstracao, para o visitante do estande entrar sozinho. Para esconder,
+#   basta compilar com `--dart-define=MODO_FEIRA_PADRAO=false` ou desligar a
+#   opcao nas Configuracoes do proprio app.
 # - A API usada e a padrao (Render). Esse endereco precisa estar liberado no
 #   CORS do backend (ver SecurityConfig.allowedOrigins).
 # - `404.html` = copia do `index.html`: o Flutter web usa rotas por fragmento,
@@ -53,11 +55,14 @@ jobs:
       - name: Rodar testes
         run: flutter test
 
+      # MODO FEIRA LIGADO tambem na versao publicada (decisao do usuario em
+      # 05/08/2026): o card de credenciais no login e o que permite o visitante
+      # do estande entrar sozinho, sem alguem digitar a senha para ele.
+      # Contrapartida conhecida: quem abrir o link enxerga um login valido.
       - name: Compilar versao web
         run: |
           flutter build web --release \
-            --base-href /connect-ong/ \
-            --dart-define=MODO_FEIRA_PADRAO=false
+            --base-href /connect-ong/
 
       - name: Tratar rotas profundas (404 -> index)
         run: cp build/web/index.html build/web/404.html
