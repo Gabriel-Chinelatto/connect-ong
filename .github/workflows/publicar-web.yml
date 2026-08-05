@@ -59,10 +59,18 @@ jobs:
       # 05/08/2026): o card de credenciais no login e o que permite o visitante
       # do estande entrar sozinho, sem alguem digitar a senha para ele.
       # Contrapartida conhecida: quem abrir o link enxerga um login valido.
+      # --pwa-strategy=none: NAO instala service worker.
+      # Por padrao o Flutter guarda o app inteiro no navegador e continua
+      # servindo a VERSAO ANTIGA depois de uma publicacao — em 05/08/2026 uma
+      # correcao ja estava no ar e o navegador do usuario insistia na versao
+      # velha. Numa feira isso e pior ainda: cada visitante poderia pegar uma
+      # versao diferente. O app precisa de internet de qualquer forma (fala com
+      # a API), entao o cache offline nao compensa o risco.
       - name: Compilar versao web
         run: |
           flutter build web --release \
-            --base-href /connect-ong/
+            --base-href /connect-ong/ \
+            --pwa-strategy=none
 
       - name: Tratar rotas profundas (404 -> index)
         run: cp build/web/index.html build/web/404.html
