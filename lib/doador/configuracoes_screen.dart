@@ -11,6 +11,7 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../utils/page_transition.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../screens/legal/documentos_legais_screen.dart';
@@ -83,41 +84,23 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
     setState(() => _p = _original.copy());
   }
 
-  /// Dialog ao tentar sair com mudancas pendentes.
+  /// Dialog ao tentar sair com mudancas pendentes. O dialogo vive em
+  /// widgets/common/confirmar_saida.dart, compartilhado com a tela de edicao
+  /// de perfil (antes cada tela tinha a sua copia).
   Future<void> _confirmarSaida() async {
-    final escolha = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Descartar alterações?'),
-        content: const Text(
-            'Você mudou algumas configurações mas ainda não salvou.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, 'editar'),
-            child: const Text('Continuar editando'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, 'descartar'),
-            child: const Text('Descartar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, 'salvar'),
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
-    );
+    final navegador = Navigator.of(context);
+    final escolha = await perguntarSaida(context, permiteSalvar: true);
     if (!mounted) return;
 
     switch (escolha) {
-      case 'salvar':
+      case SaidaEscolha.salvar:
         final ok = await _salvar();
-        if (ok && mounted) Navigator.pop(context);
-      case 'descartar':
+        if (ok && navegador.mounted) navegador.pop();
+      case SaidaEscolha.descartar:
         _descartar();
-        Navigator.pop(context);
-      default:
-        break; // continuar editando (ou dialog fechado)
+        if (navegador.mounted) navegador.pop();
+      case SaidaEscolha.continuarEditando:
+        break;
     }
   }
 

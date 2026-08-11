@@ -9,6 +9,7 @@ import '../services/session_service.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/forms/seletor_uf_cidade.dart';
 
@@ -36,6 +37,21 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
   bool _carregando = true;
   bool _salvando = false;
   bool _abrindoGaleria = false; // guard anti-duplo-toque no seletor
+
+  /// Retrato dos campos como estavam na última carga. Serve para avisar antes
+  /// de sair com alterações pendentes (antes, sair perdia tudo em silêncio).
+  String _retratoSalvo = '';
+
+  String _retratoAtual() => [
+        _nome.text,
+        _telefone.text,
+        _cidade.text,
+        _estado.text,
+        _bio.text,
+        _fotoBase64,
+      ].join('');
+
+  bool get _temMudanca => !_carregando && _retratoAtual() != _retratoSalvo;
 
   // Foto de perfil SEMPRE por arquivo (galeria → base64). Campo de URL foi
   // removido de vez: o backend recebe/devolve apenas fotoBase64.
@@ -79,17 +95,18 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
             _fotoBase64.isNotEmpty ? base64Decode(_fotoBase64) : null;
         _carregando = false;
       });
+      _retratoSalvo = _retratoAtual();
     } catch (_) {
       if (mounted) setState(() => _carregando = false);
     }
   }
 
-  Future<void> _salvar() async {
-    if (_usuarioId == null) return;
+  Future<bool> _salvar() async {
+    if (_usuarioId == null) return false;
     // Nome é obrigatório — não deixa salvar em branco por cima do dado real.
     if (_nome.text.trim().isEmpty) {
       AppSnackbar.erro(context, 'Informe seu nome.');
-      return;
+      return false;
     }
     setState(() => _salvando = true);
     try {
@@ -101,14 +118,17 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
         'bio': _bio.text.trim(),
         'fotoBase64': _fotoBase64,
       });
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() => _salvando = false);
+      _retratoSalvo = _retratoAtual();
       AppSnackbar.sucesso(context, 'Perfil atualizado! 💚');
       Navigator.pop(context, true); // avisa o hub para recarregar
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() => _salvando = false);
       AppSnackbar.erro(context, e.toString().replaceFirst('Exception: ', ''));
+      return false;
     }
   }
 
@@ -153,6 +173,15 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     final iniciais = _nome.text.isNotEmpty ? _nome.text[0].toUpperCase() : '?';
     final avatarImg = _avatarImagem();
 
+    return GuardaDeSaida(
+      temMudanca: _temMudanca,
+      aoSalvar: _salvar,
+      child: _conteudo(context, cs, iniciais, avatarImg),
+    );
+  }
+
+  Widget _conteudo(BuildContext context, ColorScheme cs, String iniciais,
+      ImageProvider? avatarImg) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Editar perfil'),
