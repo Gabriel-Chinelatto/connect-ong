@@ -1,16 +1,19 @@
 # Memory Index
 
-> ## 🚀 ESTADO ATUAL (2026-08-11) — LEIA PRIMEIRO
+> ## 🚀 ESTADO ATUAL (2026-08-12) — LEIA PRIMEIRO
 > **Banco RECHEADO para a apresentação:** 2.000 ONGs pelas 27 UFs (coordenada real de município), 1.200 doadores, 909 necessidades abertas, 3.254 prestações, R$ 3,56 mi em PIX; contas da feira com história escrita à mão (Lar Viva é a #1 do ranking e fica com interesses PENDENTES de propósito, para aceitar ao vivo). Ferramentas em `connect-ong-api/ferramentas/`.
+> **Última rodada (12/08):** o banco cheio revelou três problemas de TELA, todos fechados — carrossel de campanhas estourando a largura, campanha sem caminho para o perfil da ONG e o mapa da web ilegível (agora em 3 níveis: estado → área → ONG). Ver [ajustes pós-recheio](connect-ong-ajustes-pos-recheio-2026-08-12.md), que também traz **como subir os 4 serviços locais** para conferir na tela.
 > **🔑 FRASE-CHAVE COMBINADA:** ao ouvir **"vamos se preparar para a feira no computador de apresentação"**, executar **`PREPARAR-FEIRA.md`** (raiz do repo mobile) — tudo local no notebook. Ainda NÃO executado.
 > **🔴 A lentidão NÃO é o código nem o volume: é o Render grátis.** Mesma tela, mesmo banco: perfil de ONG 4,85s no Render × **0,81s local**. Ver [massa-demo + feira](connect-ong-massa-demo-e-feira-2026-08-11.md).
-> **Testes:** backend **179** · doador **96** · painel **50**.
+> **Testes:** backend **179** · doador **98** · painel **50**.
 > **🌐 No ar:** site https://connectong.netlify.app · doador https://gabriel-chinelatto.github.io/connect-ong/ · painel https://gabriel-chinelatto.github.io/connect-ong-desktop/ · API https://connect-ong-api.onrender.com + MySQL da escola. `git push` = deploy automático. **Os 4 repos são PÚBLICOS (nunca commitar segredo).**
 > **⏰ A API hiberna** (~15 min ociosa; 1ª chamada de 10 a 95s): acordar antes de qualquer apresentação. Se ela CAIR, ler Events/Logs no Render antes de supor hibernação (a causa real já foi estouro de 512 MB).
 > **📋 Apresentar:** `COMO-MOSTRAR.md` (repo mobile). Contas: `demo.joao@connectong.com` / `demo.larviva@connectong.com`, senha `demo123`.
 > **⚠️ Nome "web":** o portal que o usuário chama de web **é o app mobile no navegador** (`lib/web/portal_institucional_screen.dart`, repo `connect-ong`). O site em HTML puro é outro repo (`connect-ong-web`).
 > **🔴 PENDÊNCIA HUMANA: rotacionar a senha do MySQL** (está no histórico do GitHub público; o banco aceita qualquer host). Passo a passo em `C:\Users\01gabriel.MAQCHINELATTO\CONNECT-ONG-SEGREDOS.txt`.
-> **⏭️ Aguardando o usuário:** se a feira terá internet · escolher as fotos reais · a frase-chave acima · UptimeRobot · apagar a pasta solta `connect-ong/connect-ong-web/`.
+> **⏭️ Aguardando o usuário:** (1) se a feira terá internet — decide se vale cachear as imagens do mapa; (2) escolher as **fotos reais** (guia pronto em `connect-ong-api/ferramentas/COMO-COLOCAR-FOTOS.md`, script faz o resto); (3) dizer a frase-chave quando quiser preparar o notebook; (4) rotacionar a senha do MySQL; (5) UptimeRobot; (6) apagar a pasta solta `connect-ong/connect-ong-web/` (já está no .gitignore, mas continua no disco).
+
+- [Ajustes pós-recheio (2026-08-12)](connect-ong-ajustes-pos-recheio-2026-08-12.md) — os três problemas que só apareceram com o banco cheio: **carrossel estourando 1.381px** (uma bolinha por campanha), **campanha sem link para o perfil da ONG** e o **mapa em 3 níveis** (estado → área → ONG; agrupar por cidade NÃO resolve, são 1.414 cidades). Traz **como subir os 4 serviços locais** e a pegadinha do `127.0.0.1` × `localhost` no `serve.py` (2,1s × 0,1s).
 
 - [Massa de demonstração + plano da feira (2026-08-11)](connect-ong-massa-demo-e-feira-2026-08-11.md) — o banco deixou de parecer banco de teste; traz a **frase-chave** que dispara o `PREPARAR-FEIRA.md`, a medição que prova que **a lentidão é o Render**, o **N+1 que só apareceu com o banco cheio** (ranking de 0,3s para +180s) e as armadilhas do banco **latin1** da escola.
 
