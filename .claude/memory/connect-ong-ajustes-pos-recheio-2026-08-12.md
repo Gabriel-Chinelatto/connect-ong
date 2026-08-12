@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 01999f4b-11a0-40ba-a799-57d84627ae96
-  modified: 2026-08-12T14:16:42.174Z
+  modified: 2026-08-12T14:44:53.327Z
 ---
 
 # Rodada de 12/08/2026 — ajustes que só apareceram com o banco cheio
@@ -112,6 +112,46 @@ para arquivo (`> arquivo.log 2>&1`) e esperar pela linha
 uma página temporária na pasta do site que faz `fetch('/usuarios/login')`, grava
 `co_token`/`co_user` no `localStorage` e redireciona para a rota — mesma origem,
 funciona no Chrome headless com `--screenshot`. Apagar depois.
+
+## 4. A tela de LOGIN do doador (mesmo dia, mais tarde) — commit `421c1e7`
+
+O usuário mandou o print do login: "meio feia ainda... esses dados ficam meio
+repetitivos". Os "dados" eram os **números da plataforma** (2000 ONGs /
+`R$ 3566555` / 7075 causas) que o herói do login buscava em
+`/publico/estatisticas`. Ele estava certo por dois motivos: o **portal
+institucional é a tela ANTERIOR ao login** (`main.dart`:
+`home: kIsWeb ? EntradaWeb() : SplashDecider()`) e já mostra os três números —
+lá com `formatarReais` (`portal_institucional_screen.dart:300-307`) — enquanto o
+login imprimia `toStringAsFixed(0)`, ou seja, `R$ 3566555` cru. Os números
+saíram do login **junto com a chamada de rede que só alimentava aquela linha**.
+
+O pedido foi explícito: **só aparência, nenhuma funcionalidade**. O que mudou em
+`lib/pages/login_page.dart` (mesmos campos, mesmo fluxo login/2FA, mesmos
+destinos, mesma flag do Modo Feira):
+- Degradê profundo (verde vivo → `primaryDark`) no lugar do
+  `primaryLight → primary`. O topo claro deixava o texto branco **lavado**; o
+  contraste agora é forte na coluna inteira.
+- Três círculos translúcidos de fundo, todos em **`IgnorePointer`** — sem isso
+  um enfeite decorativo pode comer o toque do formulário.
+- Marca em moldura circular; o `logo.jpg` é **500x500 com margem branca**, então
+  `BoxFit.contain` num círculo deixava o emblema minúsculo. Ficou
+  `BoxFit.cover` preenchendo o círculo (o fundo branco do JPG some no branco da
+  moldura, o `ClipOval` corta só o canto).
+- Campos que acendem no foco (borda/ícone verdes, halo) via dois `FocusNode`
+  com listener que só repinta — não mexe na navegação por teclado.
+- Card do Modo Feira virou vidro translúcido sobre o verde, para não competir
+  com o cartão branco do login. Credenciais continuam `SelectableText`.
+
+⚠️ **Chrome headless no Windows tem largura MÍNIMA de janela (~500px).** Pedir
+`--window-size=430,940` não dá uma viewport de 430: o Flutter continua
+diagramando em ~500 e o print sai **cortado à direita** (o cartão passa da borda
+e parece bug de layout, mas não é). Usar `--window-size=502,...` para cima. O
+harness ganhou a rota **`#login`** — a única que **pula** o login demo do
+`main_screenshots.dart`, já que a tela precisa da sessão vazia.
+
+⚠️ **`git commit -m` com here-string do PowerShell quebra se a mensagem tiver
+aspas duplas**: o git recebe os pedaços como pathspec e falha. Escrever a
+mensagem num arquivo e usar **`git commit -F arquivo.txt`**.
 
 ## Estado ao fim da sessão
 
