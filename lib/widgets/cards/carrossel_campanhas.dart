@@ -21,11 +21,16 @@ class CarrosselCampanhas extends StatefulWidget {
   final double altura;
   final void Function(Campanha) onTap;
 
+  /// Toque no NOME da ONG dentro do card: abre o perfil dela. Opcional — sem
+  /// isso o nome continua sendo só texto, e o card inteiro leva à campanha.
+  final void Function(Campanha)? onTapOng;
+
   const CarrosselCampanhas({
     super.key,
     required this.campanhas,
     required this.altura,
     required this.onTap,
+    this.onTapOng,
   });
 
   @override
@@ -156,13 +161,28 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
     );
   }
 
+  /// Quantas bolinhas cabem sem estourar a largura da tela.
+  ///
+  /// Antes havia UMA bolinha por campanha. Com poucas campanhas cabia; quando o
+  /// banco encheu, o carrossel recebeu dezenas delas e a linha de bolinhas
+  /// passou da tela ("RIGHT OVERFLOWED BY 1381 PIXELS"). Agora a lista de
+  /// bolinhas é uma JANELA que desliza junto com a página atual, e o total
+  /// aparece como texto ao lado — não importa se são 5 ou 500 campanhas.
+  static const int _maxPontos = 7;
+
   // Bolinhas indicadoras: a ativa vira uma "pílula" verde.
   Widget _indicador() {
     final cs = Theme.of(context).colorScheme;
+    final bool muitas = _n > _maxPontos;
+    final int inicio = muitas
+        ? (_paginaReal - _maxPontos ~/ 2).clamp(0, _n - _maxPontos)
+        : 0;
+    final int fim = muitas ? inicio + _maxPontos : _n;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (var i = 0; i < _n; i++)
+        for (var i = inicio; i < fim; i++)
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
             margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -175,6 +195,18 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
               borderRadius: AppRadius.brSm,
             ),
           ),
+        // Com muitas campanhas as bolinhas sozinhas não dizem onde você está.
+        if (muitas) ...[
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            '${_paginaReal + 1} de $_n',
+            style: TextStyle(
+              color: cs.onSurfaceVariant,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -226,13 +258,7 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          c.ongNome ?? 'ONG',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              color: cs.onSurfaceVariant, fontSize: 12),
-                        ),
+                        _nomeDaOng(c, cs),
                         const Spacer(),
                         // Barra de progresso ANIMADA: cresce de 0 até o valor
                         // real quando o card aparece. Com navegação
@@ -273,6 +299,52 @@ class _CarrosselCampanhasState extends State<CarrosselCampanhas> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Nome da ONG dentro do card.
+  ///
+  /// Quando a tela informa [CarrosselCampanhas.onTapOng] e a campanha sabe de
+  /// qual ONG é, o nome vira um atalho para o perfil dela: quem se interessa
+  /// pela campanha quase sempre quer saber QUEM está por trás antes de doar.
+  /// O toque no nome não dispara o toque do card (que leva à campanha).
+  Widget _nomeDaOng(Campanha c, ColorScheme cs) {
+    final nome = c.ongNome ?? 'ONG';
+    final podeAbrir = widget.onTapOng != null && c.ongId != null;
+    if (!podeAbrir) {
+      return Text(
+        nome,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+      );
+    }
+    return InkWell(
+      onTap: () => widget.onTapOng!(c),
+      borderRadius: AppRadius.brSm,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                nome,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 2),
+            const Icon(Icons.chevron_right,
+                size: 14, color: AppColors.primary),
+          ],
         ),
       ),
     );

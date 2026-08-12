@@ -14,6 +14,7 @@ import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
 
 import 'doar_pix_screen.dart';
+import 'perfil_publico_ong_screen.dart';
 
 /// Lista as campanhas ativas das ONGs que o doador pode apoiar, com capa
 /// ilustrativa por categoria, AUTO-FILTRO de categorias (chips gerados das
@@ -283,9 +284,40 @@ class _CampanhasScreenState extends State<CampanhasScreen> {
                 ),
                 if (c.ongNome != null) ...[
                   const SizedBox(height: 2),
-                  Text(c.ongNome!,
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.primary)),
+                  // O nome da ONG abre o perfil dela: antes de contribuir, a
+                  // pergunta natural é "quem é essa instituição?".
+                  InkWell(
+                    onTap: c.ongId == null
+                        ? null
+                        : () => Navigator.push(
+                              context,
+                              PageTransition.fade(PerfilPublicoOngScreen(
+                                  ongId: c.ongId!, ongNome: c.ongNome!)),
+                            ),
+                    borderRadius: AppRadius.brSm,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(c.ongNome!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600)),
+                          ),
+                          if (c.ongId != null) ...[
+                            const SizedBox(width: 2),
+                            const Icon(Icons.chevron_right,
+                                size: 15, color: AppColors.primary),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 10),
                 Text(c.descricao,

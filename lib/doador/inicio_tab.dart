@@ -92,7 +92,14 @@ class _InicioTabState extends State<InicioTab> {
     setState(() {
       _usuario = user;
       _fotoBytes = foto;
-      _campanhas = campanhas;
+      // A Início é uma VITRINE, não o catálogo: o carrossel mostra só um
+      // punhado (as em destaque primeiro), e "Ver todas" abre a lista
+      // completa. Sem esse corte, o carrossel recebia todas as campanhas
+      // abertas da plataforma — centenas de cards para deslizar um a um.
+      _campanhas = [
+        ...campanhas.where((c) => c.destaque),
+        ...campanhas.where((c) => !c.destaque),
+      ].take(10).toList();
       // "Urgentes": as marcadas como urgente; se não houver, mostra as
       // primeiras abertas para a seção não ficar vazia.
       final urgentes = necessidades.where((n) => n.urgente).toList();
@@ -395,6 +402,10 @@ class _InicioTabState extends State<InicioTab> {
             campanhas: _campanhas,
             altura: _altura(216),
             onTap: (_) => _abrir(const CampanhasScreen()),
+            // Toque no nome da ONG leva ao perfil dela (o card inteiro
+            // continua levando à lista de campanhas).
+            onTapOng: (c) => _abrir(PerfilPublicoOngScreen(
+                ongId: c.ongId!, ongNome: c.ongNome ?? 'ONG')),
           ),
       ],
     );
