@@ -10,7 +10,6 @@ import '../theme/app_spacing.dart';
 
 import '../services/api_service.dart';
 import '../services/login_service.dart';
-import '../services/estatistica_service.dart';
 import '../config/config_controller.dart';
 
 import '../widgets/buttons/app_button.dart';
@@ -24,11 +23,16 @@ import 'verificacao_2fa_page.dart';
 
 /// Tela de login do doador (porta de entrada do app mobile).
 ///
-/// Redesenho (Bloco 21 / Fase 2), inspirado em telas de onboarding modernas:
-/// um "herói" com a marca + uma frase de impacto que alterna + os NÚMEROS REAIS
-/// da plataforma (prova social vinda de GET /publico/estatisticas), seguido do
-/// formulário de acesso. A tela é sempre clara (padrão de telas de autenticação),
-/// evitando problemas de contraste no modo escuro.
+/// Redesenho visual (12/08/2026): a tela era clara demais no topo (texto branco
+/// sobre verde-claro ficava lavado) e repetia os NÚMEROS da plataforma que o
+/// portal institucional — a tela ANTERIOR ao login — já mostra, e lá com o valor
+/// formatado. Os números saíram daqui; ficou o herói (marca + frase que alterna)
+/// sobre um fundo em degradê profundo com brilhos suaves, e o formulário num
+/// cartão branco flutuante. Nenhum comportamento mudou: os mesmos campos, os
+/// mesmos destinos e o mesmo fluxo de login/2FA.
+///
+/// A tela é sempre clara (padrão de telas de autenticação), evitando problemas
+/// de contraste no modo escuro.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -40,6 +44,11 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
 
+  // Focos: servem só para o realce visual do campo ativo (borda verde, ícone
+  // colorido e sombra). Não alteram a navegação por teclado.
+  final FocusNode _focoEmail = FocusNode();
+  final FocusNode _focoSenha = FocusNode();
+
   final LoginService _loginService = LoginService();
 
   // Credenciais de demonstração exibidas no "Modo Feira" (ex.: FECITEC).
@@ -48,9 +57,14 @@ class _LoginPageState extends State<LoginPage> {
 
   bool carregando = false;
 
-  // Números reais da plataforma (prova social). Opcional: se a API não
-  // responder, a tela funciona igual, só não mostra os números.
-  EstatisticasPublicas? _stats;
+  // Degradê do fundo. Começa num verde vivo e fecha no verde escuro da marca:
+  // dá profundidade e garante contraste do texto branco em toda a coluna.
+  static const LinearGradient _fundo = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF12A85E), AppColors.primary, AppColors.primaryDark],
+    stops: [0.0, 0.5, 1.0],
+  );
 
   // Frases de impacto que alternam no herói.
   static const List<String> _frases = [
@@ -64,27 +78,26 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _carregarEstatisticas();
     // Alterna a frase de impacto a cada 4s (efeito "onboarding vivo").
     _fraseTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted) return;
       setState(() => _fraseAtual = (_fraseAtual + 1) % _frases.length);
     });
+    _focoEmail.addListener(_repintar);
+    _focoSenha.addListener(_repintar);
   }
 
-  Future<void> _carregarEstatisticas() async {
-    try {
-      final s = await EstatisticaService().carregar();
-      if (!mounted) return;
-      setState(() => _stats = s);
-    } catch (_) {
-      // Silencioso: os números são um complemento, não bloqueiam o login.
-    }
+  void _repintar() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _fraseTimer?.cancel();
+    _focoEmail.removeListener(_repintar);
+    _focoSenha.removeListener(_repintar);
+    _focoEmail.dispose();
+    _focoSenha.dispose();
     emailController.dispose();
     senhaController.dispose();
     super.dispose();
@@ -156,150 +169,184 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.primaryLight, AppColors.primary],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
-                child: Column(
-                  children: [
-                    const SizedBox(height: AppSpacing.xl),
-                    _heroi(),
-                    const SizedBox(height: AppSpacing.xl),
-                    _cardFormulario(),
-                    if (ConfigController.instance.modoFeira) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      _cardModoFeira(),
-                    ],
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
-                ),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: _fundo),
+        child: Stack(
+          children: [
+            ..._brilhos(),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, restricoes) {
+                  // Centraliza de verdade quando sobra altura e rola quando o
+                  // teclado ou uma tela baixa apertam o conteúdo.
+                  final alturaMinima =
+                      (restricoes.maxHeight - AppSpacing.xl * 2)
+                          .clamp(0.0, double.infinity);
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.xl,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: alturaMinima),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _heroi(),
+                              const SizedBox(height: AppSpacing.xl),
+                              _cardFormulario(),
+                              if (ConfigController.instance.modoFeira) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                _cardModoFeira(),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  // ---- Herói: logo + frase de impacto que alterna + números reais ----
+  // ---- Brilhos decorativos do fundo ----
+  // Círculos translúcidos que quebram a chapa do degradê. `IgnorePointer` para
+  // que jamais roubem um toque do formulário.
+  List<Widget> _brilhos() => [
+        Positioned(
+          top: -90,
+          right: -70,
+          child: _bolha(240, Colors.white.withValues(alpha: 0.10)),
+        ),
+        Positioned(
+          top: 140,
+          left: -120,
+          child: _bolha(230, AppColors.primaryLight.withValues(alpha: 0.16)),
+        ),
+        Positioned(
+          bottom: -130,
+          right: -80,
+          child: _bolha(300, Colors.white.withValues(alpha: 0.06)),
+        ),
+      ];
+
+  Widget _bolha(double diametro, Color cor) => IgnorePointer(
+        child: Container(
+          width: diametro,
+          height: diametro,
+          decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
+        ),
+      );
+
+  // ---- Herói: marca + frase de impacto que alterna ----
   Widget _heroi() {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppRadius.brXl,
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.16),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.35),
+              width: 1.2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+                color: AppColors.primaryDark.withValues(alpha: 0.35),
+                blurRadius: 30,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
-          child: Image.asset('assets/images/logo.jpg', height: 84),
+          // O emblema já é redondo: o recorte oval esconde os cantos brancos
+          // do JPG e deixa a moldura perfeitamente circular.
+          child: ClipOval(
+            child: Container(
+              width: 112,
+              height: 112,
+              color: Colors.white,
+              alignment: Alignment.center,
+              // O JPG é 500x500 com margem branca; preencher o círculo inteiro
+              // (em vez de caber dentro dele) faz o emblema ganhar corpo — como
+              // ele já é redondo e o fundo é branco, o recorte não some com nada.
+              child: Image.asset(
+                'assets/images/logo.jpg',
+                width: 122,
+                height: 122,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         const Text(
           'Connect ONG',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        // Frase de impacto que troca suavemente.
+        // Frase de impacto que troca com um leve deslize para cima.
         SizedBox(
-          height: 30,
+          height: 28,
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 450),
+            transitionBuilder: (filho, animacao) => FadeTransition(
+              opacity: animacao,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.4),
+                  end: Offset.zero,
+                ).animate(animacao),
+                child: filho,
+              ),
+            ),
             child: Text(
               _frases[_fraseAtual],
               key: ValueKey(_fraseAtual),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.95),
-                fontSize: 17,
+                color: Colors.white.withValues(alpha: 0.92),
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
+                letterSpacing: 0.1,
               ),
             ),
           ),
         ),
-        if (_stats != null) ...[
-          const SizedBox(height: AppSpacing.lg),
-          _numerosReais(_stats!),
-        ],
       ],
     );
   }
-
-  Widget _numerosReais(EstatisticasPublicas s) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _numero('${s.totalOngs}', 'ONGs'),
-        _divisor(),
-        _numero('R\$ ${s.valorTotalDoado.toStringAsFixed(0)}', 'doados'),
-        _divisor(),
-        _numero('${s.totalNecessidades}', 'causas'),
-      ],
-    );
-  }
-
-  Widget _numero(String valor, String rotulo) {
-    return Column(
-      children: [
-        Text(
-          valor,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          rotulo,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.85),
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _divisor() => Container(
-        width: 1,
-        height: 32,
-        color: Colors.white.withValues(alpha: 0.35),
-      );
 
   // ---- Card do formulário (sempre claro) ----
   Widget _cardFormulario() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.lg,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadius.brXl,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
+            color: AppColors.primaryDark.withValues(alpha: 0.30),
+            blurRadius: 40,
+            spreadRadius: -8,
+            offset: const Offset(0, 18),
           ),
         ],
       ),
@@ -311,23 +358,36 @@ class _LoginPageState extends State<LoginPage> {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          const Text(
+            'Entre para continuar ajudando quem precisa.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13.5,
+              height: 1.35,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
           _campo(
             controller: emailController,
+            foco: _focoEmail,
             hint: 'E-mail',
-            icon: Icons.email_outlined,
+            icon: Icons.mail_outline_rounded,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: AppSpacing.md),
           _campo(
             controller: senhaController,
+            foco: _focoSenha,
             hint: 'Senha',
-            icon: Icons.lock_outline,
+            icon: Icons.lock_outline_rounded,
             obscure: true,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => fazerLogin(), // Enter entra
@@ -344,25 +404,60 @@ class _LoginPageState extends State<LoginPage> {
               ),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
+                textStyle: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                ),
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                minimumSize: const Size(0, 36),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: const Text('Esqueceu a senha?'),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           AppButton(
             texto: 'ENTRAR',
             carregando: carregando,
             onPressed: fazerLogin,
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(
+            color: AppColors.divider,
+            thickness: 1,
+            height: AppSpacing.md,
+          ),
           TextButton(
             onPressed: () => Navigator.push(
               context,
               PageTransition.fade(const CadastroDoadorPage()),
             ),
-            child: const Text('Não tem conta? Cadastre-se'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            ),
+            child: const Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Não tem conta?  ',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'Cadastre-se',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              style: TextStyle(fontSize: 14.5),
+            ),
           ),
           TextButton.icon(
             onPressed: () => Navigator.push(
@@ -371,7 +466,15 @@ class _LoginPageState extends State<LoginPage> {
                 builder: (_) => const PortalInstitucionalScreen(),
               ),
             ),
-            icon: const Icon(Icons.info_outline, size: 18),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              textStyle: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w500,
+              ),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+            ),
+            icon: const Icon(Icons.info_outline_rounded, size: 17),
             label: const Text('Sobre o Projeto'),
           ),
         ],
@@ -380,34 +483,35 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // ---- Card "Modo Feira": credenciais de demonstração (só quando ligado) ----
-  // Discreto, abaixo do formulário. Mostra e-mail/senha demo legíveis e um
-  // botão que preenche os campos. Controlado pela flag local em Configurações.
+  // Discreto, abaixo do formulário: vidro translúcido sobre o verde, para não
+  // competir com o cartão branco do login. Mostra e-mail/senha demo legíveis e
+  // um botão que preenche os campos. Controlado pela flag em Configurações.
   Widget _cardModoFeira() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
+        color: Colors.white.withValues(alpha: 0.13),
         borderRadius: AppRadius.brLg,
-        border: Border.all(color: AppColors.primaryLight, width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.storefront_outlined,
                 size: 18,
-                color: AppColors.primary,
+                color: Colors.white.withValues(alpha: 0.9),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(
+              const Expanded(
                 child: Text(
                   'Modo Feira — acesso de demonstração',
-                  style: const TextStyle(
-                    color: AppColors.primaryDark,
-                    fontSize: 14,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -426,7 +530,17 @@ class _LoginPageState extends State<LoginPage> {
               icon: const Icon(Icons.auto_fix_high, size: 18),
               label: const Text('Preencher'),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                textStyle: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
+                ),
               ),
             ),
           ),
@@ -444,8 +558,8 @@ class _LoginPageState extends State<LoginPage> {
           width: 56,
           child: Text(
             rotulo,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.75),
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -455,9 +569,9 @@ class _LoginPageState extends State<LoginPage> {
           child: SelectableText(
             valor,
             style: const TextStyle(
-              color: AppColors.textPrimary,
+              color: Colors.white,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -466,8 +580,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Campo de texto sempre claro (independe do tema), para o card branco.
+  // Ganha borda verde, ícone colorido e um halo suave quando está em foco.
   Widget _campo({
     required TextEditingController controller,
+    required FocusNode foco,
     required String hint,
     required IconData icon,
     bool obscure = false,
@@ -475,34 +591,63 @@ class _LoginPageState extends State<LoginPage> {
     TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
   }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      onSubmitted: onSubmitted,
-      style: const TextStyle(color: AppColors.textPrimary),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.textTertiary),
-        prefixIcon: Icon(icon, color: AppColors.textSecondary),
-        filled: true,
-        fillColor: AppColors.surfaceMuted,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 18,
-          horizontal: 16,
+    final bool ativo = foco.hasFocus;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.brLg,
+        boxShadow: ativo
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : const [],
+      ),
+      child: TextField(
+        controller: controller,
+        focusNode: foco,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        onSubmitted: onSubmitted,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
         ),
-        border: OutlineInputBorder(
-          borderRadius: AppRadius.brMd,
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.brMd,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: AppRadius.brMd,
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w400,
+          ),
+          prefixIcon: Icon(
+            icon,
+            size: 20,
+            color: ativo ? AppColors.primary : AppColors.textTertiary,
+          ),
+          filled: true,
+          fillColor: ativo ? Colors.white : AppColors.surfaceMuted,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 18,
+            horizontal: 16,
+          ),
+          border: const OutlineInputBorder(
+            borderRadius: AppRadius.brLg,
+            borderSide: BorderSide(color: AppColors.border, width: 1.2),
+          ),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: AppRadius.brLg,
+            borderSide: BorderSide(color: AppColors.border, width: 1.2),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: AppRadius.brLg,
+            borderSide: BorderSide(color: AppColors.primary, width: 1.8),
+          ),
         ),
       ),
     );

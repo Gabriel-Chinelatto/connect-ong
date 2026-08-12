@@ -16,6 +16,7 @@
 //   perfil-doador -> PerfilPublicoDoadorScreen (estilo Uber)
 //   perfil-ong    -> PerfilPublicoOngScreen (capa/streak/Maps/galeria)
 //   chat          -> ChatScreen do match 8 (anexo de imagem)
+//   login         -> LoginPage (unica tela que NAO faz o login demo antes)
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -33,6 +34,7 @@ import 'screens/about/descricao_screen.dart';
 import 'screens/about/desenvolvimento_chat_screen.dart';
 import 'screens/legal/documentos_legais_screen.dart';
 import 'models/usuario_logado.dart';
+import 'pages/login_page.dart';
 import 'services/api_service.dart';
 import 'services/assistente_service.dart';
 import 'services/conversas_dora_service.dart';
@@ -43,25 +45,28 @@ import 'web/portal_institucional_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Login real do doador demo -> grava token + sessao como o app faria.
-  final resp = await http.post(
-    Uri.parse('${ApiService.baseUrl}/usuarios/login'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'email': 'demo.joao@connectong.com',
-      'senha': 'demo123',
-    }),
-  );
-  final dados = jsonDecode(resp.body) as Map<String, dynamic>;
-  await ApiService.setToken(dados['accessToken'] as String?);
-  await SessionService().salvarUsuario(UsuarioLogado(
-    id: dados['id'] as int,
-    nome: dados['nome'] as String,
-    email: dados['email'] as String,
-    tipo: dados['tipo'] as String,
-  ));
-
   final tela = Uri.base.fragment.isEmpty ? 'home' : Uri.base.fragment;
+
+  // A propria tela de login e a unica que precisa da sessao VAZIA — nas demais,
+  // faz o login real do doador demo -> grava token + sessao como o app faria.
+  if (!tela.startsWith('login')) {
+    final resp = await http.post(
+      Uri.parse('${ApiService.baseUrl}/usuarios/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': 'demo.joao@connectong.com',
+        'senha': 'demo123',
+      }),
+    );
+    final dados = jsonDecode(resp.body) as Map<String, dynamic>;
+    await ApiService.setToken(dados['accessToken'] as String?);
+    await SessionService().salvarUsuario(UsuarioLogado(
+      id: dados['id'] as int,
+      nome: dados['nome'] as String,
+      email: dados['email'] as String,
+      tipo: dados['tipo'] as String,
+    ));
+  }
 
   // Para as telas da Dora, semeia algumas conversas locais para provar o
   // historico persistente (lista + chat restaurado) sem depender de uso manual.
@@ -194,6 +199,8 @@ class _HarnessApp extends StatelessWidget {
           titulo: 'Fraldas geriatricas',
           concluido: true,
         );
+      case 'login':
+        return const LoginPage();
       case 'portal':
         return const PortalInstitucionalScreen();
       case 'sobre':
