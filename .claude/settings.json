@@ -149,7 +149,10 @@
       "Bash(grep -rn \"allowed-origins\\\\|allowedOrigins\" \"/c/Users/gabri/IdeaProjects/connect-ong-api/API - Chinelatto - att2/API - Chinelatto/API - Chinelatto/src/main/java/com/example/connectong_api/config/SecurityConfig.java\" | head -3; grep -rn \"app.cors\" \"/c/Users/gabri/IdeaProjects/connect-ong-api/API - Chinelatto - att2/API - Chinelatto/API - Chinelatto/src/main/resources\" | head -3)",
       "Read(//c/Users/gabri/IdeaProjects/connect-ong-api/API - Chinelatto - att2/API - Chinelatto/API - Chinelatto/src/main/java/com/example/connectong_api/config/**)",
       "Bash(./bin/mysqld --defaults-file=my-feira.ini --initialize-insecure)",
-      "Bash(/c/Users/gabri/tools/mysql/bin/mysqld --defaults-file=/c/Users/gabri/tools/mysql/my-feira.ini)"
+      "Bash(/c/Users/gabri/tools/mysql/bin/mysqld --defaults-file=/c/Users/gabri/tools/mysql/my-feira.ini)",
+      "Bash(/c/Users/gabri/tools/mysql/bin/mysqladmin --host=127.0.0.1 --port=3306 -u root ping)",
+      "Bash(break)",
+      "Read(//c/Users/gabri/tools/mysql-data/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\gabri\\IdeaProjects\\connect-ong-api\\API - Chinelatto - att2\\API - Chinelatto\\API - Chinelatto\\src\\main\\java\\com\\example\\connectong_api\\config",

@@ -20,4 +20,12 @@ No notebook `gabri` (ver [[connect-ong-notebook-fecitec]]) o **Avast Antivirus f
    `keytool -importcert -noprompt -trustcacerts -alias avast-root -file avast-root.cer -keystore "<JDK>\lib\security\cacerts" -storepass changeit`
    (Feito no `C:\Users\gabri\.jdks\corretto-21.0.3`. O JBR do Android Studio em Program Files deu "Acesso negado" — contornado rodando `sdkmanager`/Gradle com `JAVA_HOME=corretto-21`, que ja tem a CA.)
 
+**⚠️ A CA DO AVAST ROTACIONA (visto em 13/08/2026):** a CA importada em 26/06
+(SHA1 `FF:52:5A:...`) foi trocada pelo Avast por outra (`FE:C5:81:...`) e o PKIX
+voltou. Se o erro reaparecer, comparar o fingerprint do `keytool -list -alias
+avast-root*` com o do `Cert:\LocalMachine\Root` e importar a NOVA com alias
+datado (ex.: `avast-root-2026-08`). Tambem: o Gradle do Flutter usa o JBR do
+Android Studio por padrao — `flutter config --jdk-dir=C:\Users\gabri\.jdks\corretto-21.0.3`
+faz ele usar o Corretto (que tem as CAs) permanente.
+
 **Por que importa p/ o projeto:** sem isso, NAO da p/ instalar o Android SDK/emulador nem fazer build Android offline-da-CA; e o `mvn` so funcionou de cara porque as deps ja estavam no `.m2`. Se aparecer PKIX em qualquer passo Java nesta maquina, a causa e essa. (O Maven do projeto: usar o permanente em `C:\Users\gabri\tools`, NAO o `./mvnw`.)

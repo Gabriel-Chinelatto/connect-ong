@@ -1,6 +1,9 @@
 # Memory Index
 
-> ## 🚀 ESTADO ATUAL (2026-08-12) — LEIA PRIMEIRO
+> ## 🚀 ESTADO ATUAL (2026-08-13) — LEIA PRIMEIRO
+> **✅ MÁQUINA DE APRESENTAÇÃO PRONTA:** o `PREPARAR-FEIRA.md` foi EXECUTADO em 13/08 no notebook `gabri` — MySQL portátil local com o banco copiado da escola, API em jar, 3 frontends em build release, APK gerado, mapa offline, tudo por **1 clique** (`INICIAR-FEIRA.bat` na Área de Trabalho, com aquecimento automático). Telas que levavam 4,85s no Render respondem em **0,10–0,45s**. Ver [preparação da feira](connect-ong-preparacao-feira-2026-08-13.md). Falta só: instalar o APK no celular (cabo) e, na véspera, rodar `ATUALIZAR-BANCO-DA-ESCOLA.bat`.
+>
+> ## Estado anterior (2026-08-12)
 > **Banco RECHEADO para a apresentação:** 2.000 ONGs pelas 27 UFs (coordenada real de município), 1.200 doadores, 909 necessidades abertas, 3.254 prestações, R$ 3,56 mi em PIX; contas da feira com história escrita à mão (Lar Viva é a #1 do ranking e fica com interesses PENDENTES de propósito, para aceitar ao vivo). Ferramentas em `connect-ong-api/ferramentas/`.
 > **Última rodada (12/08):** o banco cheio revelou três problemas de TELA, todos fechados — carrossel de campanhas estourando a largura, campanha sem caminho para o perfil da ONG e o mapa da web ilegível (agora em 3 níveis: estado → área → ONG). Ver [ajustes pós-recheio](connect-ong-ajustes-pos-recheio-2026-08-12.md), que também traz **como subir os 4 serviços locais** para conferir na tela.
 > **🔑 FRASE-CHAVE COMBINADA:** ao ouvir **"vamos se preparar para a feira no computador de apresentação"**, executar **`PREPARAR-FEIRA.md`** (raiz do repo mobile) — tudo local no notebook. Ainda NÃO executado.
@@ -12,6 +15,8 @@
 > **⚠️ Nome "web":** o portal que o usuário chama de web **é o app mobile no navegador** (`lib/web/portal_institucional_screen.dart`, repo `connect-ong`). O site em HTML puro é outro repo (`connect-ong-web`).
 > **🔴 PENDÊNCIA HUMANA: rotacionar a senha do MySQL** (está no histórico do GitHub público; o banco aceita qualquer host). Passo a passo em `C:\Users\01gabriel.MAQCHINELATTO\CONNECT-ONG-SEGREDOS.txt`.
 > **⏭️ Aguardando o usuário:** (1) se a feira terá internet — decide se vale cachear as imagens do mapa; (2) escolher as **fotos reais** (guia pronto em `connect-ong-api/ferramentas/COMO-COLOCAR-FOTOS.md`, script faz o resto); (3) dizer a frase-chave quando quiser preparar o notebook; (4) rotacionar a senha do MySQL; (5) UptimeRobot; (6) apagar a pasta solta `connect-ong/connect-ong-web/` (já está no .gitignore, mas continua no disco).
+
+- [Preparação da feira (2026-08-13)](connect-ong-preparacao-feira-2026-08-13.md) — **máquina de apresentação PRONTA e testada**: MySQL 8 portátil (sem admin) com o banco da escola importado, jar + builds release + APK, scripts de 1 clique (INICIAR/PARAR/RECOMPILAR/ATUALIZAR-BANCO), mapa offline por cache de tiles no serve.py, aquecimento automático. Gotchas novos: **CA do Avast rotaciona**, `findstr` com espaço vira OU, `timeout` do Git Bash sombreia o do Windows.
 
 - [Ajustes pós-recheio (2026-08-12)](connect-ong-ajustes-pos-recheio-2026-08-12.md) — os três problemas que só apareceram com o banco cheio: **carrossel estourando 1.381px** (uma bolinha por campanha), **campanha sem link para o perfil da ONG** e o **mapa em 3 níveis** (estado → área → ONG; agrupar por cidade NÃO resolve, são 1.414 cidades). Mais tarde no mesmo dia, o **redesenho visual do login do doador** (os números saíram porque o portal ANTERIOR já os mostra formatados) + a rota `#login` do harness. Traz **como subir os 4 serviços locais**, a pegadinha do `127.0.0.1` × `localhost` no `serve.py` (2,1s × 0,1s) e a **largura mínima de 500px do Chrome headless**.
 
