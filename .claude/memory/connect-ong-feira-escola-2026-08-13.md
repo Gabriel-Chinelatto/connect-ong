@@ -145,10 +145,31 @@ ambas afetando QUALQUER APK release — inclusive a do celular via Render, que
    `android/app/src/main/res/xml/network_security_config.xml` liberando cleartext
    APENAS para `10.0.2.2`/`localhost`/`127.0.0.1`, referenciado no manifest por
    `android:networkSecurityConfig`. Producao (Render, HTTPS) segue exigindo TLS.
-As DUAS APKs foram refeitas: `ConnectONG-emulador.apk` (local, 10.0.2.2) e
-`ConnectONG.apk` (celular, Render). ⚠️ **Licao: sempre conferir
+As DUAS APKs foram refeitas. ⚠️ **Licao: sempre conferir
 `aapt2 dump permissions` numa APK release ANTES de confiar que ela conecta** — o
 `flutter run` (debug) engana porque tem INTERNET e cleartext liberados.
+
+## ⚡ Emulador LENTO era o NAT do QEMU — trocado por adb reverse (17/08)
+
+O usuario achou o app do emulador "muito lerdo" e suspeitou que fosse o Render.
+NAO era: a APK tinha `10.0.2.2` embutido (conferido com `unzip`+`grep` no
+`lib/x86_64/libapp.so`), 100% local. O gargalo era o **NAT user-mode do QEMU**:
+medido de DENTRO do emulador, `10.0.2.2:8080` levava **600-900ms por chamada**
+mesmo com o backend aquecido (host respondia em 32ms). Com **`adb reverse
+tcp:8080 tcp:8080`** + a APK apontando para **`http://127.0.0.1:8080`**, a mesma
+chamada caiu para **63-142ms (~10x)**. Entao:
+- APK do emulador REconstruida com `--dart-define=API_BASE=http://127.0.0.1:8080`
+  (conferido: 17x `127.0.0.1`, zero `onrender`/`10.0.2.2` no binario).
+- `INICIAR-MOBILE-EMULADOR.bat` roda `adb reverse tcp:8080 tcp:8080` apos o boot,
+  antes de instalar/abrir. adb reverse persiste enquanto a conexao adb viver;
+  reboot do emulador exige rodar de novo (o bat ja faz).
+- Como o app fala com o backend LOCAL, **o RESTAURAR-DEMO tambem reseta o que o
+  emulador mostra** (mesmo banco); depois de restaurar, puxar a tela p/ atualizar
+  ou reabrir o app.
+⚠️ **RAM 7,7 GB e o limite real:** durante ESTA sessao o emulador caiu varias
+vezes por pressao de memoria (backend + MySQL + daemons de build do Gradle +
+emulador). Na feira, sem builds rodando, sobra mais folga; ainda assim rodar o
+emulador com POUCAS abas de Chrome. `./gradlew --stop` libera ~1-2 GB apos builds.
 
 ## Pedidos futuros do usuario (registrados p/ retomar)
 - **Janela de ~2 semanas (ate ~fim de agosto/inicio de setembro):** o usuario e o
