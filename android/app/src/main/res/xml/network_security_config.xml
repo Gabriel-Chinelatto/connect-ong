@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Producao continua exigindo HTTPS (a API no Render e https). O trafego HTTP
+  sem criptografia (cleartext) fica liberado APENAS para os enderecos locais
+  usados na feira/desenvolvimento: o emulador Android chega no backend do PC
+  por 10.0.2.2, e um build local pode apontar para localhost/127.0.0.1.
+  Nenhum endereco publico usa cleartext.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

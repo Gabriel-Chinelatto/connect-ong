@@ -12,10 +12,24 @@ originSessionId: 55296eb6-8279-4787-a454-d6bfcfaa4661
 Continuacao de [[connect-ong-preparacao-feira-2026-08-13]] (a maquina de
 apresentacao ja estava pronta). O usuario pediu 4 coisas ao ver a demo rodando.
 
-## 1. Pasta unica `C:\Users\gabri\Desktop\FEIRA ESCOLA\`
+## 1. Pasta unica `FEIRA ESCOLA` — na Area de Trabalho REAL (OneDrive)
+
+⚠️ **PEGADINHA (17/08):** a Area de Trabalho do usuario e REDIRECIONADA para o
+OneDrive: o caminho fisico e **`C:\Users\gabri\OneDrive\Área de Trabalho\`**, NAO
+`C:\Users\gabri\Desktop\` (esse ultimo existe mas nao e o que aparece na tela).
+Por isso a pasta criada em Desktop nao aparecia. A `FEIRA ESCOLA` foi MOVIDA para
+o OneDrive Desktop (via PowerShell `Move-Item`; o `mv` do bash falha no caminho
+com acento/reparse point). Os arquivos foram fixados como "sempre neste
+dispositivo" (`attrib +P -U`) para o OneDrive NAO evict-los para nuvem-so e
+quebrar na feira — conferido que apk (61 MB) e dump (12 MB) estao fisicamente
+presentes. ⚠️ **Os REPOS continuam em `C:\Users\gabri\Desktop\connect-ong` etc.
+(fora do OneDrive)** — os caminhos absolutos nos .bat estao certos; so a pasta de
+atalhos mudou. Os .bat usam `%~dp0` para achar `interno\` e `chave-ia.txt`, entao
+funcionam do novo local (testado: 5 servicos sobem, aquecimento roda).
 
 Tudo o que estava solto na Area de Trabalho foi consolidado nela (os .bat antigos
-soltos foram apagados; `INICIAR-FECITEC` ganhou um `_SUPERADO-LEIA.txt`). Conteudo:
+soltos foram apagados; `INICIAR-FECITEC` ganhou um `_SUPERADO-LEIA.txt`). Conteudo
+(+ `PASSO-A-PASSO-DO-DIA.txt` com o roteiro objetivo do dia da feira):
 - `INICIAR-FEIRA.bat` (1 clique: MySQL local + jar + doador 5000 + painel 5001 +
   site 8090 + aquecimento; caminhos usam `%~dp0interno\...`, nao mais FEIRA-LOCAL).
 - `RESTAURAR-DEMO.bat`, `PARAR-FEIRA.bat`, `RECOMPILAR-FEIRA.bat`,
@@ -97,8 +111,58 @@ Agentes varreram os 3 apps e aplicaram no que faltava:
   por grep. Editar doacao/perfil e Ajustes ja tinham. Sem `beforeunload` (fechar
   a aba nunca avisa — decisao mantida).
 
+## APK / mobile no emulador (em andamento 17/08)
+
+⚠️ **DISTINCAO IMPORTANTE:** o `ConnectONG.apk` da pasta foi buildado SEM
+dart-define → aponta para o **Render** (nuvem). Logo, num CELULAR real ele NAO
+usa o backend local rapido NEM o RESTAURAR-DEMO (fala com o banco remoto da
+escola via Render, lento/hiberna). INICIAR-FEIRA e RESTAURAR-DEMO valem para as
+telas LOCAIS (web/painel) e para o EMULADOR, nao para o apk-no-celular-via-Render.
+
+**Emulador FEITO e VALIDADO (17/08):** o AVD **`ConnectOng`** (pixel_6) ja existia.
+Gerado um **APK apontando para `http://10.0.2.2:8080`** (alias do emulador para o
+localhost do host — zero-config, sem `adb reverse`) em
+`FEIRA ESCOLA\interno\ConnectONG-emulador.apk`, e o
+**`INICIAR-MOBILE-EMULADOR.bat`** (na pasta) sobe o AVD, espera o boot e
+INSTALA+abre o app (mais robusto que o `flutter run` do script antigo). Testado ao
+vivo: login demo entra e a home carrega DADOS REAIS do backend local (21 matches,
+campanhas). Assim o mobile roda local/rapido e o RESTAURAR-DEMO tambem vale.
+⚠️ **RAM = so 7,7 GB**: emulador (~2-3,5 GB) + stack local + Chrome aperta;
+recomendado rodar o emulador com POUCAS abas abertas.
+
+## 🔴 BUG CRITICO achado no teste do emulador (17/08) — corrigido
+
+O login no app instalado (release) dava **"Sem conexao. Verifique sua internet"**,
+mesmo o emulador alcancando o backend por `nc 10.0.2.2:8080` (200). DUAS causas,
+ambas afetando QUALQUER APK release — inclusive a do celular via Render, que
+**teria falhado na feira**:
+1. **Release NAO herda a permissao INTERNET** que o modo debug injeta (o
+   `aapt2 dump permissions` da APK antiga NAO listava `android.permission.INTERNET`).
+   Adicionada `<uses-permission android:name="android.permission.INTERNET"/>` no
+   `android/app/src/main/AndroidManifest.xml`.
+2. **Android release bloqueia cleartext (HTTP)** desde o Android 9. A APK do
+   emulador usa `http://10.0.2.2` (nao-HTTPS). Criado
+   `android/app/src/main/res/xml/network_security_config.xml` liberando cleartext
+   APENAS para `10.0.2.2`/`localhost`/`127.0.0.1`, referenciado no manifest por
+   `android:networkSecurityConfig`. Producao (Render, HTTPS) segue exigindo TLS.
+As DUAS APKs foram refeitas: `ConnectONG-emulador.apk` (local, 10.0.2.2) e
+`ConnectONG.apk` (celular, Render). ⚠️ **Licao: sempre conferir
+`aapt2 dump permissions` numa APK release ANTES de confiar que ela conecta** — o
+`flutter run` (debug) engana porque tem INTERNET e cleartext liberados.
+
+## Pedidos futuros do usuario (registrados p/ retomar)
+- **Janela de ~2 semanas (ate ~fim de agosto/inicio de setembro):** o usuario e o
+  grupo vao TESTAR bastante e depois trazer mudancas. Nao mexer sozinho no que
+  esta pronto; esperar o feedback deles.
+- **Dicas de chave Groq:** mais para frente o usuario quer orientacao de como
+  colocar a chave do Groq (onde gerar, colar em `chave-ia.txt`, ligar a IA de
+  verdade nas 8 frentes). Ja existe o `chave-ia.txt.EXEMPLO` na pasta. Ver
+  [[connect-ong-assistente-ia.md]] e a nota do modelo de visao abaixo.
+
 ## Detalhes que voltam a morder
 - Rebuild do jar (`mvn package`) FALHA se o backend estiver rodando (Windows nao
   renomeia o jar aberto): PARAR o 8080 antes. Erro = "Unable to rename ... .jar".
 - Heredoc do Git Bash e fragil aqui; para editar arquivo, usar Edit, nao
   `python - <<EOF`.
+- A Area de Trabalho e no OneDrive (ver secao 1) — mover/criar coisas la exige
+  PowerShell e `attrib +P` para nao virar nuvem-so.
