@@ -1,7 +1,8 @@
 # Memory Index
 
-> ## 🚀 ESTADO ATUAL (2026-08-13) — LEIA PRIMEIRO
-> **✅ MÁQUINA DE APRESENTAÇÃO PRONTA:** o `PREPARAR-FEIRA.md` foi EXECUTADO em 13/08 no notebook `gabri` — MySQL portátil local com o banco copiado da escola, API em jar, 3 frontends em build release, APK gerado, mapa offline, tudo por **1 clique** (`INICIAR-FEIRA.bat` na Área de Trabalho, com aquecimento automático). Telas que levavam 4,85s no Render respondem em **0,10–0,45s**. Ver [preparação da feira](connect-ong-preparacao-feira-2026-08-13.md). Falta só: instalar o APK no celular (cabo) e, na véspera, rodar `ATUALIZAR-BANCO-DA-ESCOLA.bat`.
+> ## 🚀 ESTADO ATUAL (2026-08-13/17) — LEIA PRIMEIRO
+> **✅ MÁQUINA DE APRESENTAÇÃO PRONTA:** o `PREPARAR-FEIRA.md` foi EXECUTADO no notebook `gabri` — tudo LOCAL por **1 clique**. Agora consolidado na pasta **`C:\Users\gabri\Desktop\FEIRA ESCOLA\`**: `INICIAR-FEIRA.bat` (sobe tudo + aquece) e o **`RESTAURAR-DEMO.bat` = "voltar antes"** que devolve a demo ao estado inicial (Lar Viva com interesses pendentes) em ~15s entre apresentações. Telas respondem em **0,10–0,45s** (eram 4,85s no Render). Ver [FEIRA ESCOLA](connect-ong-feira-escola-2026-08-13.md) e [preparação](connect-ong-preparacao-feira-2026-08-13.md).
+> **🤖 IA (Dora etc.):** a chave do Groq NÃO está neste notebook → tudo cai no modo por regras (agora melhorado: entende Cidade-UF e estados). Para ligar a IA de verdade: colar a chave em `FEIRA ESCOLA\chave-ia.txt` (copiar do PC da escola ou gerar em console.groq.com/keys). Falta ainda: APK no celular (cabo) e, na véspera, `ATUALIZAR-BANCO-DA-ESCOLA.bat`.
 >
 > ## Estado anterior (2026-08-12)
 > **Banco RECHEADO para a apresentação:** 2.000 ONGs pelas 27 UFs (coordenada real de município), 1.200 doadores, 909 necessidades abertas, 3.254 prestações, R$ 3,56 mi em PIX; contas da feira com história escrita à mão (Lar Viva é a #1 do ranking e fica com interesses PENDENTES de propósito, para aceitar ao vivo). Ferramentas em `connect-ong-api/ferramentas/`.
@@ -15,6 +16,8 @@
 > **⚠️ Nome "web":** o portal que o usuário chama de web **é o app mobile no navegador** (`lib/web/portal_institucional_screen.dart`, repo `connect-ong`). O site em HTML puro é outro repo (`connect-ong-web`).
 > **🔴 PENDÊNCIA HUMANA: rotacionar a senha do MySQL** (está no histórico do GitHub público; o banco aceita qualquer host). Passo a passo em `C:\Users\01gabriel.MAQCHINELATTO\CONNECT-ONG-SEGREDOS.txt`.
 > **⏭️ Aguardando o usuário:** (1) se a feira terá internet — decide se vale cachear as imagens do mapa; (2) escolher as **fotos reais** (guia pronto em `connect-ong-api/ferramentas/COMO-COLOCAR-FOTOS.md`, script faz o resto); (3) dizer a frase-chave quando quiser preparar o notebook; (4) rotacionar a senha do MySQL; (5) UptimeRobot; (6) apagar a pasta solta `connect-ong/connect-ong-web/` (já está no .gitignore, mas continua no disco).
+
+- [FEIRA ESCOLA (2026-08-13/17)](connect-ong-feira-escola-2026-08-13.md) — pasta única na Área de Trabalho com **RESTAURAR-DEMO (o "voltar antes")**; Dora no modo regras entendendo **"Cidade - UF"** e estados; a **chave do Groq não está neste notebook** (plumbing `chave-ia.txt`, integração de IA centralizada em 8 serviços); **guarda de "descartar alterações" em TODA tela de edição** dos 3 apps. Gotchas: `mvn package` falha com o jar rodando; heredoc do Git Bash quebra.
 
 - [Preparação da feira (2026-08-13)](connect-ong-preparacao-feira-2026-08-13.md) — **máquina de apresentação PRONTA e testada**: MySQL 8 portátil (sem admin) com o banco da escola importado, jar + builds release + APK, scripts de 1 clique (INICIAR/PARAR/RECOMPILAR/ATUALIZAR-BANCO), mapa offline por cache de tiles no serve.py, aquecimento automático. Gotchas novos: **CA do Avast rotaciona**, `findstr` com espaço vira OU, `timeout` do Git Bash sombreia o do Windows.
 

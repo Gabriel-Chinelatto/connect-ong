@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../utils/categorias.dart';
 import '../widgets/buttons/app_button.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/inputs/app_text_field.dart';
 
@@ -55,11 +56,42 @@ class _CadastrarDoacaoScreenState
   bool get editando =>
       widget.doacao != null;
 
+  /// Retrato dos campos na última carga/salvamento. Serve para avisar antes
+  /// de sair com alterações pendentes (mesmo padrão do Editar Perfil).
+  String _retratoSalvo = '';
+
+  String _retratoAtual() => [
+        nomeController.text,
+        descricaoController.text,
+        quantidadeController.text,
+        categoria,
+        tipo,
+        urgente,
+        produtoNovo,
+      ].join('|');
+
+  bool get _temMudanca => _retratoAtual() != _retratoSalvo;
+
   @override
   void initState() {
     super.initState();
 
     preencherCampos();
+
+    _retratoSalvo = _retratoAtual();
+
+    // Reconstrói a cada tecla: o canPop da guarda é lido do último build.
+    for (final c in [
+      nomeController,
+      descricaoController,
+      quantidadeController,
+    ]) {
+      c.addListener(_aoDigitar);
+    }
+  }
+
+  void _aoDigitar() {
+    if (mounted) setState(() {});
   }
 
   void preencherCampos() {
@@ -86,7 +118,8 @@ class _CadastrarDoacaoScreenState
     produtoNovo = doacao.novo;
   }
 
-  Future<void> salvarDoacao() async {
+  // Devolve true quando salvou (também é o aoSalvar da guarda de saída).
+  Future<bool> salvarDoacao() async {
     FocusScope.of(context).unfocus();
 
     if (nomeController.text
@@ -97,7 +130,7 @@ class _CadastrarDoacaoScreenState
         'Informe o nome da doação.',
       );
 
-      return;
+      return false;
     }
 
     if (quantidadeController.text
@@ -108,7 +141,7 @@ class _CadastrarDoacaoScreenState
         'Informe a quantidade.',
       );
 
-      return;
+      return false;
     }
 
     final quantidade = int.tryParse(
@@ -122,7 +155,7 @@ class _CadastrarDoacaoScreenState
         'Quantidade inválida.',
       );
 
-      return;
+      return false;
     }
 
     setState(() {
@@ -152,7 +185,7 @@ class _CadastrarDoacaoScreenState
         );
       }
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       AppSnackbar.sucesso(
         context,
@@ -161,9 +194,15 @@ class _CadastrarDoacaoScreenState
             : 'Doação cadastrada com sucesso!',
       );
 
+      // Marca como salvo ANTES do pop: a guarda intercepta pops e não pode
+      // perguntar depois de um salvamento bem-sucedido.
+      _retratoSalvo = _retratoAtual();
+
       Navigator.pop(context, true);
+
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
 
       AppSnackbar.erro(
         context,
@@ -171,6 +210,8 @@ class _CadastrarDoacaoScreenState
             ? 'Erro ao atualizar doação.'
             : 'Erro ao cadastrar doação.',
       );
+
+      return false;
     } finally {
       if (mounted) {
         setState(() {
@@ -194,6 +235,16 @@ class _CadastrarDoacaoScreenState
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Guarda de saída: com campos alterados, oferece Salvar/Descartar antes
+    // de fechar a tela.
+    return GuardaDeSaida(
+      temMudanca: _temMudanca,
+      aoSalvar: salvarDoacao,
+      child: _scaffold(cs),
+    );
+  }
+
+  Widget _scaffold(ColorScheme cs) {
     return Scaffold(
       appBar: AppBar(
         title: Text(

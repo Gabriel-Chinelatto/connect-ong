@@ -8,6 +8,7 @@ import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/celebracao.dart';
 
@@ -59,6 +60,12 @@ class _DoarPixScreenState extends State<DoarPixScreen>
 
   // Pulso do "Aguardando pagamento..." (repete em vai-e-volta).
   late final AnimationController _pulso;
+
+  /// Valor digitado ou PIX já gerado, e doação ainda não concluída → avisa
+  /// antes de sair. Na etapa de sucesso sai livre (nada a perder).
+  bool get _temMudanca =>
+      _etapa != _Etapa.sucesso &&
+      (_valorCtrl.text.trim().isNotEmpty || _etapa == _Etapa.aguardando);
 
   @override
   void initState() {
@@ -158,6 +165,15 @@ class _DoarPixScreenState extends State<DoarPixScreen>
     final titulo = widget.campanha != null
         ? 'Contribuir com a campanha'
         : 'Doar para ${widget.ongNome}';
+    // Sem aoSalvar: não existe "salvar" uma doação pela metade — o aviso
+    // oferece só "Descartar"/"Continuar editando".
+    return GuardaDeSaida(
+      temMudanca: _temMudanca,
+      child: _scaffold(titulo),
+    );
+  }
+
+  Widget _scaffold(String titulo) {
     return Scaffold(
       appBar: AppBar(
         title: Text(titulo),

@@ -152,13 +152,20 @@
       "Bash(/c/Users/gabri/tools/mysql/bin/mysqld --defaults-file=/c/Users/gabri/tools/mysql/my-feira.ini)",
       "Bash(/c/Users/gabri/tools/mysql/bin/mysqladmin --host=127.0.0.1 --port=3306 -u root ping)",
       "Bash(break)",
-      "Read(//c/Users/gabri/tools/mysql-data/**)"
+      "Read(//c/Users/gabri/tools/mysql-data/**)",
+      "Bash(curl -s -X POST http://127.0.0.1:8080/assistente -H \"Content-Type: application/json\" -d '{\"mensagem\":\"se eu estiver no rio de janeiro, onde posso doar?\"}' -w \"\\\\n[HTTP %{http_code}]\\\\n\")",
+      "Bash(flutter build *)",
+      "Bash(echo \"doador exit=$?\")",
+      "Read(//c/Users/gabri/Desktop/FEIRA ESCOLA/interno/**)",
+      "Bash(echo \"painel exit=$?\")",
+      "Read(//c/Users/gabri/Desktop/connect-ong-web/js/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\gabri\\IdeaProjects\\connect-ong-api\\API - Chinelatto - att2\\API - Chinelatto\\API - Chinelatto\\src\\main\\java\\com\\example\\connectong_api\\config",
       "c:\\Users\\gabri\\Desktop\\connect-ong-desktop\\lib",
       "c:\\users\\gabri\\Desktop\\connect-ong\\android\\gradle\\wrapper",
-      "C:\\Users\\gabri\\tools\\mysql"
+      "C:\\Users\\gabri\\tools\\mysql",
+      "C:\\Users\\gabri\\Desktop\\connect-ong-web\\js"
     ]
   }
 }

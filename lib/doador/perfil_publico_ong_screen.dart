@@ -10,6 +10,7 @@ import '../services/perfil_publico_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../widgets/common/dialog_pontuacao.dart';
 import '../utils/app_links.dart';
 import '../widgets/common/chip_foguinho.dart';
@@ -195,7 +196,21 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               }
             }
 
-            return AlertDialog(
+            // Sujo = detalhes digitados. Qualquer fechamento (voltar, toque
+            // fora — o ModalBarrier chama maybePop — ou o Cancelar abaixo)
+            // passa por este PopScope e pergunta antes de descartar.
+            final temMudanca = descricaoController.text.trim().isNotEmpty;
+            return PopScope(
+              canPop: !temMudanca,
+              onPopInvokedWithResult: (didPop, _) async {
+                if (didPop) return;
+                final escolha = await perguntarSaida(dialogContext);
+                if (escolha == SaidaEscolha.descartar &&
+                    dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              child: AlertDialog(
               title: Text(
                 'Denunciar ONG',
                 style: TextStyle(fontWeight: FontWeight.w700),
@@ -229,6 +244,9 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                     controller: descricaoController,
                     maxLines: 3,
                     enabled: !enviando,
+                    // Reconstrói a cada tecla: o canPop da guarda acima é
+                    // lido do último build.
+                    onChanged: (_) => setStateDialog(() {}),
                     decoration: const InputDecoration(
                       labelText: 'Detalhes (opcional)',
                     ),
@@ -237,8 +255,11 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               ),
               actions: [
                 TextButton(
+                  // maybePop: o Cancelar passa pela mesma confirmação.
                   onPressed:
-                      enviando ? null : () => Navigator.of(dialogContext).pop(),
+                      enviando
+                          ? null
+                          : () => Navigator.of(dialogContext).maybePop(),
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
@@ -253,6 +274,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
                           : const Text('Enviar'),
                 ),
               ],
+              ),
             );
           },
         );

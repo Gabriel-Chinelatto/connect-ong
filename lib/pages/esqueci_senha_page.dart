@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/buttons/app_button.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/inputs/app_text_field.dart';
 
@@ -44,6 +45,31 @@ class _EsqueciSenhaPageState extends State<EsqueciSenhaPage> {
   // Código exibido quando o servidor está em modo demonstração.
   String? _codigoDemo;
 
+  // Senha redefinida com sucesso: a volta ao login sai sem aviso.
+  bool _concluido = false;
+
+  /// Algo digitado (o e-mail pré-preenchido pelo login não conta) e fluxo
+  /// ainda não concluído → avisa antes de descartar.
+  bool get _temMudanca =>
+      !_concluido &&
+      (_email.text.trim() != (widget.emailInicial ?? '').trim() ||
+          _codigo.text.isNotEmpty ||
+          _novaSenha.text.isNotEmpty ||
+          _confirmarSenha.text.isNotEmpty);
+
+  @override
+  void initState() {
+    super.initState();
+    // Reconstrói a cada tecla: o canPop da guarda é lido do último build.
+    for (final c in [_email, _codigo, _novaSenha, _confirmarSenha]) {
+      c.addListener(_aoDigitar);
+    }
+  }
+
+  void _aoDigitar() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -69,7 +95,8 @@ class _EsqueciSenhaPageState extends State<EsqueciSenhaPage> {
   void _voltar() {
     if (_enviando) return;
     if (_passo == 0) {
-      Navigator.pop(context);
+      // maybePop: passa pela guarda de saída (pop direto a ignoraria).
+      Navigator.maybePop(context);
       return;
     }
     _irParaPasso(_passo - 1);
@@ -137,7 +164,9 @@ class _EsqueciSenhaPageState extends State<EsqueciSenhaPage> {
       );
       if (!mounted) return;
 
-      // Sucesso: volta ao login para entrar com a nova senha.
+      // Sucesso: volta ao login para entrar com a nova senha. Marca como
+      // concluído ANTES do pop para a guarda de saída não perguntar.
+      _concluido = true;
       AppSnackbar.sucesso(
           context, 'Senha redefinida com sucesso! Entre com a nova senha.');
       Navigator.pop(context);
@@ -153,6 +182,15 @@ class _EsqueciSenhaPageState extends State<EsqueciSenhaPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    // Sem aoSalvar: não há o que salvar num fluxo de redefinição parcial —
+    // o aviso oferece só "Descartar"/"Continuar editando".
+    return GuardaDeSaida(
+      temMudanca: _temMudanca,
+      child: _scaffold(cs),
+    );
+  }
+
+  Widget _scaffold(ColorScheme cs) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

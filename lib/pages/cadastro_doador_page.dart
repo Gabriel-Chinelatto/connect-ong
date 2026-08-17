@@ -11,6 +11,7 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
 import '../widgets/buttons/app_button.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/forms/seletor_uf_cidade.dart';
 import '../widgets/inputs/app_text_field.dart';
@@ -45,8 +46,34 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
   int _passo = 0;
   bool _criando = false;
 
+  // Conta criada com sucesso: a saída (auto-login → MainShell) acontece sem
+  // o aviso de alterações não salvas.
+  bool _cadastroConcluido = false;
+
   // Consentimento LGPD (obrigatório no último passo).
   bool _aceitouTermos = false;
+
+  List<TextEditingController> get _controllers =>
+      [_nome, _email, _senha, _confirmarSenha, _cidade, _estado, _telefone];
+
+  /// Qualquer campo preenchido e cadastro ainda não concluído → avisa antes
+  /// de descartar o que já foi digitado.
+  bool get _temMudanca =>
+      !_cadastroConcluido && _controllers.any((c) => c.text.trim().isNotEmpty);
+
+  @override
+  void initState() {
+    super.initState();
+    // Reconstrói a cada tecla: o canPop da guarda é lido do último build,
+    // então sem isso ela não enxergaria o que acabou de ser digitado.
+    for (final c in _controllers) {
+      c.addListener(_aoDigitar);
+    }
+  }
+
+  void _aoDigitar() {
+    if (mounted) setState(() {});
+  }
 
   // Recognizers dos links "Política de Privacidade" / "Termos de Uso"
   // (criados uma vez e descartados no dispose, como manda o RichText).
@@ -125,7 +152,8 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
 
   void _voltar() {
     if (_passo == 0) {
-      Navigator.pop(context);
+      // maybePop: passa pela guarda de saída (pop direto a ignoraria).
+      Navigator.maybePop(context);
       return;
     }
     setState(() => _passo--);
@@ -156,6 +184,8 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
       );
 
       if (!mounted) return;
+      // Marca ANTES de navegar: a saída do fluxo concluído não deve avisar.
+      _cadastroConcluido = true;
       Navigator.pushAndRemoveUntil(
         context,
         PageTransition.fade(const MainShell()),
@@ -173,6 +203,15 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
     final cs = Theme.of(context).colorScheme;
     final ultimoPasso = _passo == _totalPassos - 1;
 
+    // Sem aoSalvar: não faz sentido salvar um cadastro parcial — o aviso
+    // oferece só "Descartar"/"Continuar editando".
+    return GuardaDeSaida(
+      temMudanca: _temMudanca,
+      child: _scaffold(cs, ultimoPasso),
+    );
+  }
+
+  Widget _scaffold(ColorScheme cs, bool ultimoPasso) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

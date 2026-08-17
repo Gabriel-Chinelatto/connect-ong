@@ -65,12 +65,18 @@ class GuardaDeSaida extends StatelessWidget {
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final navegador = Navigator.of(context);
+        final rota = ModalRoute.of(context);
         final escolha =
             await perguntarSaida(context, permiteSalvar: aoSalvar != null);
         switch (escolha) {
           case SaidaEscolha.salvar:
             final ok = await aoSalvar!.call();
-            if (ok && navegador.mounted) navegador.pop();
+            // Alguns salvamentos já fecham a própria tela (pop com resultado,
+            // ex.: Editar Perfil). Nesse caso a rota fica inativa e um segundo
+            // pop aqui derrubaria também a tela de baixo.
+            if (ok && navegador.mounted && (rota?.isActive ?? true)) {
+              navegador.pop();
+            }
           case SaidaEscolha.descartar:
             if (navegador.mounted) navegador.pop();
           case SaidaEscolha.continuarEditando:

@@ -12,6 +12,7 @@ import '../services/avaliacao_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/feedback/empty_state.dart';
 
@@ -358,15 +359,31 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
     final u = await _sessionService.obterUsuario();
     if (u == null || !mounted) return;
 
-    int nota = 5;
+    const notaInicial = 5;
+    int nota = notaInicial;
     final comentarioC = TextEditingController();
 
     await showDialog(
       context: context,
       builder:
           (dialogContext) => StatefulBuilder(
-            builder:
-                (dialogContext, setStateDialog) => AlertDialog(
+            builder: (dialogContext, setStateDialog) {
+              // Sujo = comentário digitado ou nota mexida. Qualquer fechamento
+              // (voltar, toque fora — o ModalBarrier chama maybePop — ou o
+              // Cancelar abaixo) passa por este PopScope e pergunta antes.
+              final temMudanca =
+                  comentarioC.text.trim().isNotEmpty || nota != notaInicial;
+              return PopScope(
+                canPop: !temMudanca,
+                onPopInvokedWithResult: (didPop, _) async {
+                  if (didPop) return;
+                  final escolha = await perguntarSaida(dialogContext);
+                  if (escolha == SaidaEscolha.descartar &&
+                      dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                },
+                child: AlertDialog(
                   title: Text('Avaliar ${i.ongNome ?? "ONG"}'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -392,6 +409,9 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                       TextField(
                         controller: comentarioC,
                         maxLines: 3,
+                        // Reconstrói a cada tecla: o canPop da guarda acima é
+                        // lido do último build.
+                        onChanged: (_) => setStateDialog(() {}),
                         decoration: const InputDecoration(
                           labelText: 'Comentário (opcional)',
                         ),
@@ -400,7 +420,8 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
+                      // maybePop: o Cancelar passa pela mesma confirmação.
+                      onPressed: () => Navigator.maybePop(dialogContext),
                       child: const Text('Cancelar'),
                     ),
                     FilledButton(
@@ -431,6 +452,8 @@ class _MeusMatchesScreenState extends State<MeusMatchesScreen>
                     ),
                   ],
                 ),
+              );
+            },
           ),
     );
 
