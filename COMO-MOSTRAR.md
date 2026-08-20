@@ -30,6 +30,28 @@ https://connect-ong-api.onrender.com/publico/estatisticas
 
 Deve aparecer uma linha com os números do projeto. Se aparecer, está quente.
 
+### 🤖 Confira também se a IA está ligada
+
+A IA nunca dá erro na tela: quando ela não responde, o assistente cai sozinho
+no modo por regras e aparece só um selo discreto **"Modo básico"** embaixo da
+resposta. Foi assim que ela passou dias fora do ar sem ninguém notar (a Groq
+tinha aposentado o modelo que usávamos).
+
+Abra este endereço — dá para conferir do celular, em pé no estande:
+
+```
+https://connect-ong-api.onrender.com/ia/status?ping=true
+```
+
+| O que vier | O que significa |
+|---|---|
+| `"ping":"ok"` | IA respondendo. Pode apresentar. |
+| `"chaveConfigurada":false` | Falta a variável `APP_IA_GROQ_KEY` no Render → **tudo** fica em "Modo básico". |
+| `"ping":"falhou"` | Veja `ultimoErro`: `404` = modelo aposentado (trocar em `app.ia.groq.modelo`), `429` = cota do minuto (esperar 1 min). |
+
+A cota gratuita é de **8.000 tokens por minuto por modelo**. A API usa três
+modelos em cadeia justamente para a fila do estande não esbarrar nisso.
+
 ### Contas de demonstração
 
 Nas versões publicadas as credenciais **não aparecem na tela** de propósito
@@ -83,6 +105,27 @@ Get-NetTCPConnection -LocalPort 5000 -State Listen |
   ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
 
+⚠️ **Se o site (8090) abrir com "HTTP ERROR 501"**: alguém já estava naquela
+porta e é **ele** que está respondendo o navegador, não o site. No Windows o
+`serve.py` conseguia ligar por cima de outro programa **sem dar erro nenhum** —
+ele avisava "Connect ONG em http://localhost:8090" como se estivesse tudo bem.
+Corrigido: agora o `serve.py` recusa subir e mostra quem está ocupando a porta.
+Basta ler a mensagem dele na janela preta e rodar o comando que ele sugere
+(mesmo comando acima, trocando 5000 por 8090).
+
+### 📱 E se eu quiser mostrar no emulador do Android?
+
+Nada a configurar: o emulador usa a internet do próprio computador e o app já
+aponta para a API publicada. Só **acorde a API antes** (link lá em cima).
+
+Se quiser o emulador falando com o **backend local**, o endereço `localhost`
+não serve — dentro do emulador ele é o próprio Android. Use `10.0.2.2`, que é
+o apelido do PC visto de dentro do emulador:
+
+```bash
+flutter run --dart-define=API_BASE=http://10.0.2.2:8080
+```
+
 ---
 
 ## 3. Se algo der errado na hora
@@ -93,6 +136,8 @@ Get-NetTCPConnection -LocalPort 5000 -State Listen |
 | "O servidor está fora do ar (erro 502)" | A aplicação caiu no Render | Abrir o painel do Render e ver **Logs**; um novo deploy costuma resolver. |
 | Telas vazias, tudo zerado | A API não respondeu | Testar o endereço de estatísticas acima. |
 | Site abre mas nada carrega | Front no ar, API não | Mesmo caso acima — o problema é a API, não o site. |
+| Assistente responde curto/genérico com o selo **"Modo básico"** | A IA não respondeu e caiu no fallback por regras | Abrir `/ia/status?ping=true` (seção 1). Se for `429`, esperar 1 minuto: é a cota gratuita por minuto. |
+| Site local (8090) abre com **HTTP ERROR 501** | Outro programa já está naquela porta | Fechar a janela do site, liberar a porta 8090 (seção 2) e rodar o `serve.py` de novo. |
 
 Existe um alarme automático: um GitHub Action testa a API de tempos em tempos e
 **manda e-mail quando ela cai**. Ele avisa, mas não conserta.
