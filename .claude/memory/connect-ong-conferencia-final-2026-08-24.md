@@ -65,13 +65,35 @@ precisar). Depois disso serve.py pega a 8090 normalmente. ⚠️ Se o 501 voltar
 conferir de novo quem esta na 8090 (`netstat -ano | findstr :8090`) — pode ser
 outro programa; a saida definitiva seria mudar a porta do site.
 
-## Pendencias HUMANAS (nao bloqueiam a feira; decisao do usuario)
+## Pendencias RESOLVIDAS na sessao de 24/08 (tarde)
 
-1. **Chave do Groq** em `FEIRA ESCOLA\chave-ia.txt` para a IA de verdade (Dora,
-   chat do dev, foto). Sem ela, modo regras (bom). Com a chave + jar novo:
-   conferir `/ia/status?ping=true` → `ping:"ok"`. A chave esta no PC da escola
-   (`application-local.properties`) ou gerar em console.groq.com/keys.
-2. **Fotos reais** das ONGs (guia `ferramentas/COMO-COLOCAR-FOTOS.md`).
-3. **APK no celular** (cabo) — opcional; o emulador e a demo mobile principal.
-4. **Rotacionar a senha do MySQL** (higiene de seguranca; nao bloqueia a feira).
-5. Vespera: rodar `ATUALIZAR-BANCO-DA-ESCOLA.bat` (dados frescos).
+1. **✅ IA de verdade LIGADA.** O usuario gerou uma chave Groq NOVA (a antiga nao
+   da p/ revisualizar no console) e colou. Escrita em `FEIRA ESCOLA\chave-ia.txt`
+   (fixada always-local; NAO e repo, entao nao vaza p/ git). Provado ao vivo:
+   `/ia/status?ping=true` → `chaveConfigurada:true, ping:ok, modo:ia,
+   ultimoModeloOk:gpt-oss-120b`; Dora e chat do dev conversando em `modo:ia`. E o
+   **fluxo real** (PARAR+INICIAR-FEIRA lendo a chave-ia.txt) tambem foi validado.
+   ⚠️ **Pegadinha "Groq × Grok":** o usuario colou 1o uma chave `xai-...` (xAI/Grok,
+   PAGA) por engano — nao serve (o projeto usa api.groq.com, chave `gsk_`, gratis).
+   A chave `gsk_` certa e a que ficou. (Ambas as chaves ficaram no historico do
+   chat; a `xai-` esta sem uso — o usuario pode apaga-la no console da xAI.)
+2. **✅ Fotos reais das 6 ONGs da feira** (ids 20/32/33/34/35/36): capas livres do
+   Wikimedia Commons (baixadas com User-Agent proprio — o Commons bloqueia o UA
+   padrao do curl), escolhidas por causa (idosos→casarao, criancas→sala de aula,
+   animais→resgate c/ filhote, doacao→cesta de latas, rua→refeitorio, acolhimento
+   →casarao). Gravadas no banco LOCAL via `subir_fotos.py --host 127.0.0.1
+   --usuario feira --senha feira123` (precisa `pip install pymysql pillow`).
+   Provado: capa da Lar Viva servida pela API. Originais preservados em
+   `interno/fotos-ongs/capa/<id>.jpg`. **NAO** foram gravadas no banco da escola
+   (produacao intocada). Para nao sumirem no `ATUALIZAR-BANCO`, esse .bat agora
+   **re-aplica as fotos automaticamente** apos recopiar (passo [3/3]).
+
+## Pendencias que ficam (decisao do usuario)
+
+- **APK no celular:** dispensado — "so o emulador basta".
+- **Rotacionar a senha do MySQL:** o usuario decidiu **NAO** ("a senha e ruim de
+  alterar, deixa essa mesma"). Fica exposta no historico do git publico; risco
+  aceito conscientemente.
+- **Fotos no site publicado (Render):** nao feitas (so local). Se quiser as capas
+  no site do ar tambem, rodar `subir_fotos.py` sem `--host` (vai p/ a escola).
+- Vespera: `ATUALIZAR-BANCO-DA-ESCOLA.bat` (agora ja re-aplica as fotos).
