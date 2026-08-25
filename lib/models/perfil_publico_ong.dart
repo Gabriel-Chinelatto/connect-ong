@@ -22,8 +22,10 @@ class PerfilPublicoOng {
   /// "perfil indisponível". Ausente no JSON (backend antigo) = false.
   final bool bloqueado;
 
-  // Perfil rico (feira): capa em base64, endereço e fotos do local. Todos
-  // opcionais — contas antigas sem esses dados degradam graciosamente.
+  // Perfil rico (feira): logo e capa em base64, endereço e fotos do local.
+  // Todos opcionais — contas antigas sem esses dados degradam graciosamente
+  // (sem logo, o cabeçalho volta a mostrar a inicial do nome).
+  final String? logoBase64;
   final String? capaBase64;
   final String? endereco;
   final List<String> fotosLocal;
@@ -57,6 +59,7 @@ class PerfilPublicoOng {
     required this.transparenciaScore,
     required this.nivelTransparencia,
     this.bloqueado = false,
+    this.logoBase64,
     this.capaBase64,
     this.endereco,
     this.fotosLocal = const [],
@@ -94,6 +97,7 @@ class PerfilPublicoOng {
       transparenciaScore: (j['transparenciaScore'] ?? 0) as int,
       nivelTransparencia: j['nivelTransparencia'] ?? 'BRONZE',
       bloqueado: j['bloqueado'] ?? false,
+      logoBase64: j['logoBase64'] as String?,
       capaBase64: j['capaBase64'] as String?,
       endereco: j['endereco'] as String?,
       fotosLocal:

@@ -11,6 +11,7 @@ import '../theme/app_spacing.dart';
 import '../utils/page_transition.dart';
 import '../utils/tempo.dart';
 import '../widgets/cards/capa_categoria.dart';
+import '../widgets/common/logo_ong.dart';
 import '../widgets/feedback/app_snackbar.dart';
 
 import 'perfil_publico_ong_screen.dart';
@@ -226,7 +227,6 @@ class _NecessidadeDetalheScreenState extends State<NecessidadeDetalheScreen> {
   Widget _cardOng(Necessidade n) {
     final cs = Theme.of(context).colorScheme;
     final nome = (n.ongNome ?? 'ONG').trim();
-    final inicial = nome.isNotEmpty ? nome[0].toUpperCase() : '?';
     final clicavel = n.ongId != null;
 
     return Semantics(
@@ -242,18 +242,7 @@ class _NecessidadeDetalheScreenState extends State<NecessidadeDetalheScreen> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: AppColors.primary,
-                  child: Text(
-                    inicial,
-                    style: const TextStyle(
-                      color: AppColors.onPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
+                LogoOng(ongId: n.ongId, nome: nome, raio: 20),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(

@@ -52,6 +52,24 @@ https://connect-ong-api.onrender.com/ia/status?ping=true
 A cota gratuita é de **8.000 tokens por minuto por modelo**. A API usa três
 modelos em cadeia justamente para a fila do estande não esbarrar nisso.
 
+### 🖼️ As imagens da demonstração (só no notebook da feira)
+
+Na máquina da feira, **todas as 2.000 ONGs têm logo e capa** e **todos os 1.200
+doadores têm foto de perfil** — o visitante pode abrir qualquer instituição que
+nunca vai cair numa tela vazia. A imagem é escolhida pela **causa** da ONG
+(animais → cachorro no abrigo, alimentação → banco de alimentos, e assim por
+diante) e as 6 ONGs do telão continuam com a foto escolhida a dedo.
+
+Duas coisas para saber:
+
+- O **RESTAURAR-DEMO agora leva ~50 s** (antes ~15 s). O dump da escola não tem
+  as imagens, então ele repõe todas depois de restaurar. É o preço de a demo
+  voltar ao início **com** as fotos.
+- No **site publicado** (Netlify/Render) as imagens **não** estão: elas vivem só
+  no banco local. Lá as ONGs continuam com a inicial do nome, como antes.
+
+De onde veio cada foto (autor e licença): `FEIRA ESCOLA\interno\imagens-demo\CREDITOS.md`.
+
 ### Contas de demonstração
 
 Nas versões publicadas as credenciais **não aparecem na tela** de propósito

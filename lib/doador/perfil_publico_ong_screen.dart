@@ -51,6 +51,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
   bool _erro = false;
 
   // Imagens decodificadas UMA vez ao carregar (evita decode a cada frame).
+  Uint8List? _logoBytes;
   Uint8List? _capaBytes;
   List<Uint8List> _fotosLocalBytes = [];
 
@@ -71,11 +72,17 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
     try {
       final p = await _service.buscar(widget.ongId);
 
-      // Decodifica capa e fotos do local; base64 inválido é só ignorado.
+      // Decodifica logo, capa e fotos do local; base64 inválido é só ignorado.
+      Uint8List? logo;
+      if ((p.logoBase64 ?? '').isNotEmpty) {
+        try {
+          logo = base64Decode(_semPrefixo(p.logoBase64!));
+        } catch (_) {}
+      }
       Uint8List? capa;
       if ((p.capaBase64 ?? '').isNotEmpty) {
         try {
-          capa = base64Decode(p.capaBase64!);
+          capa = base64Decode(_semPrefixo(p.capaBase64!));
         } catch (_) {}
       }
       final fotos = <Uint8List>[];
@@ -88,6 +95,7 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
       if (!mounted) return;
       setState(() {
         _perfil = p;
+        _logoBytes = logo;
         _capaBytes = capa;
         _fotosLocalBytes = fotos;
         _carregando = false;
@@ -99,6 +107,14 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
         _erro = true;
       });
     }
+  }
+
+  // As imagens gravadas pelo painel da ONG vêm como base64 puro; as gravadas
+  // pelo script da demonstração vêm como data-URI ("data:image/png;base64,...").
+  // Aceitamos os dois formatos.
+  static String _semPrefixo(String b64) {
+    final i = b64.indexOf(',');
+    return b64.startsWith('data:') && i > 0 ? b64.substring(i + 1) : b64;
   }
 
   // Compartilhar = LINK público do perfil (o app web abre /#/ong/<id>).
@@ -446,6 +462,15 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
+              // O logo entra como imagem do próprio círculo: assim ele é
+              // recortado em círculo sem precisar de ClipOval por cima.
+              image:
+                  _logoBytes != null
+                      ? DecorationImage(
+                        image: MemoryImage(_logoBytes!),
+                        fit: BoxFit.cover,
+                      )
+                      : null,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.15),
@@ -455,14 +480,18 @@ class _PerfilPublicoOngScreenState extends State<PerfilPublicoOngScreen> {
               ],
             ),
             alignment: Alignment.center,
-            child: Text(
-              inicial,
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
+            // Sem logo, continua a inicial do nome (comportamento antigo).
+            child:
+                _logoBytes != null
+                    ? null
+                    : Text(
+                      inicial,
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
           ),
           const SizedBox(height: 14),
           Row(
