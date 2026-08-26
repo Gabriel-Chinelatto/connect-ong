@@ -65,6 +65,32 @@ escola e anterior a ela; como o MySQL nao tem `ADD COLUMN IF NOT EXISTS`, usa
 imagens). Sao ~80 MB gravados; nao da para acelerar muito. Esta escrito no .bat
 e no COMO-MOSTRAR.
 
+## ⚡ Tirar o base64 da RESPOSTA nao bastava: a entidade ainda o CARREGAVA
+
+Descoberto em 26/08, rodando o INICIAR-FEIRA inteiro. O `findAll()` traz a
+ENTIDADE, e a entidade tem `capa_base64` + `logo_base64`: cada `GET /ongs` LIA
+~78 MB do banco (2.000 x ~39 KB) so para descartar ao montar o DTO. O efeito
+transbordava para as telas SEGUINTES — no aquecimento o `/necessidades` chegou a
+**8,4 s** logo depois de um `/ongs`.
+
+Corrigido com uma projecao das 12 colunas que a listagem usa
+(`ONGRepository.listagemLeve`). Medido no banco da feira:
+
+| | antes | depois |
+|---|---|---|
+| `GET /ongs` | 0,31–0,39 s | **0,07–0,12 s** (era 0,18 s ANTES das imagens) |
+| `/necessidades` logo depois | pico de 8,4 s | 0,80–0,91 s |
+
+A resposta ficou **byte a byte identica** (conferido com `cmp`, listagem completa
+e busca por nome). Duas armadilhas para isso:
+
+- **`ORDER BY o.id`** — o `findAll()` devolvia nessa ordem; sem isso a ordem muda.
+- **`COALESCE`** — 15 ONGs antigas tem `verificada`/`total_avaliacoes` **NULL** no
+  banco, e a ENTIDADE devolvia o valor do **inicializador do campo** (`false`/`0`),
+  nao null. A projecao le a coluna crua e devolveria null, mudando o contrato so
+  para essas 15. Fica a licao: **trocar entidade por projecao muda o que chega ao
+  DTO quando a coluna e NULL e o campo Java tem inicializador.**
+
 ## 🐛 Marca d'agua do rawpixel
 
 O Openverse mistura fontes. As imagens do **rawpixel** vem com "rawpixel"
@@ -111,6 +137,24 @@ cores), retrato ~5 KB. Total no banco: ~80 MB.
 - **Commons bloqueia rajada:** `upload.wikimedia.org` responde 429 com 10 threads;
   3 threads + repeticao resolve.
 - **`GET /ongs` exige token** e o login e `POST /usuarios/login` (nao `/auth/login`).
+
+## Conferido ao vivo (26/08, fechamento)
+
+- **`RESTAURAR-DEMO.bat` rodado de verdade**, com o arquivo final: **55 s**
+  (12 s do dump + ~35 s das imagens + aquecimento). As 2.000 capas, 2.000 logos e
+  1.200 fotos voltaram, e a coluna `logo_base64` foi recriada pelo prologo do
+  .sql. E o botao que se aperta entre uma apresentacao e outra — agora esta provado.
+- **`INICIAR-FEIRA.bat` rodado inteiro**: os 5 servicos (3306/8080/5000/5001/8090)
+  sobem, aquece e abre as 3 abas.
+- **Logo pelo painel da ONG** (contrato do PUT, via API): enviar `logoBase64`
+  grava e **preserva a capa**; PUT sem `logoBase64` **mantem** o logo (mesma regra
+  da capa); o endpoint de imagem serve o arquivo novo com `image/png`.
+- Emulador (APK novo, `adb reverse`, backend local): login, feed, detalhe da
+  necessidade com o logo no cartao da ONG, perfil da ONG com logo + capa e a
+  **foto do doador no "Ola, Joao"**.
+- ⚠️ **O emulador desta maquina trava com ANR do `systemui`** quando algo pesado
+  roda junto (build, restauracao). Nao e o app: e o Android do AVD. Fechar os
+  builds antes e, se travar, `-no-snapshot-load`.
 
 ## Conferido ao vivo
 
