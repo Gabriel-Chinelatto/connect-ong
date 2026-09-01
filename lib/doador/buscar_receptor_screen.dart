@@ -221,15 +221,14 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
       );
     }
     if (!_temMais && _resultados.isNotEmpty) {
+      // O total ja aparece no chip do topo; aqui so marcamos o fim da lista.
       return Padding(
         padding: const EdgeInsets.only(top: 4, bottom: 28),
         child: Center(
           child: Text(
-            _resultados.length == 1
-                ? '1 instituição encontrada'
-                : '${_resultados.length} instituições encontradas',
+            'Fim da lista',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.75),
+              color: Colors.white.withValues(alpha: 0.65),
               fontSize: 13,
             ),
           ),
@@ -609,7 +608,14 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
-                      "${_resultados.length} ONGs encontradas",
+                      // Enquanto ha proxima pagina, o numero carregado NAO e o
+                      // total — dizer "20 ONGs encontradas" com 2.000 no banco
+                      // faria o visitante achar que a busca falhou.
+                      _temMais
+                          ? "${_resultados.length} ONGs · role para ver mais"
+                          : _resultados.length == 1
+                          ? "1 ONG encontrada"
+                          : "${_resultados.length} ONGs encontradas",
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
