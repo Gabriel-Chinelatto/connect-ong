@@ -10,16 +10,26 @@ import 'package:flutter_application_1/widgets/feedback/app_snackbar.dart';
 import 'package:flutter_application_1/doador/doar_pix_screen.dart';
 import 'package:flutter_application_1/doador/perfil_publico_ong_screen.dart';
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-/// Busca de ONGs receptoras: lista e filtra ONGs por nome, permite favoritar
-/// e abre o perfil publico ou a doacao via PIX. Ponto de partida para o doador
-/// escolher uma instituicao para apoiar.
+/// Busca de ONGs receptoras: lista e filtra ONGs por nome ou cidade, permite
+/// favoritar e abre o perfil publico ou a doacao via PIX. Ponto de partida para
+/// o doador escolher uma instituicao para apoiar.
 ///
 /// Redesenho (Bloco 21 / Fase 4): design system + tema (dark mode ok).
-/// A logica de rede (chamadas http diretas) foi preservada intacta.
+///
+/// CARREGAMENTO AOS POUCOS (rolagem infinita). Esta tela baixava as ONGs TODAS
+/// numa chamada so e guardava a lista inteira na memoria. Com 2.000 instituicoes
+/// isso travava de dois jeitos: ao abrir, porque criava 2.000 objetos de uma vez
+/// na thread da interface; e ao digitar, porque refiltrava as 2.000 a cada tecla.
+///
+/// Agora a tela pede [_porPagina] por vez e busca a proxima pagina quando o
+/// usuario se aproxima do fim da lista. A busca tambem foi para o servidor, com
+/// um respiro de [_esperaDigitacao] entre a ultima tecla e a chamada — quem
+/// digita "lar viva" gera UMA busca, nao oito.
 class BuscarReceptorScreen extends StatefulWidget {
   const BuscarReceptorScreen({super.key});
 
@@ -29,12 +39,30 @@ class BuscarReceptorScreen extends StatefulWidget {
 
 class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
-  List<Ong> _ongs = [];
+  /// Quantas ONGs por pagina. 20 enche mais de uma tela de rolagem, entao a
+  /// proxima pagina chega antes de o usuario ver o fim.
+  static const int _porPagina = 20;
 
-  List<Ong> _resultados = [];
+  /// Respiro entre a ultima tecla e a busca no servidor.
+  static const Duration _esperaDigitacao = Duration(milliseconds: 400);
 
+  /// So o que ja foi carregado — nunca as 2.000.
+  final List<Ong> _resultados = [];
+
+  int _pagina = 0;
+  bool _temMais = true;
   bool carregando = true;
+  bool _carregandoMais = false;
+
+  /// Texto que a lista atual representa (nao o que esta digitado agora).
+  String _buscaAtual = '';
+  Timer? _debounce;
+
+  /// Cresce a cada nova busca. A resposta que chegar com numero antigo e
+  /// descartada — sem isso, uma busca lenta sobrescreve o resultado da seguinte.
+  int _buscaId = 0;
 
   final FavoritoService _favService = FavoritoService();
   int? _usuarioId;
@@ -46,8 +74,28 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
   void initState() {
     super.initState();
 
-    _carregarOngs();
+    _scrollController.addListener(_aoRolar);
+    _carregarPagina(reiniciar: true);
     _carregarFavoritos();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _scrollController.removeListener(_aoRolar);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// Pede a proxima pagina quando falta menos de uma tela e meia para o fim.
+  void _aoRolar() {
+    if (!_scrollController.hasClients) return;
+    final faltando = _scrollController.position.maxScrollExtent -
+        _scrollController.position.pixels;
+    if (faltando < 600) {
+      _carregarPagina();
+    }
   }
 
   Future<void> _carregarFavoritos() async {
@@ -84,47 +132,111 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
     }
   }
 
-  Future<void> _carregarOngs() async {
+  /// Carrega uma pagina. Com [reiniciar], zera a lista e volta para a primeira
+  /// (e o que acontece ao abrir a tela e a cada nova busca).
+  Future<void> _carregarPagina({bool reiniciar = false}) async {
+    if (!reiniciar && (_carregandoMais || !_temMais || carregando)) return;
+
+    final id = reiniciar ? ++_buscaId : _buscaId;
+    if (reiniciar) {
+      setState(() {
+        _pagina = 0;
+        _temMais = true;
+        carregando = true;
+        _resultados.clear();
+      });
+    } else {
+      setState(() => _carregandoMais = true);
+    }
+
+    final url = Uri.parse(_baseUrl).replace(queryParameters: {
+      'pagina': '$_pagina',
+      'tamanho': '$_porPagina',
+      if (_buscaAtual.isNotEmpty) 'nome': _buscaAtual,
+    });
+
     try {
-      final response =
-          await http.get(Uri.parse(_baseUrl), headers: ApiService.authHeaders())
-              .timeout(ApiService.timeout);
+      final response = await http
+          .get(url, headers: ApiService.authHeaders())
+          .timeout(ApiService.timeout);
+
+      // Chegou tarde: uma busca mais nova ja tomou o lugar desta.
+      if (!mounted || id != _buscaId) return;
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
-
         setState(() {
-          _ongs = data.map((e) => Ong.fromJson(e)).toList();
-
-          _resultados = _ongs;
-
+          _resultados.addAll(data.map((e) => Ong.fromJson(e)));
+          // Fim da lista e pagina VAZIA, nao pagina menor que o pedido: o
+          // servidor filtra ONGs que bloquearam o doador DEPOIS de paginar,
+          // entao uma pagina cheia pode chegar aqui com menos itens.
+          _temMais = data.isNotEmpty;
+          _pagina++;
           carregando = false;
+          _carregandoMais = false;
         });
       } else {
         setState(() {
           carregando = false;
+          _carregandoMais = false;
         });
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || id != _buscaId) return;
       setState(() {
         carregando = false;
+        _carregandoMais = false;
       });
-
-      AppSnackbar.erro(context, 'Erro ao conectar API');
+      AppSnackbar.erro(context, ApiService.mensagemAmigavel(e));
     }
   }
 
-  void _buscarOng() {
-    final query = _searchController.text.toLowerCase();
+  /// Chamado a cada tecla: agenda a busca e cancela a anterior.
+  void _aoDigitar(String texto) {
+    _debounce?.cancel();
+    _debounce = Timer(_esperaDigitacao, () => _buscarOng());
+  }
 
-    setState(() {
-      _resultados =
-          _ongs.where((ong) {
-            return ong.nome.toLowerCase().contains(query) ||
-                ong.cidade.toLowerCase().contains(query);
-          }).toList();
-    });
+  /// Busca no SERVIDOR (nome ou cidade) e recomeca da primeira pagina.
+  void _buscarOng() {
+    _debounce?.cancel();
+    final texto = _searchController.text.trim();
+    if (texto == _buscaAtual && _resultados.isNotEmpty) return;
+    _buscaAtual = texto;
+    _carregarPagina(reiniciar: true);
+  }
+
+  /// Rodape da lista: carregando a proxima pagina, ou o fim.
+  Widget _rodapeDaLista() {
+    if (_carregandoMais) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: SizedBox(
+            width: 26,
+            height: 26,
+            child: CircularProgressIndicator(strokeWidth: 2.6, color: Colors.white),
+          ),
+        ),
+      );
+    }
+    if (!_temMais && _resultados.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 4, bottom: 28),
+        child: Center(
+          child: Text(
+            _resultados.length == 1
+                ? '1 instituição encontrada'
+                : '${_resultados.length} instituições encontradas',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.75),
+              fontSize: 13,
+            ),
+          ),
+        ),
+      );
+    }
+    return const SizedBox(height: 12);
   }
 
   Widget _buildOngCard(Ong ong) {
@@ -477,7 +589,9 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                         ),
                       ),
                     ),
-                    onChanged: (_) => _buscarOng(),
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) => _buscarOng(),
+                    onChanged: _aoDigitar,
                   ),
                 ),
 
@@ -536,9 +650,15 @@ class _BuscarReceptorScreenState extends State<BuscarReceptorScreen> {
                             ),
                           )
                           : ListView.builder(
+                            controller: _scrollController,
                             physics: const BouncingScrollPhysics(),
-                            itemCount: _resultados.length,
+                            // +1 pelo rodape: girinho enquanto a proxima pagina
+                            // vem, ou o aviso de que a lista acabou.
+                            itemCount: _resultados.length + 1,
                             itemBuilder: (context, index) {
+                              if (index == _resultados.length) {
+                                return _rodapeDaLista();
+                              }
                               return _buildOngCard(_resultados[index]);
                             },
                           ),
