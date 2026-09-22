@@ -1,5 +1,8 @@
 # Memory Index
 
+> ## 🆕 PÓS-FECITEC (2026-09-22) — LEIA PRIMEIRO
+> Feira deu **6,6**. Plano de Ação + Entrega Final **feitos e no ar** (docs em `connect-ong/docs/entregas/`): validação de formato nos 4 lados, criptografia AES-256-GCM, LGPD (consentimento/exportação/anonimização), indicadores, páginas Resultados/Para empresas/Segurança no site. Testes 231/124/75. **🔴 Falta o usuário pôr `APP_CRYPTO_KEY` no Render** (valor no CONNECT-ONG-SEGREDOS.txt) — sem ela a criptografia fica desligada. O site estava quebrado desde 01/09 (corrigido). Ver [Plano de Ação pós-FECITEC](connect-ong-plano-acao-pos-fecitec-2026-09-22.md).
+>
 > ## 🚀 ESTADO ATUAL (2026-09-01) — LEIA PRIMEIRO  ·  VÉSPERA da apresentação
 > **✅ MÁQUINA DA FEIRA 100% PRONTA E CONFERIDA.** Tudo LOCAL por **1 clique**, na pasta **`C:\Users\gabri\OneDrive\Área de Trabalho\FEIRA ESCOLA\`** (a Área de Trabalho é redirecionada pro OneDrive — NÃO é `C:\Users\gabri\Desktop\`; os REPOS continuam em `Desktop\connect-ong` etc.). Scripts: `INICIAR-FEIRA` (sobe tudo + aquece + abre 3 abas), `RESTAURAR-DEMO` (o **"voltar antes"** entre apresentações, **~50s** desde 25/08: repõe as imagens), `PARAR-FEIRA`, `RECOMPILAR-FEIRA`, `RECOMPILAR-APK` (só o APK do emulador, ~8 min), `ATUALIZAR-BANCO-DA-ESCOLA` (véspera), `INICIAR-MOBILE-EMULADOR` (o app no celular simulado), `PASSO-A-PASSO-DO-DIA.txt`. Telas em **0,03–0,26s**. Ver [conferência final](connect-ong-conferencia-final-2026-08-24.md) e [FEIRA ESCOLA](connect-ong-feira-escola-2026-08-13.md).
 > **⚠️ CONFERÊNCIA 24/08:** o notebook estava ATRÁS do remoto (correções do grupo de ~20/08). Sincronizei os 4 repos e **reconstruí jar+web da pasta** do código novo (senão a feira usaria versão velha). backend **191 testes verdes**.
