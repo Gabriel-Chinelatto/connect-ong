@@ -1,5 +1,7 @@
 # Memory Index
 
+> ## 💻 EM OUTRO COMPUTADOR? Siga o [checklist de atualização](connect-ong-atualizar-outro-computador-2026-09-22.md): puxar os 4 repos, pôr `APP_CRYPTO_KEY` local (valor no Render), recompilar FEIRA ESCOLA e substituir os PDFs em `Área de Trabalho\Connect ONG - Entregas`.
+>
 > ## 🆕 PÓS-FECITEC (2026-09-22) — LEIA PRIMEIRO
 > Feira deu **6,6**. Plano de Ação + Entrega Final **feitos e no ar** (docs em `connect-ong/docs/entregas/`): validação de formato nos 4 lados, criptografia AES-256-GCM, LGPD (consentimento/exportação/anonimização), indicadores, páginas Resultados/Para empresas/Segurança no site. Testes 231/124/75. `APP_CRYPTO_KEY` já está no Render e os dados antigos foram todos cifrados (a mesma chave está no CONNECT-ONG-SEGREDOS.txt; o notebook da feira precisa dela se for ler um dump da escola). O site estava quebrado desde 01/09 (corrigido). Ver [Plano de Ação pós-FECITEC](connect-ong-plano-acao-pos-fecitec-2026-09-22.md).
 >
