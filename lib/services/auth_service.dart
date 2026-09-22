@@ -89,6 +89,7 @@ class AuthService {
     String? telefone,
     String? cidade,
     String? estado,
+    required bool aceiteTermos,
   }) async {
     final url = Uri.parse('$baseUrl/usuarios/registro');
 
@@ -102,6 +103,8 @@ class AuthService {
         if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
         if (cidade != null && cidade.isNotEmpty) 'cidade': cidade,
         if (estado != null && estado.isNotEmpty) 'estado': estado,
+        // LGPD: a API grava o aceite (versão dos termos, data e IP).
+        'aceiteTermos': aceiteTermos,
       }),
     ).timeout(ApiService.timeout);
 

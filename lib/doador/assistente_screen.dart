@@ -194,12 +194,12 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
   }
 
   MensagemDora _bolhaParaMensagem(_Bolha b) => MensagemDora(
-        papel: b.papel == _Papel.usuario ? 'user' : 'assistente',
-        texto: b.texto,
-        imagemBase64: b.imagemBase64,
-        sugestoes: b.sugestoes,
-        modoRegras: b.modoRegras,
-      );
+    papel: b.papel == _Papel.usuario ? 'user' : 'assistente',
+    texto: b.texto,
+    imagemBase64: b.imagemBase64,
+    sugestoes: b.sugestoes,
+    modoRegras: b.modoRegras,
+  );
 
   /// Autosave: transfere as bolhas reais (sem erros) para a conversa atual,
   /// salva no storage e a marca como a ultima aberta.
@@ -246,19 +246,25 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
   /// Monta o historico recente (ultimas ~6 trocas de user/assistente DESTA
   /// conversa, sem as bolhas de erro) no formato do contrato: {papel, texto}.
   List<Map<String, String>> _historico() {
-    final trocas = _bolhas
-        .where((b) => b.papel != _Papel.erro)
-        .map((b) => {
-              'papel': b.papel == _Papel.usuario ? 'user' : 'assistente',
-              'texto': b.texto,
-            })
-        .toList();
+    final trocas =
+        _bolhas
+            .where((b) => b.papel != _Papel.erro)
+            .map(
+              (b) => {
+                'papel': b.papel == _Papel.usuario ? 'user' : 'assistente',
+                'texto': b.texto,
+              },
+            )
+            .toList();
     if (trocas.length <= 6) return trocas;
     return trocas.sublist(trocas.length - 6);
   }
 
-  Future<void> _enviar(String texto,
-      {String? imagemBase64, Uint8List? imagemBytes}) async {
+  Future<void> _enviar(
+    String texto, {
+    String? imagemBase64,
+    Uint8List? imagemBytes,
+  }) async {
     final mensagem = texto.trim();
     // Anexo atual (parametro tem prioridade — usado no "tentar de novo").
     final imgB64 = imagemBase64 ?? _anexoBase64;
@@ -271,17 +277,20 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     // "mensagem" do request, nao no historico).
     final historico = _historico();
     // Se veio so imagem, manda um texto padrao para a Dora saber o que fazer.
-    final mensagemEnviada = mensagem.isNotEmpty
-        ? mensagem
-        : 'Dei uma olhada nesta foto — o que voce acha? Serve para doar?';
+    final mensagemEnviada =
+        mensagem.isNotEmpty
+            ? mensagem
+            : 'Dei uma olhada nesta foto — o que voce acha? Serve para doar?';
 
     setState(() {
-      _bolhas.add(_Bolha(
-        papel: _Papel.usuario,
-        texto: mensagem,
-        imagemBytes: temImagem ? imgBytes : null,
-        imagemBase64: temImagem ? imgB64 : null,
-      ));
+      _bolhas.add(
+        _Bolha(
+          papel: _Papel.usuario,
+          texto: mensagem,
+          imagemBytes: temImagem ? imgBytes : null,
+          imagemBase64: temImagem ? imgB64 : null,
+        ),
+      );
       _enviando = true;
       _analisandoImagem = temImagem;
       _controller.clear();
@@ -299,27 +308,35 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
       );
       if (!mounted) return;
       setState(() {
-        _bolhas.add(_Bolha(
-          papel: _Papel.assistente,
-          texto: resposta.resposta.isNotEmpty
-              ? resposta.resposta
-              : 'Nao consegui uma resposta agora. Pode reformular?',
-          sugestoes: resposta.sugestoes,
-          modoRegras: resposta.modoRegras,
-        ));
+        _bolhas.add(
+          _Bolha(
+            papel: _Papel.assistente,
+            texto:
+                resposta.resposta.isNotEmpty
+                    ? resposta.resposta
+                    : 'Nao consegui uma resposta agora. Pode reformular?',
+            sugestoes: resposta.sugestoes,
+            modoRegras: resposta.modoRegras,
+          ),
+        );
         // Titulo da conversa: definido na 1a resposta. Usa o do backend se
         // vier; senao deriva da 1a mensagem do usuario. Dedupe contra as
         // conversas existentes. Renomear manual sobrepoe (nao mexe depois).
         if (_conversa.titulo.trim().isEmpty) {
-          final primeira = _bolhas
-              .firstWhere((b) => b.papel == _Papel.usuario,
-                  orElse: () => const _Bolha(papel: _Papel.usuario, texto: ''))
-              .texto;
-          final base = resposta.titulo.isNotEmpty
-              ? resposta.titulo
-              : (primeira.trim().isNotEmpty
-                  ? ConversasDoraService.tituloDerivado(primeira)
-                  : 'Foto para doar');
+          final primeira =
+              _bolhas
+                  .firstWhere(
+                    (b) => b.papel == _Papel.usuario,
+                    orElse:
+                        () => const _Bolha(papel: _Papel.usuario, texto: ''),
+                  )
+                  .texto;
+          final base =
+              resposta.titulo.isNotEmpty
+                  ? resposta.titulo
+                  : (primeira.trim().isNotEmpty
+                      ? ConversasDoraService.tituloDerivado(primeira)
+                      : 'Foto para doar');
           _conversa.titulo = ConversasDoraService.tituloUnico(
             base,
             _conversas,
@@ -331,13 +348,15 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _bolhas.add(_Bolha(
-          papel: _Papel.erro,
-          texto: e.toString().replaceFirst('Exception: ', ''),
-          perguntaOriginal: mensagem,
-          imagemOriginal: temImagem ? imgB64 : null,
-          imagemBytes: temImagem ? imgBytes : null,
-        ));
+        _bolhas.add(
+          _Bolha(
+            papel: _Papel.erro,
+            texto: e.toString().replaceFirst('Exception: ', ''),
+            perguntaOriginal: mensagem,
+            imagemOriginal: temImagem ? imgB64 : null,
+            imagemBytes: temImagem ? imgBytes : null,
+          ),
+        );
       });
     } finally {
       if (mounted) {
@@ -386,8 +405,7 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     setState(() {
       final idxErro = _bolhas.lastIndexWhere((b) => b.papel == _Papel.erro);
       if (idxErro != -1) _bolhas.removeAt(idxErro);
-      final idxUser =
-          _bolhas.lastIndexWhere((b) => b.papel == _Papel.usuario);
+      final idxUser = _bolhas.lastIndexWhere((b) => b.papel == _Papel.usuario);
       if (idxUser != -1) _bolhas.removeAt(idxUser);
     });
     _enviar(
@@ -486,23 +504,24 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
   Future<void> _excluir(ConversaDora c) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir conversa'),
-        content: Text(
-          'Excluir "${c.tituloExibicao}"? Esta acao nao pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Excluir conversa'),
+            content: Text(
+              'Excluir "${c.tituloExibicao}"? Esta acao nao pode ser desfeita.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Excluir'),
+              ),
+            ],
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
     );
     if (ok != true) return;
     await _conversasService.excluir(c.id);
@@ -522,7 +541,8 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PerfilPublicoOngScreen(ongId: s.id!, ongNome: s.titulo),
+          builder:
+              (_) => PerfilPublicoOngScreen(ongId: s.id!, ongNome: s.titulo),
         ),
       );
     } else if (s.ehNecessidade) {
@@ -553,9 +573,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     final mostrarChips =
         _bolhas.where((b) => b.papel == _Papel.usuario).isEmpty && !_enviando;
     // Subtitulo do cabecalho: o titulo da conversa quando ja existe.
-    final subtitulo = _conversa.titulo.trim().isNotEmpty
-        ? _conversa.titulo.trim()
-        : 'Sua assistente de doacao';
+    final subtitulo =
+        _conversa.titulo.trim().isNotEmpty
+            ? _conversa.titulo.trim()
+            : 'Sua assistente de doacao';
     // Fundo sutil da conversa (estilo WhatsApp): um tom levemente esverdeado.
     final fundoConversa = Color.alphaBlend(
       AppColors.primary.withValues(alpha: 0.04),
@@ -644,12 +665,13 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
   // ---- Drawer / historico (estilo ChatGPT) ----
   Widget _construirDrawer(ColorScheme cs) {
     final q = _busca.trim().toLowerCase();
-    final filtradas = q.isEmpty
-        ? _conversas
-        : _conversas.where((c) {
-            if (c.tituloExibicao.toLowerCase().contains(q)) return true;
-            return c.mensagens.any((m) => m.texto.toLowerCase().contains(q));
-          }).toList();
+    final filtradas =
+        q.isEmpty
+            ? _conversas
+            : _conversas.where((c) {
+              if (c.tituloExibicao.toLowerCase().contains(q)) return true;
+              return c.mensagens.any((m) => m.texto.toLowerCase().contains(q));
+            }).toList();
 
     return Drawer(
       child: SafeArea(
@@ -657,7 +679,11 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md, AppSpacing.md, AppSpacing.sm, AppSpacing.sm),
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.sm,
+              ),
               child: Row(
                 children: [
                   Text(
@@ -692,27 +718,29 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
                     borderRadius: AppRadius.brMd,
                     borderSide: BorderSide.none,
                   ),
-                  suffixIcon: _busca.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () {
-                            _buscaController.clear();
-                            setState(() => _busca = '');
-                          },
-                        ),
+                  suffixIcon:
+                      _busca.isEmpty
+                          ? null
+                          : IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () {
+                              _buscaController.clear();
+                              setState(() => _busca = '');
+                            },
+                          ),
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Expanded(
-              child: filtradas.isEmpty
-                  ? _historicoVazio(cs)
-                  : ListView.builder(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      itemCount: filtradas.length,
-                      itemBuilder: (_, i) => _itemConversa(filtradas[i], cs),
-                    ),
+              child:
+                  filtradas.isEmpty
+                      ? _historicoVazio(cs)
+                      : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        itemCount: filtradas.length,
+                        itemBuilder: (_, i) => _itemConversa(filtradas[i], cs),
+                      ),
             ),
           ],
         ),
@@ -751,21 +779,27 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     final atual = c.id == _conversa.id;
     final data = tempoRelativo(c.atualizadoEm.toIso8601String());
     return Material(
-      color: atual
-          ? AppColors.primary.withValues(alpha: 0.10)
-          : Colors.transparent,
+      color:
+          atual
+              ? AppColors.primary.withValues(alpha: 0.10)
+              : Colors.transparent,
       child: InkWell(
         onTap: () => _abrirConversa(c),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           child: Row(
             children: [
               if (c.fixado)
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
-                  child: Icon(Icons.push_pin,
-                      size: 15, color: AppColors.primary),
+                  child: Icon(
+                    Icons.push_pin,
+                    size: 15,
+                    color: AppColors.primary,
+                  ),
                 ),
               Expanded(
                 child: Column(
@@ -797,7 +831,11 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
               ),
               PopupMenuButton<String>(
                 tooltip: 'Opcoes',
-                icon: Icon(Icons.more_vert, size: 20, color: cs.onSurfaceVariant),
+                icon: Icon(
+                  Icons.more_vert,
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
                 onSelected: (v) {
                   switch (v) {
                     case 'fixar':
@@ -811,40 +849,46 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
                       break;
                   }
                 },
-                itemBuilder: (_) => [
-                  PopupMenuItem(
-                    value: 'fixar',
-                    child: Row(
-                      children: [
-                        Icon(c.fixado
-                            ? Icons.push_pin_outlined
-                            : Icons.push_pin),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(c.fixado ? 'Desafixar' : 'Fixar'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'renomear',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined),
-                        SizedBox(width: AppSpacing.sm),
-                        Text('Renomear'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'excluir',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline, color: AppColors.error),
-                        SizedBox(width: AppSpacing.sm),
-                        Text('Excluir', style: TextStyle(color: AppColors.error)),
-                      ],
-                    ),
-                  ),
-                ],
+                itemBuilder:
+                    (_) => [
+                      PopupMenuItem(
+                        value: 'fixar',
+                        child: Row(
+                          children: [
+                            Icon(
+                              c.fixado
+                                  ? Icons.push_pin_outlined
+                                  : Icons.push_pin,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(c.fixado ? 'Desafixar' : 'Fixar'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'renomear',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined),
+                            SizedBox(width: AppSpacing.sm),
+                            Text('Renomear'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'excluir',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline, color: AppColors.error),
+                            SizedBox(width: AppSpacing.sm),
+                            Text(
+                              'Excluir',
+                              style: TextStyle(color: AppColors.error),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
               ),
             ],
           ),
@@ -867,8 +911,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
   /// Uma bolha simples de texto da Dora (sem sugestoes) — usada nas boas-vindas.
   Widget _bolhaAssistenteTexto(ColorScheme cs, String texto) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(vertical: 4, horizontal: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        vertical: 4,
+        horizontal: AppSpacing.md,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -915,9 +961,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
     // Bolha em si (com a foto opcional em cima do texto).
     final bolha = Container(
       constraints: const BoxConstraints(maxWidth: 300),
-      padding: b.imagemBytes != null && !temTexto
-          ? const EdgeInsets.all(4)
-          : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding:
+          b.imagemBytes != null && !temTexto
+              ? const EdgeInsets.all(4)
+              : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: minha ? AppColors.primary : cs.surface,
         borderRadius: BorderRadius.only(
@@ -945,7 +992,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 220, maxWidth: 240),
+                  constraints: const BoxConstraints(
+                    maxHeight: 220,
+                    maxWidth: 240,
+                  ),
                   child: Image.memory(b.imagemBytes!, fit: BoxFit.cover),
                 ),
               ),
@@ -954,9 +1004,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
           ],
           if (temTexto)
             Padding(
-              padding: b.imagemBytes != null
-                  ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
-                  : EdgeInsets.zero,
+              padding:
+                  b.imagemBytes != null
+                      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+                      : EdgeInsets.zero,
               child: Text(
                 b.texto,
                 style: TextStyle(
@@ -1093,7 +1144,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
 
   Widget _bolhaErro(_Bolha b, ColorScheme cs) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        vertical: 4,
+        horizontal: AppSpacing.md,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -1106,8 +1160,9 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
               decoration: BoxDecoration(
                 color: AppColors.error.withValues(alpha: 0.10),
                 borderRadius: AppRadius.brMd,
-                border:
-                    Border.all(color: AppColors.error.withValues(alpha: 0.30)),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.30),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1115,8 +1170,11 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.error_outline,
-                          size: 18, color: AppColors.error),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 18,
+                        color: AppColors.error,
+                      ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
@@ -1146,7 +1204,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
 
   Widget _bolhaDigitando(ColorScheme cs) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        vertical: 4,
+        horizontal: AppSpacing.md,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -1210,12 +1271,16 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
               borderRadius: AppRadius.brXl,
               onTap: _enviando ? null : () => _enviar(chip),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 9,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.10),
                   borderRadius: AppRadius.brXl,
-                  border:
-                      Border.all(color: AppColors.primary.withValues(alpha: 0.30)),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.30),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1268,9 +1333,10 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
                 backgroundColor: cs.surfaceContainerHighest,
               ),
               icon: Icon(Icons.close, size: 16, color: cs.onSurface),
-              onPressed: _enviando
-                  ? null
-                  : () => setState(() {
+              onPressed:
+                  _enviando
+                      ? null
+                      : () => setState(() {
                         _anexoBytes = null;
                         _anexoBase64 = null;
                       }),
@@ -1286,59 +1352,79 @@ class _AssistenteScreenState extends State<AssistenteScreen> {
       top: false,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              tooltip: 'Enviar foto para a Dora analisar',
-              onPressed: _enviando ? null : _escolherAnexo,
-              icon: const Icon(Icons.photo_camera_outlined,
-                  color: AppColors.primary),
+            // Uso consciente da IA (F-10): quem conversa sabe que é uma IA,
+            // que ela erra e que o dado pessoal não viaja.
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                'Respostas geradas por IA podem conter erros. E-mail, telefone, '
+                'CPF e CNPJ são removidos antes de a pergunta sair do app.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+              ),
             ),
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                focusNode: _campoFocus,
-                minLines: 1,
-                maxLines: 5,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                decoration: InputDecoration(
-                  hintText: 'Pergunte alguma coisa...',
-                  filled: true,
-                  fillColor: cs.surfaceContainerHighest,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: AppRadius.brXl,
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: AppRadius.brXl,
-                    borderSide: BorderSide.none,
+            Row(
+              children: [
+                IconButton(
+                  tooltip: 'Enviar foto para a Dora analisar',
+                  onPressed: _enviando ? null : _escolherAnexo,
+                  icon: const Icon(
+                    Icons.photo_camera_outlined,
+                    color: AppColors.primary,
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: AppColors.primary,
-              child: IconButton(
-                tooltip: 'Enviar',
-                icon: _enviando
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.send, color: Colors.white),
-                onPressed: _enviando ? null : () => _enviar(_controller.text),
-              ),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _campoFocus,
+                    minLines: 1,
+                    maxLines: 5,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    decoration: InputDecoration(
+                      hintText: 'Pergunte alguma coisa...',
+                      filled: true,
+                      fillColor: cs.surfaceContainerHighest,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: AppRadius.brXl,
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppRadius.brXl,
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppColors.primary,
+                  child: IconButton(
+                    tooltip: 'Enviar',
+                    icon:
+                        _enviando
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Icon(Icons.send, color: Colors.white),
+                    onPressed:
+                        _enviando ? null : () => _enviar(_controller.text),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

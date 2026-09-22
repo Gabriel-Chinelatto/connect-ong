@@ -10,6 +10,7 @@ import '../widgets/buttons/app_button.dart';
 import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/inputs/app_text_field.dart';
+import '../utils/validadores.dart';
 
 /// Recuperação de senha em 2 passos (mesmo padrão multi-passo do cadastro):
 ///   1. Informar o e-mail  -> `POST /auth/esqueci-senha` (envia o código)
@@ -144,9 +145,9 @@ class _EsqueciSenhaPageState extends State<EsqueciSenhaPage> {
       AppSnackbar.erro(context, 'Digite o código de 6 dígitos.');
       return;
     }
-    if (_novaSenha.text.length < 6) {
-      AppSnackbar.erro(
-          context, 'A nova senha precisa de pelo menos 6 caracteres.');
+    final erroSenha = Validadores.senhaForte(_novaSenha.text);
+    if (erroSenha != null) {
+      AppSnackbar.erro(context, erroSenha);
       return;
     }
     if (_novaSenha.text != _confirmarSenha.text) {
@@ -302,7 +303,7 @@ class _EsqueciSenhaPageState extends State<EsqueciSenhaPage> {
         const SizedBox(height: AppSpacing.md),
         AppTextField(
           controller: _novaSenha,
-          hint: 'Nova senha (mín. 6 caracteres)',
+          hint: 'Nova senha (8+ com letras e números)',
           icon: Icons.lock_outline,
           obscureText: true,
           maxLength: 60,

@@ -12,6 +12,7 @@ import '../theme/app_spacing.dart';
 import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/forms/seletor_uf_cidade.dart';
+import '../utils/validadores.dart';
 
 /// Edicao dos dados pessoais do doador (nome, telefone, cidade, estado, bio e
 /// foto de perfil via galeria). Separada da aba Perfil (que virou um hub de
@@ -101,11 +102,24 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     }
   }
 
+  // Erros por campo (F-02): aparecem embaixo do campo, com as MESMAS regras
+  // que a API confere (utils/validadores.dart ↔ validacao/Regras.java).
+  Map<TextEditingController, String?> _erros = {};
+
   Future<bool> _salvar() async {
     if (_usuarioId == null) return false;
-    // Nome é obrigatório — não deixa salvar em branco por cima do dado real.
-    if (_nome.text.trim().isEmpty) {
-      AppSnackbar.erro(context, 'Informe seu nome.');
+    final erros = <TextEditingController, String?>{
+      // Nome é obrigatório — não deixa salvar em branco por cima do dado real.
+      _nome: Validadores.todas(_nome.text, [
+        (v) => Validadores.obrigatorio(v, 'O nome'),
+        Validadores.textoLegivel,
+      ]),
+      _telefone: Validadores.telefone(_telefone.text),
+      _bio: Validadores.textoLegivel(_bio.text),
+    };
+    setState(() => _erros = erros);
+    if (erros.values.any((e) => e != null)) {
+      AppSnackbar.erro(context, 'Confira os campos destacados.');
       return false;
     }
     setState(() => _salvando = true);
@@ -225,10 +239,8 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                 _campo(_nome, 'Nome', maxLength: 80),
                 _campo(_telefone, 'Telefone',
                     keyboardType: TextInputType.phone,
-                    maxLength: 20,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[\d()\-+ ]')),
-                    ]),
+                    maxLength: 15,
+                    inputFormatters: [TelefoneInputFormatter()]),
                 // Estado → Cidade com dados do IBGE offline. O seletor devolve
                 // os valores nos mesmos controllers de antes, então o _salvar
                 // continua lendo _cidade/_estado sem nenhuma mudança.
@@ -287,6 +299,8 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
         decoration: InputDecoration(
           labelText: label,
           counterText: '',
+          errorText: _erros[c],
+          errorMaxLines: 2,
         ),
       ),
     );

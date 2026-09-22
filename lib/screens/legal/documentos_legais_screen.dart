@@ -479,13 +479,16 @@ const _DocumentoConteudo _politicaPrivacidade = _DocumentoConteudo(
   subtitulo:
       'Como o Connect ONG coleta, usa e protege os seus dados pessoais.',
   icone: Icons.shield_outlined,
-  atualizacao: 'Julho de 2026',
-  minutos: 3,
+  // Versão 2026-09-22: a MESMA gravada no aceite (Consentimento.VERSAO_ATUAL
+  // na API). Se o texto mudar, suba as duas.
+  atualizacao: 'Setembro de 2026 (versão 2026-09-22)',
+  minutos: 5,
   resumo: [
     'Coletamos só o necessário para conectar você a uma ONG.',
-    'Seu telefone e e-mail só aparecem para quem você autorizar.',
+    'Seu telefone e suas conversas ficam criptografados no nosso banco.',
     'Não vendemos os seus dados para ninguém.',
-    'Você pode acessar, corrigir ou apagar tudo quando quiser.',
+    'Você vê e copia tudo o que guardamos em "Privacidade e meus dados".',
+    'Ao excluir a conta, seus dados pessoais são anonimizados na hora.',
   ],
   secoes: [
     _SecaoLegal(
@@ -494,57 +497,79 @@ const _DocumentoConteudo _politicaPrivacidade = _DocumentoConteudo(
           'não governamentais (ONGs), facilitando doações de itens e '
           'financeiras. Esta política explica como tratamos seus dados '
           'pessoais, em conformidade com a Lei Geral de Proteção de Dados '
-          '(LGPD — Lei nº 13.709/2018).',
+          '(LGPD — Lei nº 13.709/2018). O projeto é desenvolvido por '
+          'estudantes do COTIL/UNICAMP; enquanto não houver uma pessoa '
+          'jurídica operando a plataforma, a equipe do projeto responde '
+          'como controladora e encarregada dos dados.',
     ),
     _SecaoLegal(
       'Dados que coletamos',
-      'Coletamos os dados que você nos fornece ao criar sua conta e usar o '
-          'app: nome, e-mail, telefone, cidade e estado, além das doações, '
-          'mensagens e interações que você realiza na plataforma. A sua senha '
-          'é armazenada de forma criptografada e nunca em texto puro.',
+      'Conta: nome, e-mail e senha (guardada só como um resumo irreversível, '
+          'BCrypt). Perfil, se você informar: telefone, cidade, estado, bio e '
+          'foto. Uso: interesses em necessidades, mensagens do chat, doações, '
+          'avaliações, favoritos e notificações. Segurança: registro de acessos '
+          '(data e endereço IP). Consentimento: a versão dos Termos e desta '
+          'Política que você aceitou, com data e IP.',
     ),
     _SecaoLegal(
-      'Para que usamos seus dados',
-      'Usamos seus dados para autenticar o seu acesso, conectar você a ONGs '
-          'compatíveis, viabilizar o contato e as doações, enviar as '
-          'notificações que você autorizou e melhorar a experiência da '
-          'plataforma. Não vendemos seus dados pessoais a terceiros.',
+      'Por que usamos (bases legais)',
+      'Para executar o serviço que você pediu — criar a conta, conectar você '
+          'à ONG, abrir o chat e registrar doações (LGPD, art. 7º, V). Com o '
+          'seu consentimento — exibir telefone ou e-mail, perfil público e '
+          'notificações opcionais (art. 7º, I), que você liga e desliga em '
+          'Privacidade. Por legítimo interesse — prevenir fraudes e proteger '
+          'sua conta com o registro de acessos (art. 7º, IX). Para cumprir a '
+          'lei — o Marco Civil da Internet exige guardar registros de acesso '
+          'por 6 meses (art. 7º, II).',
     ),
     _SecaoLegal(
       'Compartilhamento',
-      'Seus dados de contato só são exibidos a outras partes quando você '
-          'autoriza nas Configurações de Privacidade (exibir telefone, exibir '
-          'e-mail, perfil público). Ao demonstrar interesse em uma '
-          'necessidade, a ONG correspondente recebe os dados necessários para '
-          'concluir a doação.',
+      'Seus dados de contato só aparecem para outras pessoas quando você '
+          'autoriza em Privacidade. Ao demonstrar interesse em uma necessidade, '
+          'a ONG recebe o necessário para concluir a doação. Usamos dois '
+          'fornecedores fora do Brasil (art. 33): a hospedagem da API (Render, '
+          'EUA) e o provedor de inteligência artificial (Groq, EUA). Antes de '
+          'uma pergunta sua ir para a IA, removemos e-mail, telefone, CPF e '
+          'CNPJ do texto. Não vendemos dados a ninguém.',
     ),
     _SecaoLegal(
-      'Seus direitos (LGPD)',
-      'Você pode, a qualquer momento, acessar, corrigir ou solicitar a '
-          'exclusão dos seus dados, revogar consentimentos e gerenciar suas '
-          'preferências na Central de Configurações. Para exercer esses '
-          'direitos, utilize as opções do app ou entre em contato com a nossa '
-          'equipe.',
+      'Por quanto tempo guardamos',
+      'Enquanto a sua conta existir. Ao excluir a conta, nome, e-mail, '
+          'telefone, cidade, bio e foto são anonimizados na mesma hora; o que '
+          'sobra (por exemplo, "uma doação de R\$ 50 foi feita") não '
+          'identifica mais você e continua contando para a transparência da '
+          'ONG (art. 16). Registros de acesso ficam 6 meses, como exige o '
+          'Marco Civil da Internet.',
+    ),
+    _SecaoLegal(
+      'Seus direitos (LGPD, art. 18)',
+      'Confirmar e acessar seus dados e levá-los com você: Configurações › '
+          'Privacidade e meus dados mostra tudo e copia em formato JSON. '
+          'Corrigir: Editar perfil. Excluir: Configurações › Zona de perigo. '
+          'Revogar um consentimento: desligue a opção em Privacidade. Para '
+          'qualquer outro pedido, fale com a equipe do projeto.',
     ),
     _SecaoLegal(
       'Segurança',
-      'Adotamos medidas técnicas para proteger seus dados, como criptografia '
-          'de senhas e autenticação por token. Ainda assim, nenhum sistema é '
-          'totalmente imune a riscos, e recomendamos que você mantenha a sua '
-          'senha em sigilo.',
+      'Seu telefone, as mensagens do chat e as denúncias são guardados '
+          'criptografados (AES-256-GCM): quem abrir o banco de dados vê só '
+          'texto embaralhado. Senhas ficam em BCrypt e códigos de verificação '
+          'em HMAC — nenhum dos dois pode ser lido de volta. A comunicação é '
+          'por HTTPS, cada tela só mostra os dados do próprio dono e há limite '
+          'de tentativas contra quem tenta adivinhar senhas. Nenhum sistema é '
+          '100% imune: mantenha sua senha em sigilo e ative a verificação em '
+          'duas etapas.',
     ),
     _SecaoLegal(
       'Alterações desta política',
-      'Podemos atualizar esta política para refletir melhorias na plataforma '
-          'ou exigências legais. Mudanças relevantes serão comunicadas dentro '
-          'do app, e a data de atualização no topo desta página é sempre a da '
-          'versão em vigor.',
+      'Quando esta política mudar, a versão nova recebe outra data e você '
+          'verá o aviso dentro do app. Em "Privacidade e meus dados" fica '
+          'registrado qual versão você aceitou e quando.',
     ),
     _SecaoLegal(
       'Contato',
-      'Em caso de dúvidas sobre esta política ou sobre o tratamento dos seus '
-          'dados, fale com a equipe do Connect ONG pelos canais oficiais do '
-          'projeto.',
+      'Dúvidas sobre esta política ou pedidos sobre os seus dados: fale com '
+          'a equipe do Connect ONG pelos canais oficiais do projeto.',
     ),
   ],
 );

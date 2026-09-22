@@ -15,6 +15,8 @@ import '../widgets/common/confirmar_saida.dart';
 import '../utils/page_transition.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../screens/legal/documentos_legais_screen.dart';
+import '../utils/validadores.dart';
+import 'meus_dados_screen.dart';
 
 /// Central de configuracoes do doador: aparencia, acessibilidade,
 /// notificacoes, privacidade, seguranca e area legal.
@@ -304,6 +306,15 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _abrirDocumento(DocumentoLegal.termos),
                     ),
+                    // LGPD (F-04): ver, copiar e entender os próprios dados.
+                    ListTile(
+                      leading: const Icon(Icons.manage_accounts_outlined),
+                      title: const Text('Privacidade e meus dados'),
+                      subtitle: const Text(
+                          'Veja e copie tudo o que guardamos sobre você (LGPD)'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: _abrirMeusDados,
+                    ),
                   ],
                 ),
                 // Zona de perigo: acao destrutiva, destacada em vermelho.
@@ -320,8 +331,8 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
                         'Excluir minha conta',
                         style: TextStyle(color: AppColors.error),
                       ),
-                      subtitle:
-                          const Text('Desativa sua conta permanentemente'),
+                      subtitle: const Text(
+                          'Desativa a conta e anonimiza seus dados pessoais'),
                       onTap: _excluindo ? null : _confirmarExcluirConta,
                     ),
                   ],
@@ -605,6 +616,15 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
     );
   }
 
+  Future<void> _abrirMeusDados() async {
+    final usuario = await SessionService().obterUsuario();
+    if (!mounted || usuario == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => MeusDadosScreen(usuarioId: usuario.id)),
+    );
+  }
+
   Future<void> _abrirAlterarSenha() async {
     final atualController = TextEditingController();
     final novaController = TextEditingController();
@@ -630,10 +650,13 @@ class _ConfiguracoesScreenState extends State<ConfiguracoesScreen> {
               TextFormField(
                 controller: novaController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Nova senha'),
-                validator: (v) => (v == null || v.length < 4)
-                    ? 'Mínimo 4 caracteres'
-                    : null,
+                // Mesma regra da API (antes o app pedia 4 e a API, 6).
+                validator: Validadores.senhaForte,
+                decoration: const InputDecoration(
+                  labelText: 'Nova senha',
+                  helperText: '8+ caracteres, com letras e números',
+                  errorMaxLines: 2,
+                ),
               ),
             ],
           ),

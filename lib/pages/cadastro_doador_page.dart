@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../doador/main_shell.dart';
 import '../screens/legal/documentos_legais_screen.dart';
@@ -14,6 +13,7 @@ import '../widgets/buttons/app_button.dart';
 import '../widgets/common/confirmar_saida.dart';
 import '../widgets/feedback/app_snackbar.dart';
 import '../widgets/forms/seletor_uf_cidade.dart';
+import '../utils/validadores.dart';
 import '../widgets/inputs/app_text_field.dart';
 
 /// Cadastro do doador em MULTI-PASSO (estilo Instagram: um foco por tela,
@@ -112,18 +112,21 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
     switch (_passo) {
       case 0:
         if (_nome.text.trim().isEmpty) return 'Informe seu nome.';
+        final erroNome = Validadores.nomeProprio(_nome.text);
+        if (erroNome != null) return 'Nome: $erroNome';
         if (!_emailValido) return 'Informe um e-mail válido.';
         return null;
       case 1:
-        if (_senha.text.length < 6) {
-          return 'A senha precisa de pelo menos 6 caracteres.';
-        }
+        final erroSenha = Validadores.senhaForte(_senha.text);
+        if (erroSenha != null) return erroSenha;
         if (_senha.text != _confirmarSenha.text) {
           return 'As senhas não conferem.';
         }
         return null;
       default:
         // Passo 3: campos opcionais, mas o consentimento LGPD é obrigatório.
+        final erroTelefone = Validadores.telefone(_telefone.text);
+        if (erroTelefone != null) return erroTelefone;
         if (!_aceitouTermos) {
           return 'Para criar a conta, aceite a Política de Privacidade e os '
               'Termos de Uso.';
@@ -174,6 +177,7 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
         telefone: _telefone.text.trim(),
         cidade: _cidade.text.trim(),
         estado: _estado.text.trim(),
+        aceiteTermos: _aceitouTermos,
       );
 
       // Conta criada: entra direto (login automático como doador).
@@ -306,7 +310,7 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
     return _passoBase(
       icone: Icons.lock_outline,
       titulo: 'Crie uma senha',
-      subtitulo: 'Use pelo menos 6 caracteres.',
+      subtitulo: 'Pelo menos 8 caracteres, com letras e números.',
       campos: [
         AppTextField(
           controller: _senha,
@@ -352,10 +356,10 @@ class _CadastroDoadorPageState extends State<CadastroDoadorPage> {
           hint: 'Telefone (opcional)',
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
-          maxLength: 20,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[\d()\-+ ]')),
-          ],
+          maxLength: 15,
+          // Máscara (19) 99876-5432 enquanto digita; a regra de DDD e de
+          // fixo/celular é conferida ao criar a conta (Validadores.telefone).
+          inputFormatters: [TelefoneInputFormatter()],
         ),
         const SizedBox(height: AppSpacing.lg),
         _consentimentoLgpd(),

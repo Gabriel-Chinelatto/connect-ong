@@ -32,9 +32,31 @@ class PerfilService {
       body: jsonEncode(dados),
     ).timeout(ApiService.timeout);
     if (response.statusCode != 200) {
-      throw Exception('Erro ao salvar perfil');
+      // 400 de validação: mostra a regra que falhou (ex.: "Telefone inválido"),
+      // não um "erro ao salvar" genérico.
+      throw Exception(_mensagemDeErro(response, 'Erro ao salvar perfil'));
     }
     return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+  }
+
+  // LGPD (art. 18, II e V): tudo o que a plataforma guarda sobre o usuário.
+  Future<Map<String, dynamic>> meusDados(int usuarioId) async {
+    final response = await http.get(
+      Uri.parse('${ApiService.baseUrl}/usuarios/$usuarioId/meus-dados'),
+      headers: ApiService.authHeaders(),
+    ).timeout(ApiService.timeout);
+    if (response.statusCode != 200) {
+      throw Exception(_mensagemDeErro(response, 'Não foi possível carregar seus dados'));
+    }
+    return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+  }
+
+  static String _mensagemDeErro(http.Response r, String padrao) {
+    try {
+      final body = jsonDecode(utf8.decode(r.bodyBytes));
+      if (body is Map && body['erro'] != null) return body['erro'].toString();
+    } catch (_) {}
+    return padrao;
   }
 
   // Alterar a senha.
