@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Connect ONG — Entrega Final: mudanças e rastreabilidade</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  .print { display: block; width: auto; max-width: 100%; max-height: 118mm; border: 1px solid #d9e2dc; border-radius: 2mm; margin: 2mm auto 1mm; }
+  .fig { break-inside: avoid; }
+  .fig2, .fig3 { break-inside: avoid; }
+  .legenda { font-size: 8.5pt; color: #6b7280; margin-bottom: 4mm; }
+  .fig2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; align-items: start; }
+  .fig3 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 5mm; align-items: start; }
+  .antesdepois td:first-child { width: 22%; font-weight: 600; }
+  .canvas { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: auto auto auto; gap: 2mm; font-size: 8.8pt; }
+  .canvas div { border: 1px solid #cfe8d9; border-radius: 2mm; padding: 2.5mm; background: #fbfefc; }
+  .canvas b { display: block; color: #0f5132; font-size: 8pt; text-transform: uppercase; margin-bottom: 1mm; }
+  .c-prob { grid-column: 1; grid-row: 1 / span 2; } .c-sol { grid-column: 2; grid-row: 1; } .c-met { grid-column: 2; grid-row: 2; }
+  .c-prop { grid-column: 3; grid-row: 1 / span 2; background: #f0faf4 !important; } .c-vant { grid-column: 4; grid-row: 1; }
+  .c-can { grid-column: 4; grid-row: 2; } .c-seg { grid-column: 5; grid-row: 1 / span 2; }
+  .c-cus { grid-column: 1 / span 3; grid-row: 3; } .c-rec { grid-column: 4 / span 2; grid-row: 3; }
+  .numeros { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3mm; margin: 3mm 0; }
+  .numeros div { border: 1px solid #cfe8d9; border-radius: 2mm; padding: 3mm; text-align: center; background: #fff; }
+  .numeros b { display: block; font-size: 18pt; color: #0f5132; }
+  .alerta { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 2mm; padding: 3mm 4mm; margin: 3mm 0; break-inside: avoid; }
+</style></head><body>
+
+<div class="capa">
+  <h1>Connect ONG — Entrega Final</h1>
+  <div class="sub">Melhorias a partir da banca de qualificação e da FECITEC 2026 · relatório de mudanças, rastreabilidade (seção 4.2) e retrospectiva (seção 4.3)</div>
+  <div class="meta">
+    <div><b>Equipe</b>Gabriel Chinelatto · Abner Viola · Luan Felipe · Arthur Souza</div>
+    <div><b>Sistema no ar</b>Site: connectong.netlify.app<br>App: gabriel-chinelatto.github.io/connect-ong</div>
+    <div><b>Repositórios</b>github.com/Gabriel-Chinelatto — connect-ong, connect-ong-desktop, connect-ong-api, connect-ong-web</div>
+    <div><b>Data</b>Setembro de 2026</div>
+  </div>
+</div>
+
+<h2>1. Resumo</h2>
+<p>Na FECITEC o projeto recebeu média <b>6,6</b>. As notas mais altas foram em Interface (9), Arquitetura (9), Impacto e Ética (9) e Inovação (8). As mais baixas foram em <b>Segurança e Privacidade (3)</b>, <b>Modelo de Negócios (4)</b> e <b>Análise de Dados (5)</b>, e o avaliador 2 resumiu o principal problema técnico: <i>"não tinha validações nos campos, podia colocar o que quisesse em tudo"</i> e <i>"não tem criptografia em dados sensíveis ou LGPD"</i>. Este documento mostra o que foi feito para cada ponto, onde conferir e o que ficou para depois (com o motivo).</p>
+<div class="numeros">
+  <div><b>11 de 12</b>itens Must entregues (+2 de 3 Should)</div>
+  <div><b>430</b>testes automatizados verdes (eram 344)</div>
+  <div><b>86</b>testes novos, só desta entrega</div>
+  <div><b>4</b>frentes alteradas: API, app, painel e site</div>
+  <div><b>1</b>defeito grave achado e corrigido (site fora do ar)</div>
+</div>
+
+<h2>2. Tabela de rastreabilidade (seção 4.2)</h2>
+<p class="nota">Os IDs são os do Plano de Ação. Commits em github.com/Gabriel-Chinelatto/&lt;repositório&gt;/commit/&lt;código&gt;. "Print" são as figuras da seção 3. Os testes citados rodam a cada push (GitHub Actions).</p>
+<table>
+<thead><tr><th style="width:6%">Item</th><th style="width:24%">O que foi pedido → o que foi feito</th><th style="width:13%">Status</th><th style="width:57%">Evidência (onde conferir)</th></tr></thead>
+<tbody>
+<tr><td class="id">B-01</td><td>Pouca interação → feed, notificações, sequência e conquistas (já entregues)</td><td><span class="tag feito">Feito</span></td><td>Mantidos; suítes do app (124) e do painel (75) verdes. Vídeo: bloco "O que a banca pediu".</td></tr>
+<tr><td class="id">B-02</td><td>Sem comunicação doador ↔ ONG → chat, agora com mensagens cifradas</td><td><span class="tag feito">Feito</span></td><td>Teste <code>f03_telefoneEMensagemFicamCifradosNoBanco_eLegiveisNaApi</code> (backend). Commit API <code>061c300</code>.</td></tr>
+<tr><td class="id">B-03</td><td>Match com chat automático após o aceite</td><td><span class="tag feito">Feito</span></td><td>Fluxo em produção desde a v1.0; demonstrado no vídeo (doador demonstra interesse → ONG aceita → chat abre).</td></tr>
+<tr><td class="id">B-04</td><td>Experiência pouco dinâmica → Dora (IA), mapa, ranking, prestação de contas</td><td><span class="tag feito">Feito</span></td><td>Recursos no ar nos 3 frontends; print 3.7 (Dora com o aviso novo).</td></tr>
+<tr><td class="id">F-01</td><td>Validação de formato na API</td><td><span class="tag feito">Feito</span></td><td>Pacote <code>validacao/</code> (Regras, Telefone, Cnpj, NomeProprio, TextoLegivel, Uf, SenhaForte, PeriodoCampanha). 26 testes em <code>RegrasFormatoTest</code> + 4 em <code>PlanoDeAcaoTest</code>. Commit API <code>061c300</code>. Seção 3.1.</td></tr>
+<tr><td class="id">F-02</td><td>As mesmas regras nas telas, com máscara</td><td><span class="tag feito">Feito</span></td><td><code>utils/validadores.dart</code> (app e painel, 23 testes cada) e <code>js/validadores.js</code> (site). Commits: app <code>514f79b</code>, painel <code>654f7f3</code>, site <code>ca603e0</code>. Print 3.1.</td></tr>
+<tr><td class="id">F-03</td><td>Criptografia de dados sensíveis</td><td><span class="tag feito">Feito</span></td><td>AES-256-GCM no telefone, no chat e nas denúncias; códigos de verificação em HMAC. 5 testes (cifra, IV aleatório, adulteração detectada, migração do legado, trava de chave). Status ao vivo: <code>/publico/seguranca</code>. Seção 3.2.</td></tr>
+<tr><td class="id">F-04</td><td>LGPD</td><td><span class="tag feito">Feito</span></td><td>Consentimento gravado (versão, data, IP); <code>GET /usuarios/{id}/meus-dados</code>; exclusão com anonimização; política reescrita. 3 testes. Prints 3.3, 3.4, 3.5.</td></tr>
+<tr><td class="id">F-05</td><td>Segurança pouco abordada</td><td><span class="tag feito">Feito</span></td><td>Página "Segurança e LGPD" no site (print 3.3) e a seção 5 deste documento. O bloco no vídeo segue o roteiro da seção 7.</td></tr>
+<tr><td class="id">F-06</td><td>Pouco pensado para o mercado</td><td><span class="tag feito">Feito</span></td><td>Modelo de negócios na seção 4: Lean Canvas, segmentos, concorrência, receita, custos, mercado e metas.</td></tr>
+<tr><td class="id">F-07</td><td>O mercado visível no produto</td><td><span class="tag feito">Feito</span></td><td>Página "Para empresas" no site (print 3.6). Commit site <code>ca603e0</code>.</td></tr>
+<tr><td class="id">F-08</td><td>Análise de dados e resultados</td><td><span class="tag feito">Feito</span></td><td><code>/publico/indicadores</code> e <code>/ongs/{id}/indicadores</code>; teste <code>f08_indicadoresDaOng_funilTaxasEMedianas</code> confere cada número contra um cenário montado à mão. Prints 3.8 e 3.9.</td></tr>
+<tr><td class="id">F-09</td><td>Resultados com usuários reais</td><td><span class="tag nao">Não feito</span></td><td>Depende da equipe ir às ONGs de Limeira e aplicar o formulário; a ferramenta para medir (F-08) já está pronta. Previsto até a banca final.</td></tr>
+<tr><td class="id">F-10</td><td>Uso consciente da IA</td><td><span class="tag feito">Feito</span></td><td><code>RedatorDadosPessoais</code> remove e-mail, telefone, CPF e CNPJ antes do envio à Groq (teste <code>redatorTiraContatosEDocumentos</code>); aviso nas telas de IA (print 3.7); seção "Como usamos IA" no site.</td></tr>
+<tr><td class="id">F-11</td><td>Integrante ausente / autonomia</td><td><span class="tag parcial">Em andamento</span></td><td>Processo da equipe: cada integrante apresenta a sua frente na banca final. Ver retrospectiva (seção 8).</td></tr>
+<tr><td class="id">F-12</td><td>Estabilidade: paginar necessidades</td><td><span class="tag nao">Não feito</span></td><td>Era "Could": o tempo foi para os itens Must. Em compensação, a verificação achou e corrigiu um defeito maior (seção 3.10).</td></tr>
+<tr><td class="id">F-13</td><td>Elogios (time, inovação, pitch)</td><td><span class="tag wont">Won't</span></td><td>Pontos fortes mantidos.</td></tr>
+<tr><td class="id">F-14</td><td>Cifrar todos os dados</td><td><span class="tag wont">Won't</span></td><td>Justificativa na seção 5.3.</td></tr>
+<tr><td class="id">F-15</td><td>Conformidade LGPD completa (DPO, RIPD)</td><td><span class="tag wont">Won't</span></td><td>Exige pessoa jurídica. O que faltaria está na seção 5.4.</td></tr>
+</tbody></table>
+
+<h2>3. O que mudou, com as telas do sistema funcionando</h2>
+
+<h3>3.1 Validação de campos (F-01 e F-02): "podia colocar o que quisesse em tudo"</h3>
+<p>Antes, a API só limitava o <b>tamanho</b> dos campos. Agora ela confere o <b>formato</b>, e as mesmas regras rodam nas três telas, para o erro aparecer antes de enviar. A API continua sendo a palavra final, porque qualquer um pode chamá-la sem passar pela tela. Os casos de teste são <b>idênticos</b> no Java e no Dart, o que prova que tela e servidor concordam.</p>
+<table class="antesdepois">
+<thead><tr><th>Campo</th><th>Antes (aceito)</th><th>Agora</th></tr></thead>
+<tbody>
+<tr><td>Telefone</td><td>"abc", "123"</td><td>DDD real (lista da Anatel), fixo começando de 2 a 5 ou celular começando com 9, com máscara (19) 99876-5432</td></tr>
+<tr><td>CNPJ</td><td>qualquer texto com até 20 caracteres</td><td>dígitos verificadores conferidos, inclusive o CNPJ alfanumérico que a Receita adotou em julho de 2026</td></tr>
+<tr><td>Nome / cidade</td><td>"!!!", "Jo4o"</td><td>só letras, espaço, hífen, apóstrofo e ponto</td></tr>
+<tr><td>Títulos e descrições</td><td>"12345", "&lt;script&gt;"</td><td>ao menos 2 letras e sem os caracteres &lt; e &gt;</td></tr>
+<tr><td>Senha nova</td><td>6 caracteres na API; <b>4</b> na troca de senha do app, do painel e do site</td><td>8+ caracteres, com letras e números, fora da lista de senhas mais comuns — igual em todas as telas</td></tr>
+<tr><td>Campanha</td><td>término antes do início; meta sem teto</td><td>término igual ou depois do início (até 2 anos); meta de até R$ 10 milhões</td></tr>
+<tr><td>Perfil (PUT)</td><td>nenhuma validação</td><td>nome, telefone, cidade, UF e bio validados; e-mail da ONG conferido; coordenadas entre −90/90 e −180/180</td></tr>
+</tbody></table>
+<div class="fig2">
+  <div class="fig"><img class="print" src="prints/site-cadastro-validacao.png"><div class="legenda">Print 3.1 — Cadastro no site recusando um telefone inexistente. Teste automatizado no navegador: nome com número, senha fraca e telefone inválido foram barrados, cada um com a sua mensagem, e o cadastro válido entrou direto na plataforma.</div></div>
+  <div class="caixa"><b>A API também responde campo a campo.</b> Um cadastro com quatro erros devolve os quatro de uma vez:<br><code style="white-space:pre-wrap">{"campos": {"nome": "Nome inválido: use apenas letras…", "senha": "A senha deve ter ao menos 8 caracteres…", "telefone": "Telefone inválido: use DDD + número…", "aceiteTermos": "É preciso aceitar os Termos…"}}</code></div>
+</div>
+
+<h3>3.2 Criptografia de dados sensíveis (F-03)</h3>
+<ul>
+<li><b>O que é cifrado:</b> telefone das pessoas, mensagens do chat e texto das denúncias, com <b>AES-256-GCM</b>. O GCM também detecta adulteração: um byte trocado no banco faz a leitura falhar, em vez de devolver lixo.</li>
+<li><b>Como:</b> um conversor JPA (<code>CampoCifradoConverter</code>) cifra ao gravar e decifra ao ler, então o resto do sistema não mudou. Cada valor ganha um IV aleatório: o mesmo telefone gravado duas vezes gera cifras diferentes.</li>
+<li><b>Chave:</b> fica fora do código (<code>APP_CRYPTO_KEY</code>). O banco guarda a "impressão digital" da chave: um ambiente com a chave errada <b>não sobe</b>, em vez de misturar chaves e deixar dados ilegíveis.</li>
+<li><b>Dados antigos:</b> os que já estavam em texto puro são cifrados automaticamente na inicialização, em lotes.</li>
+<li><b>Códigos de recuperação de senha e de 2 etapas:</b> antes ficavam em texto puro; agora o banco guarda só o HMAC-SHA256 do código.</li>
+</ul>
+
+<h3>3.3 a 3.5 LGPD (F-04) e segurança explicada ao usuário (F-05)</h3>
+<div class="fig3">
+  <div class="fig"><img class="print" src="prints/site-seguranca.png"><div class="legenda">Print 3.3 — Site, "Segurança e LGPD": status conferido ao vivo no servidor (criptografia ativa, versão dos termos), medidas de proteção, direitos do titular, "Baixar meus dados (JSON)" e "Como usamos inteligência artificial".</div></div>
+  <div class="fig"><img class="print" src="prints/doador-meus-dados.png"><div class="legenda">Print 3.4 — App do doador: "Privacidade e meus dados", com dados reais da conta e "Copiar meus dados (JSON)".</div></div>
+  <div class="fig"><img class="print" src="prints/doador-politica-privacidade.png"><div class="legenda">Print 3.5 — Política de Privacidade reescrita: bases legais, retenção, fornecedores fora do país e segurança.</div></div>
+</div>
+<div class="caixa"><b>Direitos do titular implementados.</b>
+<b>Consentimento com prova</b> (art. 8º): o cadastro só passa com o aceite, gravado com versão, data e IP.
+<b>Acesso e portabilidade</b> (art. 18, II e V): exportação em JSON de conta, conversas, doações, favoritos, notificações e registro de acessos; a senha não sai, porque o sistema não a conhece.
+<b>Eliminação</b> (art. 18, VI): excluir a conta anonimiza nome, e-mail, telefone, cidade, bio e foto, e também o nome copiado nas avaliações e doações; o histórico continua sem identificar ninguém (art. 16).
+O painel da ONG tem a mesma tela e, no Windows, <b>salva o arquivo</b>.</div>
+
+<h3>3.6 e 3.7 Modelo de negócio no produto (F-07) e uso consciente da IA (F-10)</h3>
+<div class="fig3">
+  <div class="fig"><img class="print" src="prints/site-planos.png"><div class="legenda">Print 3.6 — "Para empresas": grátis para quem doa e para a ONG; quem paga é empresa (ESG) e prefeitura. Detalhes na seção 4.</div></div>
+  <div class="fig"><img class="print" src="prints/doador-assistente-aviso-ia.png"><div class="legenda">Print 3.7 — Dora no app: aviso de que a resposta é gerada por IA e de que dados pessoais não saem do app.</div></div>
+  <div class="caixa"><b>O que muda por trás do aviso</b><br>Antes de o texto de uma pessoa ir para a Groq, o backend troca e-mail, telefone, CPF e CNPJ por marcadores ([e-mail], [telefone]…). A IA entende que ali havia um contato, mas não recebe o dado (LGPD, art. 6º, III, necessidade). As instruções do sistema continuam intactas. Se a IA cair, o modo por regras responde; a decisão é sempre da pessoa.</div>
+</div>
+
+<h3>3.8 e 3.9 Análise de dados e resultados (F-08)</h3>
+<p>Antes, a plataforma só mostrava contagens soltas (quantas ONGs, quantos doadores). Agora ela responde se <b>a plataforma funciona</b>:</p>
+<ul>
+<li><b>Funil:</b> necessidade publicada → recebeu interesse → atendida;</li>
+<li><b>Taxas:</b> de atendimento e de aceite;</li>
+<li><b>Tempos:</b> <b>mediana</b> de dias até a ONG responder e até a doação chegar;</li>
+<li><b>Recortes:</b> por categoria, por estado e mês a mês.</li>
+</ul>
+<p>Tudo sai em duas consultas ao banco (as agregações num único <code>UNION ALL</code>), por causa da regra de desempenho do projeto (cada ida ao banco custa ~600 ms no servidor gratuito).</p>
+<div class="fig2">
+  <div class="fig"><img class="print" src="prints/site-resultados-producao.png"><div class="legenda">Print 3.8 — Site publicado (connectong.netlify.app), "Resultados", calculado sobre a base da escola: 7.075 necessidades, taxa de atendimento de 48,8%, mediana de 2,9 dias até a ONG responder, as 27 UFs e 12 meses. A primeira consulta leva ~3 s; com o cache, 0,25 s.</div></div>
+  <div class="fig"><img class="print" src="prints/painel-indicadores.png"><div class="legenda">Print 3.9 — Painel da ONG, "Indicadores e resultados": a ONG vê os próprios números e pode comparar com a plataforma inteira.</div></div>
+</div>
+<p class="nota"><b>Sobre os números:</b> a base da escola contém a <b>massa de demonstração</b> preparada para a feira (2.000 ONGs e 1.200 doadores fictícios, com histórico gerado). Os indicadores provam que o cálculo funciona em volume real; os números de <b>uso real</b> virão das ONGs piloto (F-09). O print 3.9 foi tirado com a base local de testes.</p>
+
+<h3>3.10 Achado da verificação: o site publicado estava fora do ar desde 01/09</h3>
+<div class="alerta">Ao conferir as páginas novas no navegador, o console mostrou <code>Uncaught SyntaxError: Unexpected identifier 'let'</code>. Uma chave <code>}</code> a mais, entrada na véspera da feira (rolagem infinita da lista de ONGs), impedia o JavaScript inteiro de carregar. O site <b>publicado</b> só exibia o login, que não funcionava. A falha foi confirmada no endereço público, corrigida e verificada de novo. <b>Lição:</b> passar a checar o console do site automaticamente antes de publicar (ver retrospectiva).</div>
+
+<h2 class="quebra">4. Modelo de negócios (F-06): resposta a "pouco pensado para o mercado"</h2>
+<div class="canvas">
+  <div class="c-prob"><b>Problema</b>ONGs pequenas não têm equipe de comunicação nem canal para pedir o item certo. Doadores não sabem onde doar e desconfiam do destino da doação. Empresas precisam comprovar investimento social e não têm como medir.</div>
+  <div class="c-sol"><b>Solução</b>Match entre a necessidade publicada e quem quer doar, chat direto, prestação de contas com fotos e indicadores de resultado.</div>
+  <div class="c-met"><b>Métricas-chave</b>Taxa de atendimento, tempo até a ONG responder, doadores recorrentes, ONGs ativas por mês (já medidas pela plataforma, F-08).</div>
+  <div class="c-prop"><b>Proposta de valor</b><b style="text-transform:none;color:#1f2a37">Doador:</b> doar o que tem para quem precisa daquilo, perto de casa, e ver o resultado.<br><b style="text-transform:none;color:#1f2a37">ONG:</b> receber o item certo, sem pagar nada e sem taxa sobre doação.<br><b style="text-transform:none;color:#1f2a37">Empresa:</b> impacto social medido e comprovado para o relatório ESG.<br><b style="text-transform:none;color:#1f2a37">Prefeitura:</b> enxergar a rede de assistência do município.</div>
+  <div class="c-vant"><b>Vantagem difícil de copiar</b>Os dados de resultado (quem atende, em quanto tempo, com prestação de contas) e o score de transparência, que crescem com o uso.</div>
+  <div class="c-can"><b>Canais</b>ONGs piloto de Limeira, Secretaria de Assistência Social, conselhos municipais, empresas locais, feiras e o próprio site.</div>
+  <div class="c-seg"><b>Segmentos de clientes</b>Usuários (grátis): doadores pessoa física e ONGs.<br>Pagantes: empresas com metas de ESG e prefeituras.</div>
+  <div class="c-cus"><b>Estrutura de custos</b>Hospedagem da API e do banco (hoje em planos gratuitos; estimados cerca de R$ 150 a 300 por mês com escala), uso de IA cobrado por volume, domínio, e o tempo da equipe (suporte e desenvolvimento).</div>
+  <div class="c-rec"><b>Fontes de receita</b>Plano Empresa ESG (a partir de R$ 490/mês), licença anual para prefeituras e, no futuro, um plano "ONG Pro" opcional. <b>Taxa zero sobre a doação.</b></div>
+</div>
+
+<h3>Concorrência e diferencial</h3>
+<table>
+<thead><tr><th>Alternativa</th><th>O que faz</th><th>Onde o Connect ONG é diferente</th></tr></thead>
+<tbody>
+<tr><td>Vaquinhas online (ex.: Vakinha)</td><td>Arrecadação em dinheiro para causas pessoais e sociais</td><td>Aqui o foco é a <b>doação de itens</b> com match e chat; a ONG recebe 100% do PIX, sem taxa da plataforma.</td></tr>
+<tr><td>Financiamento coletivo (ex.: Benfeitoria)</td><td>Campanhas com meta e prazo</td><td>Relação contínua entre doador e ONG, não uma campanha isolada; prestação de contas com fotos.</td></tr>
+<tr><td>Voluntariado (ex.: Atados)</td><td>Conecta voluntários a ONGs</td><td>Complementar: conectamos <b>doações</b>, com logística (frete) e transparência.</td></tr>
+<tr><td>Ferramentas de captação para ONGs (ex.: Doare)</td><td>Sistema pago usado pela ONG</td><td>Grátis para a ONG: quem paga é o patrocinador que quer medir impacto.</td></tr>
+</tbody></table>
+
+<div class="dois">
+<div>
+<h3>Mercado</h3>
+<p>O Brasil tem <b>mais de 800 mil organizações da sociedade civil</b> (IPEA, Mapa das OSCs). A maioria é pequena e sem estrutura de captação: é o público do plano gratuito. A receita não depende de volume de doação, mas de dois clientes com orçamento definido: empresas (investimento social privado e relatórios ESG) e municípios (assistência social).</p>
+<h3>Entrada no mercado</h3>
+<p><b>Fase 1 — Limeira (piloto):</b> 3 ONGs parceiras, Secretaria de Assistência Social e 2 empresas locais. <b>Fase 2 — Região de Campinas:</b> o mesmo roteiro, cidade a cidade. <b>Fase 3:</b> estados, com parcerias com redes de ONGs.</p>
+</div>
+<div>
+<h3>Metas do primeiro ano (hipóteses a validar com o F-09)</h3>
+<table>
+<thead><tr><th>Indicador</th><th>Meta</th></tr></thead>
+<tbody>
+<tr><td>ONGs ativas em Limeira</td><td>30</td></tr>
+<tr><td>Doadores cadastrados</td><td>500</td></tr>
+<tr><td>Taxa de atendimento das necessidades</td><td>40%</td></tr>
+<tr><td>Empresas pagantes</td><td>2 (≈ R$ 11,8 mil/ano)</td></tr>
+<tr><td>Prefeitura com licença</td><td>1 (≈ R$ 12 mil/ano)</td></tr>
+<tr><td>Receita × custo de operação</td><td>≈ R$ 24 mil × ≈ R$ 3 mil/ano</td></tr>
+</tbody></table>
+<p class="nota">Valores de referência para discussão com a banca. A validação com ONGs e empresas reais (F-09) é o próximo passo para confirmá-los.</p>
+</div>
+</div>
+<h3>Evolução do produto (potencial de aplicação)</h3>
+<p>PIX real por um provedor de pagamento (hoje simulado) · aplicativo nas lojas · integração com editais e chamamentos públicos · dados abertos para as prefeituras · relatório ESG automático para as empresas parceiras.</p>
+
+<h2>5. Segurança e LGPD: o documento que faltou na feira (F-05)</h2>
+<h3>5.1 Camadas de proteção</h3>
+<table>
+<thead><tr><th style="width:20%">Camada</th><th>Medida</th></tr></thead>
+<tbody>
+<tr><td>Dados em repouso</td><td>AES-256-GCM no telefone, no chat e nas denúncias; senhas em BCrypt; códigos de verificação em HMAC-SHA256; chave fora do repositório, com trava de impressão digital.</td></tr>
+<tr><td>Dados em trânsito</td><td>HTTPS em todos os endereços publicados (Render, Netlify, GitHub Pages).</td></tr>
+<tr><td>Acesso</td><td>Login com token JWT (12 h) e refresh (7 dias); verificação em duas etapas opcional; cada pedido é conferido contra o <b>dono</b> do dado (quem tenta ler dado alheio recebe 403); papel de administrador que não pode ser criado pelo cadastro.</td></tr>
+<tr><td>Abuso</td><td>Limite de tentativas no login, no cadastro, na recuperação de senha, nas doações e na IA (429 depois do limite); mensagens que não revelam se um e-mail existe.</td></tr>
+<tr><td>Entrada de dados</td><td>Validação de formato na API e nas telas (seção 3.1); texto do usuário escapado ao ser exibido no site.</td></tr>
+<tr><td>Privacidade</td><td>Telefone e e-mail só aparecem para quem a pessoa autoriza; bloqueio de doador; minimização de dados enviados à IA.</td></tr>
+<tr><td>LGPD</td><td>Consentimento com prova, exportação dos dados, anonimização na exclusão, política com bases legais e retenção, registro de acessos.</td></tr>
+<tr><td>Auditoria</td><td>Registro das ações sensíveis (login, troca de senha, troca de e-mail), sem nunca gravar senha ou código.</td></tr>
+</tbody></table>
+<div class="dois">
+<div>
+<h3>5.2 Conferir no sistema publicado</h3>
+<p><code>GET https://connect-ong-api.onrender.com/publico/seguranca</code> mostra, sem nenhum segredo, as proteções ativas no servidor. A mesma informação aparece na página "Segurança e LGPD" do site.</p>
+<h3>5.3 Por que não cifrar todos os dados (F-14)</h3>
+<p>O <b>e-mail</b> é usado no login e precisa ser encontrado por igualdade; cifrado com IV aleatório, isso deixaria de funcionar. Os dados da <b>ONG</b> (nome, endereço, telefone institucional) são públicos por natureza. Esses dados já estão protegidos por HTTPS, controle de acesso por dono e senha com BCrypt.</p>
+</div>
+<div>
+<h3>5.4 O que falta para operar de verdade (F-15)</h3>
+<ul>
+<li>Pessoa jurídica responsável e <b>encarregado de dados (DPO)</b> nomeado, com canal de atendimento ao titular.</li>
+<li><b>Relatório de Impacto à Proteção de Dados (RIPD)</b>.</li>
+<li>Contratos com os fornecedores (hospedagem e IA) com cláusulas de proteção de dados.</li>
+<li>Plano de resposta a incidentes (comunicar a ANPD e os titulares).</li>
+<li>Rotina de troca periódica das chaves e de backup cifrado.</li>
+</ul>
+</div>
+</div>
+
+<h2>6. Testes e verificação</h2>
+<table>
+<thead><tr><th>Frente</th><th>Antes</th><th>Agora</th><th>O que os testes novos provam</th></tr></thead>
+<tbody>
+<tr><td>API (Java, JUnit)</td><td>191</td><td><b>231</b></td><td>Cada regra de formato; cadastro que exige aceite e grava o consentimento; exportação só para o dono; anonimização; telefone e mensagem cifrados no banco e legíveis na API; adulteração detectada; migração do legado; ambiente com a chave errada não sobe; indicadores conferidos número a número.</td></tr>
+<tr><td>App do doador (Dart)</td><td>101</td><td><b>124</b></td><td>As mesmas regras da API, com os mesmos casos, e as máscaras de telefone e CNPJ.</td></tr>
+<tr><td>Painel da ONG (Dart)</td><td>52</td><td><b>75</b></td><td>Idem.</td></tr>
+<tr><td>Site (JavaScript)</td><td>—</td><td>navegador</td><td>Teste automatizado no Chrome: três cadastros inválidos barrados com a mensagem certa e um válido que entra na plataforma; console sem erros.</td></tr>
+</tbody></table>
+
+<h2>7. Roteiro do vídeo (5 a 10 minutos, seção 4.1)</h2>
+<table>
+<thead><tr><th style="width:11%">Tempo</th><th style="width:24%">Bloco</th><th>O que aparece na tela</th><th style="width:12%">Quem fala</th></tr></thead>
+<tbody>
+<tr><td>0:00–0:20</td><td>Abertura</td><td>Logo, nome da equipe e do projeto</td><td>Gabriel</td></tr>
+<tr><td>0:20–0:50</td><td>O que ouvimos</td><td>Uma frase: a banca pediu interação; a feira apontou segurança, validação, LGPD, mercado e dados</td><td>Gabriel</td></tr>
+<tr><td>0:50–1:30</td><td>O que a banca pediu (B-01 a B-04)</td><td>Doador demonstra interesse → ONG aceita no painel → o chat abre sozinho</td><td>Abner</td></tr>
+<tr><td>1:30–2:40</td><td>Validação (F-01, F-02)</td><td>Cadastro no site com nome "Jo4o", senha "123456" e telefone inválido; cadastro de ONG com CNPJ errado; a mesma recusa vinda da API</td><td>Luan</td></tr>
+<tr><td>2:40–3:50</td><td>Criptografia (F-03)</td><td>Mensagem enviada no chat → a mesma linha no banco aparece como <code>enc:v1:…</code> → no app aparece normal; <code>/publico/seguranca</code></td><td>Gabriel</td></tr>
+<tr><td>3:50–4:50</td><td>LGPD (F-04, F-05)</td><td>Aceite no cadastro, "Privacidade e meus dados", download do JSON, exclusão de conta de teste mostrando o nome anonimizado</td><td>Arthur</td></tr>
+<tr><td>4:50–6:00</td><td>Resultados (F-08)</td><td>Site "Resultados" e painel "Indicadores": funil, taxa de atendimento, tempo de resposta, por estado</td><td>Luan</td></tr>
+<tr><td>6:00–7:00</td><td>Mercado (F-06, F-07)</td><td>Página "Para empresas" + slide do Lean Canvas</td><td>Arthur</td></tr>
+<tr><td>7:00–7:30</td><td>IA consciente (F-10)</td><td>Aviso na Dora e a seção "Como usamos IA"</td><td>Abner</td></tr>
+<tr><td>7:30–8:00</td><td>O que não entrou</td><td>F-09 (pesquisa com ONGs reais) e F-12 (paginação), com o motivo</td><td>Gabriel</td></tr>
+<tr><td>8:00–8:20</td><td>Próximo passo</td><td>"Até a banca final: validar com três ONGs de Limeira e fechar a primeira empresa parceira."</td><td>Todos</td></tr>
+</tbody></table>
+
+<h2>8. Retrospectiva da equipe (seção 4.3) — rascunho para a equipe revisar</h2>
+<div class="dois">
+<div>
+<h3>O que funcionou</h3>
+<ul>
+<li>Transformar o feedback num backlog com prioridade (MoSCoW) deixou claro o que atacar primeiro: segurança, validação e LGPD, as notas mais baixas.</li>
+<li>Testes automatizados e publicação automática: cada mudança só foi para o ar com as três suítes verdes.</li>
+<li>Conferir cada tela no navegador, e não só nos testes: foi assim que apareceu o site fora do ar desde a véspera da feira.</li>
+</ul>
+<h3>O que atrapalhou</h3>
+<ul>
+<li>Um integrante ausente na feira pesou na nota de autonomia da equipe.</li>
+<li>O trabalho ficou concentrado em poucas pessoas, e o histórico do GitHub mostra isso.</li>
+<li>Um defeito entrou na véspera da feira e ninguém percebeu por três semanas: faltava checagem automática do site publicado.</li>
+<li>A pesquisa com ONGs reais (F-09) depende de agenda externa e não coube no prazo.</li>
+</ul>
+</div>
+<div>
+<h3>O que vamos mudar até a banca final</h3>
+<ul>
+<li>Cada item restante tem um dono, e cada integrante faz os próprios commits e apresenta a própria frente.</li>
+<li>Ensaio completo com os quatro presentes, incluindo o bloco de segurança e o de mercado.</li>
+<li>Checagem do console do site e da API publicada antes de cada apresentação.</li>
+<li>Visitar três ONGs de Limeira e aplicar o formulário aos doadores, para substituir as hipóteses da seção 4 por números reais.</li>
+</ul>
+</div>
+</div>
+
+</body></html>
