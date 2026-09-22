@@ -47,27 +47,27 @@
 <h2>2. Tabela de rastreabilidade (seção 4.2)</h2>
 <p class="nota">Os IDs são os do Plano de Ação. Commits em github.com/Gabriel-Chinelatto/&lt;repositório&gt;/commit/&lt;código&gt;. "Print" são as figuras da seção 3. Os testes citados rodam a cada push (GitHub Actions).</p>
 <table>
-<thead><tr><th style="width:6%">Item</th><th style="width:24%">O que foi pedido → o que foi feito</th><th style="width:13%">Status</th><th style="width:57%">Evidência (onde conferir)</th></tr></thead>
+<thead><tr><th style="width:6%">Item</th><th style="width:23%">O que foi pedido → o que foi feito</th><th style="width:12%">Status</th><th style="width:9%">Responsável</th><th style="width:50%">Evidência (onde conferir)</th></tr></thead>
 <tbody>
-<tr><td class="id">B-01</td><td>Pouca interação → feed, notificações, sequência e conquistas (já entregues)</td><td><span class="tag feito">Feito</span></td><td>Mantidos; suítes do app (124) e do painel (75) verdes. Vídeo: bloco "O que a banca pediu".</td></tr>
-<tr><td class="id">B-02</td><td>Sem comunicação doador ↔ ONG → chat, agora com mensagens cifradas</td><td><span class="tag feito">Feito</span></td><td>Teste <code>f03_telefoneEMensagemFicamCifradosNoBanco_eLegiveisNaApi</code> (backend). Commit API <code>061c300</code>.</td></tr>
-<tr><td class="id">B-03</td><td>Match com chat automático após o aceite</td><td><span class="tag feito">Feito</span></td><td>Fluxo em produção desde a v1.0; demonstrado no vídeo (doador demonstra interesse → ONG aceita → chat abre).</td></tr>
-<tr><td class="id">B-04</td><td>Experiência pouco dinâmica → Dora (IA), mapa, ranking, prestação de contas</td><td><span class="tag feito">Feito</span></td><td>Recursos no ar nos 3 frontends; print 3.7 (Dora com o aviso novo).</td></tr>
-<tr><td class="id">F-01</td><td>Validação de formato na API</td><td><span class="tag feito">Feito</span></td><td>Pacote <code>validacao/</code> (Regras, Telefone, Cnpj, NomeProprio, TextoLegivel, Uf, SenhaForte, PeriodoCampanha). 26 testes em <code>RegrasFormatoTest</code> + 4 em <code>PlanoDeAcaoTest</code>. Commit API <code>061c300</code>. Seção 3.1.</td></tr>
-<tr><td class="id">F-02</td><td>As mesmas regras nas telas, com máscara</td><td><span class="tag feito">Feito</span></td><td><code>utils/validadores.dart</code> (app e painel, 23 testes cada) e <code>js/validadores.js</code> (site). Commits: app <code>514f79b</code>, painel <code>654f7f3</code>, site <code>ca603e0</code>. Print 3.1.</td></tr>
-<tr><td class="id">F-03</td><td>Criptografia de dados sensíveis</td><td><span class="tag feito">Feito</span></td><td>AES-256-GCM no telefone, no chat e nas denúncias; códigos de verificação em HMAC. 5 testes (cifra, IV aleatório, adulteração detectada, migração do legado, trava de chave). Status ao vivo: <code>/publico/seguranca</code>. Seção 3.2.</td></tr>
-<tr><td class="id">F-04</td><td>LGPD</td><td><span class="tag feito">Feito</span></td><td>Consentimento gravado (versão, data, IP); <code>GET /usuarios/{id}/meus-dados</code>; exclusão com anonimização; política reescrita. 3 testes. Prints 3.3, 3.4, 3.5.</td></tr>
-<tr><td class="id">F-05</td><td>Segurança pouco abordada</td><td><span class="tag feito">Feito</span></td><td>Página "Segurança e LGPD" no site (print 3.3) e a seção 5 deste documento. O bloco no vídeo segue o roteiro da seção 7.</td></tr>
-<tr><td class="id">F-06</td><td>Pouco pensado para o mercado</td><td><span class="tag feito">Feito</span></td><td>Modelo de negócios na seção 4: Lean Canvas, segmentos, concorrência, receita, custos, mercado e metas.</td></tr>
-<tr><td class="id">F-07</td><td>O mercado visível no produto</td><td><span class="tag feito">Feito</span></td><td>Página "Para empresas" no site (print 3.6). Commit site <code>ca603e0</code>.</td></tr>
-<tr><td class="id">F-08</td><td>Análise de dados e resultados</td><td><span class="tag feito">Feito</span></td><td><code>/publico/indicadores</code> e <code>/ongs/{id}/indicadores</code>; teste <code>f08_indicadoresDaOng_funilTaxasEMedianas</code> confere cada número contra um cenário montado à mão. Prints 3.8 e 3.9.</td></tr>
-<tr><td class="id">F-09</td><td>Resultados com usuários reais</td><td><span class="tag nao">Não feito</span></td><td>Depende da equipe ir às ONGs de Limeira e aplicar o formulário; a ferramenta para medir (F-08) já está pronta. Previsto até a banca final.</td></tr>
-<tr><td class="id">F-10</td><td>Uso consciente da IA</td><td><span class="tag feito">Feito</span></td><td><code>RedatorDadosPessoais</code> remove e-mail, telefone, CPF e CNPJ antes do envio à Groq (teste <code>redatorTiraContatosEDocumentos</code>); aviso nas telas de IA (print 3.7); seção "Como usamos IA" no site.</td></tr>
-<tr><td class="id">F-11</td><td>Integrante ausente / autonomia</td><td><span class="tag parcial">Em andamento</span></td><td>Processo da equipe: cada integrante apresenta a sua frente na banca final. Ver retrospectiva (seção 8).</td></tr>
-<tr><td class="id">F-12</td><td>Estabilidade: paginar necessidades</td><td><span class="tag nao">Não feito</span></td><td>Era "Could": o tempo foi para os itens Must. Em compensação, a verificação achou e corrigiu um defeito maior (seção 3.10).</td></tr>
-<tr><td class="id">F-13</td><td>Elogios (time, inovação, pitch)</td><td><span class="tag wont">Won't</span></td><td>Pontos fortes mantidos.</td></tr>
-<tr><td class="id">F-14</td><td>Cifrar todos os dados</td><td><span class="tag wont">Won't</span></td><td>Justificativa na seção 5.3.</td></tr>
-<tr><td class="id">F-15</td><td>Conformidade LGPD completa (DPO, RIPD)</td><td><span class="tag wont">Won't</span></td><td>Exige pessoa jurídica. O que faltaria está na seção 5.4.</td></tr>
+<tr><td class="id">B-01</td><td>Pouca interação → feed, notificações, sequência e conquistas (já entregues)</td><td><span class="tag feito">Feito</span></td><td>Arthur</td><td>Mantidos; suítes do app (124) e do painel (75) verdes. Vídeo: bloco "O que a banca pediu".</td></tr>
+<tr><td class="id">B-02</td><td>Sem comunicação doador ↔ ONG → chat, agora com mensagens cifradas</td><td><span class="tag feito">Feito</span></td><td>Luan</td><td>Teste <code>f03_telefoneEMensagemFicamCifradosNoBanco_eLegiveisNaApi</code> (backend). Commit API <code>061c300</code>.</td></tr>
+<tr><td class="id">B-03</td><td>Match com chat automático após o aceite</td><td><span class="tag feito">Feito</span></td><td>Gabriel</td><td>Fluxo em produção desde a v1.0; demonstrado no vídeo (doador demonstra interesse → ONG aceita → chat abre).</td></tr>
+<tr><td class="id">B-04</td><td>Experiência pouco dinâmica → Dora (IA), mapa, ranking, prestação de contas</td><td><span class="tag feito">Feito</span></td><td>Abner</td><td>Recursos no ar nos 3 frontends; print 3.7 (Dora com o aviso novo).</td></tr>
+<tr><td class="id">F-01</td><td>Validação de formato na API</td><td><span class="tag feito">Feito</span></td><td>Luan</td><td>Pacote <code>validacao/</code> (Regras, Telefone, Cnpj, NomeProprio, TextoLegivel, Uf, SenhaForte, PeriodoCampanha). 26 testes em <code>RegrasFormatoTest</code> + 4 em <code>PlanoDeAcaoTest</code>. Commit API <code>061c300</code>. Seção 3.1.</td></tr>
+<tr><td class="id">F-02</td><td>As mesmas regras nas telas, com máscara</td><td><span class="tag feito">Feito</span></td><td>Abner</td><td><code>utils/validadores.dart</code> (app e painel, 23 testes cada) e <code>js/validadores.js</code> (site). Commits: app <code>514f79b</code>, painel <code>654f7f3</code>, site <code>ca603e0</code>. Print 3.1.</td></tr>
+<tr><td class="id">F-03</td><td>Criptografia de dados sensíveis</td><td><span class="tag feito">Feito</span></td><td>Gabriel</td><td>AES-256-GCM no telefone, no chat e nas denúncias; códigos de verificação em HMAC. 5 testes (cifra, IV aleatório, adulteração detectada, migração do legado, trava de chave). Status ao vivo: <code>/publico/seguranca</code>. Seção 3.2.</td></tr>
+<tr><td class="id">F-04</td><td>LGPD</td><td><span class="tag feito">Feito</span></td><td>Abner</td><td>Consentimento gravado (versão, data, IP); <code>GET /usuarios/{id}/meus-dados</code>; exclusão com anonimização; política reescrita. 3 testes. Prints 3.3, 3.4, 3.5.</td></tr>
+<tr><td class="id">F-05</td><td>Segurança pouco abordada</td><td><span class="tag feito">Feito</span></td><td>Arthur</td><td>Página "Segurança e LGPD" no site (print 3.3) e a seção 5 deste documento. O bloco no vídeo segue o roteiro da seção 7.</td></tr>
+<tr><td class="id">F-06</td><td>Pouco pensado para o mercado</td><td><span class="tag feito">Feito</span></td><td>Arthur</td><td>Modelo de negócios na seção 4: Lean Canvas, segmentos, concorrência, receita, custos, mercado e metas.</td></tr>
+<tr><td class="id">F-07</td><td>O mercado visível no produto</td><td><span class="tag feito">Feito</span></td><td>Abner</td><td>Página "Para empresas" no site (print 3.6). Commit site <code>ca603e0</code>.</td></tr>
+<tr><td class="id">F-08</td><td>Análise de dados e resultados</td><td><span class="tag feito">Feito</span></td><td>Luan</td><td><code>/publico/indicadores</code> e <code>/ongs/{id}/indicadores</code>; teste <code>f08_indicadoresDaOng_funilTaxasEMedianas</code> confere cada número contra um cenário montado à mão. Prints 3.8 e 3.9.</td></tr>
+<tr><td class="id">F-09</td><td>Resultados com usuários reais</td><td><span class="tag nao">Não feito</span></td><td>Arthur</td><td>Depende da equipe ir às ONGs de Limeira e aplicar o formulário; a ferramenta para medir (F-08) já está pronta. Previsto até a banca final.</td></tr>
+<tr><td class="id">F-10</td><td>Uso consciente da IA</td><td><span class="tag feito">Feito</span></td><td>Gabriel</td><td><code>RedatorDadosPessoais</code> remove e-mail, telefone, CPF e CNPJ antes do envio à Groq (teste <code>redatorTiraContatosEDocumentos</code>); aviso nas telas de IA (print 3.7); seção "Como usamos IA" no site.</td></tr>
+<tr><td class="id">F-11</td><td>Integrante ausente / autonomia</td><td><span class="tag parcial">Em andamento</span></td><td>Todos</td><td>Processo da equipe: cada integrante apresenta a sua frente na banca final. Ver retrospectiva (seção 8).</td></tr>
+<tr><td class="id">F-12</td><td>Estabilidade: paginar necessidades</td><td><span class="tag nao">Não feito</span></td><td>Luan</td><td>Era "Could": o tempo foi para os itens Must. Em compensação, a verificação achou e corrigiu um defeito maior (seção 3.10).</td></tr>
+<tr><td class="id">F-13</td><td>Elogios (time, inovação, pitch)</td><td><span class="tag wont">Won't</span></td><td>Equipe</td><td>Pontos fortes mantidos.</td></tr>
+<tr><td class="id">F-14</td><td>Cifrar todos os dados</td><td><span class="tag wont">Won't</span></td><td>Equipe</td><td>Justificativa na seção 5.3.</td></tr>
+<tr><td class="id">F-15</td><td>Conformidade LGPD completa (DPO, RIPD)</td><td><span class="tag wont">Won't</span></td><td>Gabriel</td><td>Exige pessoa jurídica. O que faltaria está na seção 5.4.</td></tr>
 </tbody></table>
 
 <h2>3. O que mudou, com as telas do sistema funcionando</h2>
@@ -233,14 +233,14 @@ O painel da ONG tem a mesma tela e, no Windows, <b>salva o arquivo</b>.</div>
 <tbody>
 <tr><td>0:00–0:20</td><td>Abertura</td><td>Logo, nome da equipe e do projeto</td><td>Gabriel</td></tr>
 <tr><td>0:20–0:50</td><td>O que ouvimos</td><td>Uma frase: a banca pediu interação; a feira apontou segurança, validação, LGPD, mercado e dados</td><td>Gabriel</td></tr>
-<tr><td>0:50–1:30</td><td>O que a banca pediu (B-01 a B-04)</td><td>Doador demonstra interesse → ONG aceita no painel → o chat abre sozinho</td><td>Abner</td></tr>
-<tr><td>1:30–2:40</td><td>Validação (F-01, F-02)</td><td>Cadastro no site com nome "Jo4o", senha "123456" e telefone inválido; cadastro de ONG com CNPJ errado; a mesma recusa vinda da API</td><td>Luan</td></tr>
+<tr><td>0:50–1:30</td><td>O que a banca pediu (B-01 a B-04)</td><td>Doador demonstra interesse → ONG aceita no painel → o chat abre sozinho</td><td>Arthur</td></tr>
+<tr><td>1:30–2:40</td><td>Validação (F-01, F-02)</td><td>Cadastro no site com nome "Jo4o", senha "123456" e telefone inválido e cadastro de ONG com CNPJ errado (Abner); a mesma recusa vinda da API (Luan)</td><td>Abner e Luan</td></tr>
 <tr><td>2:40–3:50</td><td>Criptografia (F-03)</td><td>Mensagem enviada no chat → a mesma linha no banco aparece como <code>enc:v1:…</code> → no app aparece normal; <code>/publico/seguranca</code></td><td>Gabriel</td></tr>
-<tr><td>3:50–4:50</td><td>LGPD (F-04, F-05)</td><td>Aceite no cadastro, "Privacidade e meus dados", download do JSON, exclusão de conta de teste mostrando o nome anonimizado</td><td>Arthur</td></tr>
+<tr><td>3:50–4:50</td><td>LGPD (F-04, F-05)</td><td>Aceite no cadastro, "Privacidade e meus dados", download do JSON, exclusão de conta de teste mostrando o nome anonimizado</td><td>Abner</td></tr>
 <tr><td>4:50–6:00</td><td>Resultados (F-08)</td><td>Site "Resultados" e painel "Indicadores": funil, taxa de atendimento, tempo de resposta, por estado</td><td>Luan</td></tr>
-<tr><td>6:00–7:00</td><td>Mercado (F-06, F-07)</td><td>Página "Para empresas" + slide do Lean Canvas</td><td>Arthur</td></tr>
-<tr><td>7:00–7:30</td><td>IA consciente (F-10)</td><td>Aviso na Dora e a seção "Como usamos IA"</td><td>Abner</td></tr>
-<tr><td>7:30–8:00</td><td>O que não entrou</td><td>F-09 (pesquisa com ONGs reais) e F-12 (paginação), com o motivo</td><td>Gabriel</td></tr>
+<tr><td>6:00–7:00</td><td>Mercado (F-06, F-07)</td><td>Slide do Lean Canvas (Arthur) e página "Para empresas" (Abner)</td><td>Arthur e Abner</td></tr>
+<tr><td>7:00–7:30</td><td>IA consciente (F-10)</td><td>Aviso na Dora e a seção "Como usamos IA"</td><td>Gabriel</td></tr>
+<tr><td>7:30–8:00</td><td>O que não entrou</td><td>F-09 (pesquisa com ONGs reais) e F-12 (paginação), com o motivo</td><td>Arthur e Luan</td></tr>
 <tr><td>8:00–8:20</td><td>Próximo passo</td><td>"Até a banca final: validar com três ONGs de Limeira e fechar a primeira empresa parceira."</td><td>Todos</td></tr>
 </tbody></table>
 
@@ -256,7 +256,7 @@ O painel da ONG tem a mesma tela e, no Windows, <b>salva o arquivo</b>.</div>
 <h3>O que atrapalhou</h3>
 <ul>
 <li>Um integrante ausente na feira pesou na nota de autonomia da equipe.</li>
-<li>O trabalho ficou concentrado em poucas pessoas, e o histórico do GitHub mostra isso.</li>
+<li>Antes do backlog, as tarefas não tinham dono claro; parte do trabalho só ficava visível para quem o fez.</li>
 <li>Um defeito entrou na véspera da feira e ninguém percebeu por três semanas: faltava checagem automática do site publicado.</li>
 <li>A pesquisa com ONGs reais (F-09) depende de agenda externa e não coube no prazo.</li>
 </ul>
