@@ -17,6 +17,7 @@
 //   perfil-ong    -> PerfilPublicoOngScreen (capa/streak/Maps/galeria)
 //   chat          -> ChatScreen do match 8 (anexo de imagem)
 //   login         -> LoginPage (unica tela que NAO faz o login demo antes)
+//   meus-dados    -> Privacidade e meus dados (Plano de Acao, F-04)
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -41,6 +42,9 @@ import 'services/conversas_dora_service.dart';
 import 'services/session_service.dart';
 import 'theme/app_theme.dart';
 import 'web/portal_institucional_screen.dart';
+import 'doador/meus_dados_screen.dart';
+
+int _usuarioId = 0;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +64,7 @@ Future<void> main() async {
     );
     final dados = jsonDecode(resp.body) as Map<String, dynamic>;
     await ApiService.setToken(dados['accessToken'] as String?);
+    _usuarioId = dados['id'] as int;
     await SessionService().salvarUsuario(UsuarioLogado(
       id: dados['id'] as int,
       nome: dados['nome'] as String,
@@ -205,6 +210,8 @@ class _HarnessApp extends StatelessWidget {
         return const PortalInstitucionalScreen();
       case 'sobre':
         return const DescricaoScreen();
+      case 'meus-dados':
+        return MeusDadosScreen(usuarioId: _usuarioId);
       case 'privacidade':
         return const DocumentosLegaisScreen(tipo: DocumentoLegal.privacidade);
       case 'termos':

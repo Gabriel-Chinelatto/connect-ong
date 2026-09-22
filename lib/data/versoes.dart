@@ -27,9 +27,22 @@ class VersaoApp {
 /// Changelog do Connect ONG — da mais recente (topo) para a mais antiga.
 const List<VersaoApp> kVersoesApp = [
   VersaoApp(
+    numero: 'v2.3',
+    titulo: 'Plano de Ação pós-FECITEC',
+    atual: true,
+    mudancas: [
+      'Campos validados de verdade: nome só com letras, telefone com DDD, '
+          'senha forte e nada de texto só com símbolos — na tela e no servidor',
+      'Seu telefone e suas conversas ficam criptografados no banco',
+      '"Privacidade e meus dados": veja e copie tudo o que guardamos (LGPD)',
+      'Ao excluir a conta, seus dados pessoais são anonimizados na hora',
+      'Política de Privacidade reescrita, com bases legais e prazos',
+      'A Dora avisa que é uma IA e não envia e-mail nem telefone ao provedor',
+    ],
+  ),
+  VersaoApp(
     numero: 'v2.2',
     titulo: 'Endereço no mapa e app mais rápido',
-    atual: true,
     mudancas: [
       'A ONG digita o endereço e escolhe a sugestão pronta — o sistema '
           'confirma que o lugar existe e guarda a localização exata',
