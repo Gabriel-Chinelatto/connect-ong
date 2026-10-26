@@ -12,19 +12,23 @@
                border-radius: 1.5mm; margin-right: 2mm; }
 .cena .tela { font-weight: 600; color: #14532d; }
 .cena .detalhe { font-size: 10pt; color: #4b5563; margin: 1.5mm 0 0; }
+.origem { display: inline-block; background: #eef2f0; color: #374151;
+          font-size: 8.5pt; padding: .4mm 2mm; border-radius: 3mm;
+          margin-top: 1.5mm; }
 .quem { font-size: 9pt; text-transform: uppercase; letter-spacing: .04em;
         color: #0f5132; font-weight: 700; margin: 3mm 0 1mm; }
 .fala { background: #f0faf4; border-left: 4px solid #20a464;
         padding: 2.5mm 3.5mm; margin: 0 0 2mm; font-size: 11.5pt; }
-.cortavel { background: #fffbeb; border-color: #fcd34d; }
-.cortavel .tempo { background: #92400e; }
-.marca { display: inline-block; background: #fef3c7; color: #92400e;
+.exigencia { border-color: #20a464; border-width: 2px; }
+.marca { display: inline-block; background: #d1fae5; color: #065f46;
          font-weight: 700; font-size: 8.5pt; padding: .4mm 2mm;
          border-radius: 3mm; margin-left: 1mm; }
-.aviso { background: #fff7ed; border: 1px solid #fcd34d; border-left: 5px solid #d97706;
+.aviso { background: #f0faf4; border: 1px solid #cfe8d9; border-left: 5px solid #20a464;
          border-radius: 2mm; padding: 4mm 5mm; margin: 0 0 6mm; }
-.aviso h3 { margin-top: 0; color: #92400e; }
+.aviso h3 { margin-top: 0; }
 .check li { margin-bottom: 2.5mm; }
+.total { text-align: right; font-weight: 700; color: #0f5132; font-size: 12pt;
+         border-top: 2px solid #20a464; padding-top: 2mm; margin-top: 2mm; }
 </style></head><body>
 
 <div class="capa">
@@ -32,36 +36,37 @@
   <div class="sub">Connect ONG · Projeto Integrador · o que mostrar, quando, e a fala de cada integrante</div>
   <div class="meta">
     <div><b>Equipe</b>Gabriel Chinelatto · Abner Viola · Luan Felipe · Arthur Souza</div>
-    <div><b>Duração montada</b>~13 minutos (com cortes marcados: ~9:30)</div>
+    <div><b>Duração</b>9 min 45 s — dentro do limite de 5 a 10 minutos</div>
     <div><b>Data</b>26/10/2026</div>
     <div><b>Como usar</b>Cada bloco tem o tempo, o que aparece na tela e a fala pronta</div>
   </div>
 </div>
 
 <div class="aviso">
-<h3>Atenção à duração — confirmar antes de gravar</h3>
-<p>A <i>Connect-ONG-Entrega-Final.pdf</i> (seção 7) registra a exigência do
-professor como <b>vídeo de 5 a 10 minutos</b> (seção 4.1 do PDF dele). Este
-roteiro foi montado em <b>~13 minutos</b>, a pedido da equipe.</p>
-<p>Os três blocos marcados <span class="marca">CORTÁVEL</span> somam ~3:30 e,
-removidos, fecham o vídeo em <b>~9:30</b> sem deixar nenhum ponto dos
-avaliadores de fora. <b>Conferir a duração correta no PDF do professor antes
-de gravar</b> — um vídeo de 13 minutos contra um limite de 10 custa nota.</p>
+<h3>Este roteiro segue o item 4.1 do enunciado</h3>
+<p>O professor pede: vídeo único de <b>5 a 10 minutos</b>; abertura rápida de
+<b>15 a 20 segundos</b>; <b>recapitulação em uma frase</b> do que a banca de
+qualificação e a Feira apontaram; demonstração de cada melhoria
+<b>mostrando o sistema rodando — não é slide</b> — e <b>citando de qual
+feedback ela veio</b>; comentário breve sobre o que não foi concluído; e
+fechamento com uma frase sobre o próximo passo até a banca final.</p>
+<p>Os blocos marcados <span class="marca">EXIGÊNCIA</span> são os que atendem
+um pedido específico dele — <b>não cortar nenhum deles</b>. Todo o resto é
+demonstração do sistema em funcionamento, nunca apresentação de slide.</p>
 </div>
 
 <h2>Antes de gravar</h2>
 <ul class="check">
-<li><b>A chave <code>APP_CRYPTO_KEY</code> precisa estar configurada na máquina
-que vai gravar.</b> Sem ela o bloco das 5:15 <b>não tem o que mostrar</b>: a
-linha do banco aparece em texto normal e <code>/publico/seguranca</code>
-responde <code>criptografiaEmRepouso: false</code> — seria gravar justamente o
-ponto criticado parecendo não resolvido. Ver <code>chave-cripto.txt.EXEMPLO</code>
-na pasta FEIRA ESCOLA.</li>
 <li><code>INICIAR-FEIRA.bat</code> rodado e as três telas no ar.</li>
-<li><code>/ia/status?ping=true</code> respondendo <code>ok</code> — senão a
-Dora grava em "modo básico" e o bloco das 10:45 fica fraco.</li>
 <li><code>RESTAURAR-DEMO.bat</code> rodado, para a Lar Viva ter pedidos
-pendentes para aceitar ao vivo no bloco das 2:10.</li>
+pendentes para aceitar ao vivo no bloco das 1:40.</li>
+<li><b>Conferir que a criptografia está ligada:</b> abrir
+<code>127.0.0.1:8080/publico/seguranca</code> e ver
+<code>criptografiaEmRepouso: true</code>. Se vier <code>false</code>, falta o
+arquivo <code>chave-cripto.txt</code> na pasta FEIRA ESCOLA, e o bloco das
+3:55 não terá o que mostrar.</li>
+<li><code>/ia/status?ping=true</code> respondendo <code>ok</code> — senão a
+Dora grava em "modo básico" e o bloco das 8:05 fica fraco.</li>
 <li>Contas: doador <code>demo.joao@connectong.com</code>, ONG
 <code>demo.larviva@connectong.com</code>, senha <code>demo123</code>.</li>
 </ul>
@@ -69,14 +74,14 @@ pendentes para aceitar ao vivo no bloco das 2:10.</li>
 <h2>Divisão das falas</h2>
 <p>Cada um fala da frente que implementou — a mesma divisão do Plano de Ação,
 em que cada integrante tem quatro itens do backlog. A avaliação olha a
-participação de todos.</p>
+participação de todos, e aqui os quatro falam ao menos três vezes.</p>
 <table>
-<thead><tr><th>Integrante</th><th>Frente</th><th>Fala sobre</th></tr></thead>
+<thead><tr><th>Integrante</th><th>Frente</th><th>Fala sobre</th><th>Falas</th></tr></thead>
 <tbody>
-<tr><td><b>Gabriel Chinelatto</b></td><td>Back-end e design</td><td>abertura, match → chat, criptografia, IA</td></tr>
-<tr><td><b>Luan Felipe</b></td><td>Back-end</td><td>chat, validação na API, indicadores</td></tr>
-<tr><td><b>Abner Viola</b></td><td>Front-end</td><td>validação nas telas, LGPD, página para empresas</td></tr>
-<tr><td><b>Arthur Souza</b></td><td>Design e testes</td><td>problema e solução, modelo de negócios, testes</td></tr>
+<tr><td><b>Gabriel Chinelatto</b></td><td>Back-end e design</td><td>abertura, match → chat, criptografia, IA</td><td>4</td></tr>
+<tr><td><b>Luan Felipe</b></td><td>Back-end</td><td>chat, validação na API, indicadores, item não concluído</td><td>4</td></tr>
+<tr><td><b>Abner Viola</b></td><td>Front-end</td><td>validação nas telas, LGPD, fechamento</td><td>3</td></tr>
+<tr><td><b>Arthur Souza</b></td><td>Design e testes</td><td>recapitulação, mercado, item não concluído</td><td>3</td></tr>
 </tbody>
 </table>
 <p class="nota">A fala <b>não precisa durar o tempo todo do bloco</b> — entra
@@ -84,114 +89,126 @@ música de fundo e legenda para completar. Falas curtas, em tom de conversa.</p>
 
 <h2 class="quebra">Roteiro</h2>
 
-<div class="cena">
-<p><span class="tempo">0:00 ~ 0:30</span> <span class="tela">Abertura: logo do projeto e os 4 integrantes na tela</span></p>
+<div class="cena exigencia">
+<p><span class="tempo">0:00 ~ 0:20</span> <span class="tela">Abertura: logo do projeto e os 4 integrantes na tela</span> <span class="marca">EXIGÊNCIA</span></p>
+<p class="detalhe">Ele pede abertura rápida, de 15 a 20 segundos. Não alongar.</p>
 <div class="quem">Fala Gabriel</div>
-<div class="fala">"Somos a equipe do Connect ONG. Nosso projeto liga quem quer doar às ONGs que precisam. Hoje a gente vai mostrar o que mudou depois da Feira de Tecnologia."</div>
+<div class="fala">"Somos a equipe do Connect ONG — Gabriel, Abner, Luan e Arthur. Nosso projeto liga quem quer doar às ONGs que precisam."</div>
 </div>
 
-<div class="cena">
-<p><span class="tempo">0:30 ~ 1:10</span> <span class="tela">Site institucional, página inicial, rolando devagar</span></p>
+<div class="cena exigencia">
+<p><span class="tempo">0:20 ~ 0:45</span> <span class="tela">Tela do sistema já aberta ao fundo (site na página inicial)</span> <span class="marca">EXIGÊNCIA</span></p>
+<p class="detalhe">A recapitulação em <b>uma frase</b> do que a banca de qualificação e a Feira apontaram. É um pedido explícito do enunciado.</p>
 <div class="quem">Fala Arthur</div>
-<div class="fala">"O problema é simples: quem quer doar não sabe para quem doar, e a ONG não consegue avisar do que precisa. O Connect ONG resolve os dois lados — a ONG publica o que precisa, e o doador encontra."</div>
+<div class="fala">"A banca de qualificação disse que faltava interação entre as pessoas, e a Feira apontou cinco falhas: campos sem validação, falta de criptografia, falta de LGPD, poucos dados sobre resultados e pouca visão de mercado. É isso que a gente vai mostrar resolvido."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">1:10 ~ 2:10</span> <span class="tela">App do doador: lista de necessidades → clicar "Tenho interesse"</span></p>
+<p><span class="tempo">0:45 ~ 1:40</span> <span class="tela">App do doador: lista de necessidades → clicar "Tenho interesse"</span></p>
+<div class="origem">Vem da banca de qualificação: "pouca interação, sem comunicação entre doador e ONG"</div>
 <div class="quem">Fala Gabriel</div>
-<div class="fala">"A banca de qualificação pediu mais interação entre as pessoas. Esta é a resposta: a ONG publica uma necessidade, e o doador demonstra interesse com um toque."</div>
+<div class="fala">"A banca pediu mais interação entre as pessoas. Esta é a resposta: a ONG publica uma necessidade, e o doador demonstra interesse com um toque."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">2:10 ~ 3:00</span> <span class="tela">Painel da ONG: aceitar o pedido → o chat abre sozinho → trocar duas mensagens</span></p>
+<p><span class="tempo">1:40 ~ 2:25</span> <span class="tela">Painel da ONG: aceitar o pedido → o chat abre sozinho → trocar duas mensagens</span></p>
+<div class="origem">Vem da banca: a sugestão do match com chat automático depois do aceite</div>
 <div class="quem">Fala Luan</div>
-<div class="fala">"Quando a ONG aceita, o chat abre automaticamente. Ninguém precisa procurar contato, nem trocar telefone. A conversa já nasce ligada àquela doação."</div>
+<div class="fala">"Foi a própria banca que sugeriu isso: quando a ONG aceita, o chat abre automaticamente. Ninguém precisa trocar telefone — a conversa já nasce ligada àquela doação."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">3:00 ~ 4:15</span> <span class="tela">Site, cadastro de ONG: CNPJ inválido, telefone "abc", senha "123456"</span></p>
+<p><span class="tempo">2:25 ~ 3:20</span> <span class="tela">Site, cadastro de ONG: CNPJ inválido, telefone "abc", senha "123456"</span></p>
 <p class="detalhe">Mostrar os erros aparecendo embaixo de cada campo, antes de clicar em enviar.</p>
+<div class="origem">Vem da Feira: "não tinha validações nos campos, podia colocar o que quisesse em tudo"</div>
 <div class="quem">Fala Abner</div>
-<div class="fala">"O avaliador disse que dava para colocar o que quisesse em qualquer campo. Agora não dá. O CNPJ passa pela conta do dígito verificador, o telefone precisa de um DDD que exista, e senha fraca não entra."</div>
+<div class="fala">"Na Feira o avaliador disse que dava para colocar o que quisesse em qualquer campo. Agora não dá: o CNPJ passa pela conta do dígito verificador, o telefone precisa de um DDD que exista, e senha fraca não entra."</div>
 </div>
 
-<div class="cena cortavel">
-<p><span class="tempo">4:15 ~ 5:15</span> <span class="tela">Swagger ou terminal: a mesma requisição direto na API, voltando 400</span> <span class="marca">CORTÁVEL</span></p>
+<div class="cena">
+<p><span class="tempo">3:20 ~ 3:55</span> <span class="tela">Swagger ou terminal: a mesma requisição direto na API, voltando 400</span></p>
+<div class="origem">Mesmo feedback da Feira, agora do lado do servidor</div>
 <div class="quem">Fala Luan</div>
-<div class="fala">"E a validação não está só na tela. Está no servidor também. Quem tentar falar direto com a API, sem passar pelo site, recebe a mesma recusa."</div>
+<div class="fala">"E não está só na tela. Quem tentar falar direto com o servidor, sem passar pelo site, recebe a mesma recusa."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">5:15 ~ 6:30</span> <span class="tela">Chat no app → a mesma linha no banco aparecendo embaralhada → <code>/publico/seguranca</code></span></p>
+<p><span class="tempo">3:55 ~ 5:00</span> <span class="tela">Mensagem enviada no chat → a mesma linha no banco aparecendo como <code>enc:v1:…</code> → <code>/publico/seguranca</code></span></p>
+<p class="detalhe">É a cena mais forte do vídeo: a mensagem legível no app e embaralhada no banco, lado a lado.</p>
+<div class="origem">Vem da Feira: "não tem criptografia em dados sensíveis"</div>
 <div class="quem">Fala Gabriel</div>
-<div class="fala">"Outro ponto foi a falta de criptografia. Hoje o telefone do doador, as mensagens do chat e as denúncias ficam embaralhados no banco, com AES-256. A chave fica fora do programa. Aqui o sistema mostra exatamente o que está protegido."</div>
+<div class="fala">"Outro ponto da Feira foi a falta de criptografia. Esta é a mensagem que acabei de enviar, e é assim que ela fica guardada no banco: embaralhada, com AES-256. A chave fica fora do programa."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">6:30 ~ 7:45</span> <span class="tela">App: "Privacidade e meus dados" → baixar o arquivo → abrir e mostrar</span></p>
+<p><span class="tempo">5:00 ~ 6:05</span> <span class="tela">App: "Privacidade e meus dados" → baixar o arquivo → abrir e mostrar o conteúdo</span></p>
+<div class="origem">Vem da Feira: "nem LGPD"</div>
 <div class="quem">Fala Abner</div>
-<div class="fala">"O avaliador também falou de LGPD. Agora o usuário baixa tudo o que o sistema guarda sobre ele, vê o consentimento que deu, e pode apagar a conta de verdade — o nome é substituído, não fica guardado."</div>
+<div class="fala">"A Feira também apontou a falta de LGPD. Agora o usuário baixa tudo o que o sistema guarda sobre ele, vê o consentimento que deu, e pode apagar a conta de verdade — o nome é substituído, não fica guardado."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">7:45 ~ 9:00</span> <span class="tela">Painel da ONG: tela "Indicadores" (funil, taxa de atendimento, tempo de resposta)</span></p>
+<p><span class="tempo">6:05 ~ 7:05</span> <span class="tela">Painel da ONG: tela "Indicadores" (funil, taxa de atendimento, tempo de resposta)</span></p>
+<div class="origem">Vem da Feira: nota 5 em "Análise de Dados e Resultados"</div>
 <div class="quem">Fala Luan</div>
-<div class="fala">"Antes a gente só mostrava quantas ONGs e quantos doadores tinha. Isso diz o tamanho, não diz se funciona. Agora acompanhamos o caminho inteiro: necessidade publicada, interesse, aceite e doação concluída."</div>
+<div class="fala">"A nota mais baixa aqui foi em análise de resultados. Antes a gente só mostrava quantas ONGs e quantos doadores tinha — isso diz o tamanho, não diz se funciona. Agora acompanhamos o caminho inteiro: necessidade publicada, interesse, aceite e doação concluída."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">9:00 ~ 10:00</span> <span class="tela">Slide do Lean Canvas</span></p>
+<p><span class="tempo">7:05 ~ 8:05</span> <span class="tela">Site: página "Para empresas", mostrando os planos, e em seguida a página "Resultados"</span></p>
+<p class="detalhe"><b>Atenção:</b> o enunciado diz que não é slide, é tela do sistema rodando. O modelo de negócios é explicado <b>pela página do site</b>, não por um slide do Lean Canvas.</p>
+<div class="origem">Vem da Feira: "pouco pensado para o mercado, precisa evoluir nos critérios mercadológicos"</div>
 <div class="quem">Fala Arthur</div>
-<div class="fala">"A Feira apontou que o projeto era pouco pensado para o mercado. A nossa decisão principal: não cobrar nada sobre a doação. Quem paga é a empresa que quer usar a plataforma no programa social dela. ONG e doador nunca pagam."</div>
-</div>
-
-<div class="cena cortavel">
-<p><span class="tempo">10:00 ~ 10:45</span> <span class="tela">Site: página "Para empresas", mostrando os planos</span> <span class="marca">CORTÁVEL</span></p>
-<div class="quem">Fala Abner</div>
-<div class="fala">"E isso saiu do papel: o site tem a página para empresas, com os planos."</div>
+<div class="fala">"O outro avaliador achou o projeto pouco pensado para o mercado. Nossa decisão: não cobrar nada sobre a doação. Quem paga é a empresa que quer usar a plataforma no programa social dela. ONG e doador nunca pagam — e isso está no ar, nesta página."</div>
 </div>
 
 <div class="cena">
-<p><span class="tempo">10:45 ~ 11:30</span> <span class="tela">Assistente Dora respondendo, com o aviso de IA visível</span></p>
+<p><span class="tempo">8:05 ~ 8:45</span> <span class="tela">Assistente Dora respondendo, com o aviso de IA visível</span></p>
+<div class="origem">Vem da Feira: critérios de compreensão e uso consciente da IA</div>
 <div class="quem">Fala Gabriel</div>
-<div class="fala">"Usamos inteligência artificial para ajudar a ONG a se apresentar. Antes de enviar qualquer texto, o sistema tira e-mail, telefone e CPF. E toda tela avisa que a resposta é gerada por IA."</div>
+<div class="fala">"Usamos inteligência artificial para ajudar a ONG a se apresentar. Antes de enviar qualquer texto, o sistema tira e-mail, telefone e CPF. E toda tela avisa que a resposta é gerada por IA e pode errar."</div>
 </div>
 
-<div class="cena cortavel">
-<p><span class="tempo">11:30 ~ 12:15</span> <span class="tela">Terminal rodando os testes, terminando em verde</span> <span class="marca">CORTÁVEL</span></p>
-<div class="quem">Fala Arthur</div>
-<div class="fala">"São 430 testes automáticos. Eles rodam antes de cada entrega, e nada vai pro ar com algum deles falhando."</div>
-</div>
-
-<div class="cena">
-<p><span class="tempo">12:15 ~ 13:00</span> <span class="tela">Encerramento: os 4 integrantes na tela</span></p>
-<div class="quem">Fala Gabriel</div>
-<div class="fala">"Dos cinco pontos apontados na Feira, corrigimos os cinco."</div>
-<div class="quem">Fala Arthur</div>
-<div class="fala">"Dois a gente decidiu não fazer, e está documentado o porquê."</div>
+<div class="cena exigencia">
+<p><span class="tempo">8:45 ~ 9:15</span> <span class="tela">Lista de necessidades rolando no app</span> <span class="marca">EXIGÊNCIA</span></p>
+<p class="detalhe">O enunciado pede comentar brevemente o que não foi concluído, e o motivo.</p>
 <div class="quem">Fala Luan</div>
-<div class="fala">"Falta dividir a lista de necessidades em páginas, para quando a base crescer."</div>
-<div class="quem">Fala Abner</div>
-<div class="fala">"E até a banca final: validar com três ONGs de Limeira. Obrigado!"</div>
+<div class="fala">"Dois itens não entraram. A lista de necessidades ainda carrega tudo de uma vez — hoje não incomoda, mas vai precisar ser dividida em páginas quando a base crescer."</div>
+<div class="quem">Fala Arthur</div>
+<div class="fala">"E a conversa com ONGs de Limeira, para validar com usuários reais, depende de agenda de terceiros e não coube no prazo."</div>
 </div>
 
-<h2>Se precisar cortar para 10 minutos</h2>
-<p>Remover os três blocos marcados <span class="marca">CORTÁVEL</span> (4:15,
-10:00 e 11:30) tira ~3:30 e o vídeo fecha em <b>~9:30</b>. Nenhum ponto dos
-avaliadores fica sem ser mostrado:</p>
+<div class="cena exigencia">
+<p><span class="tempo">9:15 ~ 9:45</span> <span class="tela">Encerramento: os 4 integrantes na tela</span> <span class="marca">EXIGÊNCIA</span></p>
+<p class="detalhe">O enunciado pede fechamento com uma frase sobre o próximo passo até a banca final.</p>
+<div class="quem">Fala Abner</div>
+<div class="fala">"Dos cinco pontos apontados na Feira, corrigimos os cinco. Até a banca final, nosso próximo passo é validar o sistema com três ONGs de Limeira e fechar a primeira empresa parceira. Obrigado!"</div>
+</div>
+
+<p class="total">Total: 9 min 45 s</p>
+
+<h2>Se precisar de margem</h2>
+<p>O roteiro já está dentro do limite, com 15 segundos de folga. Se na edição
+passar de 10 minutos, estes são os dois únicos blocos que podem encolher sem
+deixar nenhum ponto dos avaliadores de fora:</p>
 <ul>
-<li>O corte das <b>4:15</b> mantém a validação — ela continua no bloco das 3:00, pela tela.</li>
-<li>O corte das <b>10:00</b> mantém o modelo de negócios, que fica na fala do Lean Canvas.</li>
-<li>O corte das <b>11:30</b> tira só os testes, que não foram um ponto apontado pelos avaliadores.</li>
+<li><b>3:20 ~ 3:55 (validação na API)</b> — pode cair para 20 segundos, porque
+a validação já foi mostrada na tela no bloco anterior. <i>Mas Luan perde uma
+fala: nesse caso ele assume também o bloco das 3:55, junto com o Gabriel.</i></li>
+<li><b>7:05 ~ 8:05 (mercado)</b> — pode cair para 40 segundos, mostrando só a
+página "Para empresas" e deixando a "Resultados" de fora.</li>
 </ul>
 <div class="caixa">
-<p><b>Cuidado ao cortar:</b> Luan e Arthur perdem uma fala cada, e a avaliação
-olha a participação de todos. Redistribuir assim: <b>Luan</b> assume o bloco
-das 5:15 junto com o Gabriel, e <b>Arthur</b> abre o encerramento.</p>
+<p><b>O que não cortar, em hipótese alguma:</b> os quatro blocos marcados
+<span class="marca">EXIGÊNCIA</span> (abertura, recapitulação, item não
+concluído e fechamento). Eles não são demonstração — são pedidos literais do
+item 4.1 do enunciado, e a falta de qualquer um deles é ponto perdido sem o
+vídeo nem ficar melhor.</p>
 </div>
 
 <div class="rodape">
-Connect ONG · Projeto Integrador 2026 · Roteiro escrito em 26/10/2026.
+Connect ONG · Projeto Integrador 2026 · Roteiro escrito em 26/10/2026, conforme
+o item 4.1 do enunciado (vídeo demonstrativo de 5 a 10 minutos).
 Documentos relacionados: <i>Connect-ONG-Resumo-do-que-mudou.pdf</i> (o que
 mudou desde a Feira, em linguagem simples), <i>Connect-ONG-Plano-de-Acao.pdf</i>
 (backlog dos 20 itens) e <i>Connect-ONG-Entrega-Final.pdf</i> (rastreabilidade,
