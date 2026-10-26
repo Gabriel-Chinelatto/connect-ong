@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Connect ONG — O que mudou desde a Feira</title>
+<link rel="stylesheet" href="estilo-resumo.css"></head><body>
+
+<div class="capa">
+  <h1>Connect ONG — o que mudou desde a Feira</h1>
+  <div class="sub">Resumo em linguagem simples, para quem não acompanhou o dia a dia do projeto</div>
+  <div class="meta">
+    <div><b>Equipe</b>Gabriel Chinelatto · Abner Viola · Luan Felipe · Arthur Souza</div>
+    <div><b>O que é o Connect ONG</b>Uma plataforma que liga quem quer doar a ONGs que precisam: app do doador, painel da ONG, site e servidor próprio</div>
+    <div><b>Nota recebida na FECITEC 2026</b>6,6 (dois avaliadores: 5,47 e 7,73)</div>
+    <div><b>Data deste resumo</b>26/10/2026</div>
+  </div>
+</div>
+
+<h2>Em uma frase</h2>
+<p>Os avaliadores da Feira gostaram da ideia e do time, mas apontaram cinco
+falhas concretas: <b>campos sem validação, falta de criptografia, falta de LGPD,
+poucos dados sobre resultados e pouca visão de mercado</b>. Todas as cinco foram
+corrigidas. Este documento mostra, uma por uma, o que eles disseram, o que
+mudou e <b>onde dá para ver a mudança funcionando</b>.</p>
+
+<div class="caixa">
+<p><b>Como ler este documento:</b> cada ponto tem três partes — a frase do
+avaliador (em laranja), o que fizemos, e um quadro verde dizendo onde ver
+aquilo na tela. Não é preciso entender de programação para conferir: tudo pode
+ser visto clicando.</p>
+<p class="nota">Este resumo não substitui os outros dois documentos já
+entregues (o <i>Plano de Ação</i>, com o backlog completo de 20 itens, e a
+<i>Entrega Final</i>, com a rastreabilidade técnica). Ele existe para ser lido
+rápido, por inteiro, sem conhecimento prévio.</p>
+</div>
+
+<h2>Os números depois das mudanças</h2>
+<div class="numeros">
+  <div><strong>5 de 5</strong><span>pontos apontados pelos avaliadores que foram corrigidos</span></div>
+  <div><strong>430</strong><span>testes automáticos, todos passando (conferidos em 26/10/2026)</span></div>
+  <div><strong>3</strong><span>tipos de dado que antes ficavam abertos no banco e hoje estão criptografados</span></div>
+</div>
+<p class="nota">Os 430 testes são programas que conferem o sistema sozinhos:
+231 no servidor, 124 no app do doador e 75 no painel da ONG. Eles rodam antes
+de cada entrega, e nenhuma mudança é publicada com algum deles falhando.</p>
+
+<h2>Ponto 1 — Campos sem validação</h2>
+<div class="ponto">
+  <div class="critica"><b>O que o avaliador disse</b>
+  "Não tinha validações nos campos, podia colocar o que quisesse em tudo."</div>
+  <p><b>Qual era o problema de verdade:</b> o sistema só conferia o
+  <i>tamanho</i> do que era digitado, não se aquilo fazia sentido. Dava para
+  cadastrar o telefone "abc", um CNPJ inventado ou o nome "!!!".</p>
+  <p><b>O que mudou:</b> agora cada campo tem uma regra de formato. O telefone
+  precisa ter um DDD que exista no Brasil. O CNPJ passa pela conta do dígito
+  verificador — o mesmo cálculo que a Receita Federal usa — inclusive no
+  formato novo, com letras, que vale a partir de 2026. A senha precisa ter no
+  mínimo 8 caracteres com letra e número, então "123456" não entra mais.</p>
+  <p><b>O detalhe que importa:</b> a regra está em <b>dois lugares</b>. Na
+  tela, para o aviso aparecer embaixo do campo antes de enviar; e no servidor,
+  porque quem entende de computação consegue falar com o servidor sem passar
+  pela tela. Sem a segunda, a validação seria só enfeite.</p>
+  <div class="comover"><b>Onde ver</b> No site, em "Cadastre sua ONG": digite
+  um CNPJ qualquer e saia do campo. O erro aparece ali mesmo, em vermelho,
+  antes de clicar em enviar.</div>
+</div>
+
+<h2>Ponto 2 — Sem criptografia nos dados sensíveis</h2>
+<div class="ponto">
+  <div class="critica"><b>O que o avaliador disse</b>
+  "Não tem criptografia em dados sensíveis."</div>
+  <p><b>Qual era o problema de verdade:</b> o telefone do doador e as mensagens
+  do chat ficavam guardados como texto comum. Quem abrisse o banco de dados
+  lia tudo.</p>
+  <p><b>O que mudou:</b> esses dados passaram a ser guardados embaralhados, com
+  o padrão <b>AES-256-GCM</b> — o mesmo tipo de proteção usada por bancos. São
+  três tipos de informação: o telefone do usuário, o conteúdo das mensagens do
+  chat e a descrição das denúncias. A chave que desembaralha <b>não fica junto
+  do programa</b>: ela é guardada separada, no servidor, e nunca foi enviada
+  para o GitHub.</p>
+  <p>O "GCM" do nome faz uma segunda coisa, além de esconder: se alguém
+  adulterar um único caractere no banco, a leitura <b>falha</b> em vez de
+  devolver um texto errado sem avisar.</p>
+  <p>Mudaram também as senhas e os códigos de verificação. A senha nunca foi
+  guardada, e continua assim — guardamos só uma "impressão digital" dela, que
+  não tem caminho de volta. Os códigos de recuperação e de verificação em dois
+  passos, que antes ficavam salvos, agora seguem a mesma ideia.</p>
+  <div class="comover"><b>Onde ver</b> Abra o endereço
+  <code>/publico/seguranca</code> no servidor do projeto: ele responde, em
+  texto, exatamente o que está protegido e por qual método. Serve como prova
+  para o avaliador, sem precisar abrir o código.</div>
+</div>
+
+<h2>Ponto 3 — Nada de LGPD</h2>
+<div class="ponto">
+  <div class="critica"><b>O que o avaliador disse</b> "Nem LGPD."</div>
+  <p><b>Qual era o problema de verdade:</b> a LGPD é a lei brasileira de
+  proteção de dados. Ela dá direitos a quem usa o sistema, e o Connect ONG não
+  oferecia nenhum deles.</p>
+  <p><b>O que mudou:</b> foram criados os três direitos principais do artigo 18
+  da lei:</p>
+  <ul>
+    <li><b>Ver e baixar os próprios dados.</b> O usuário pede, e o sistema
+    monta um arquivo com tudo o que existe sobre ele — conta, conversas,
+    doações, favoritos, notificações e registro de acessos.</li>
+    <li><b>Apagar a conta.</b> E apagar de verdade: o nome é substituído, não
+    fica uma conta "desativada" com os dados intactos.</li>
+    <li><b>Registro do consentimento.</b> Fica guardado qual versão dos termos
+    a pessoa aceitou e em que dia — porque "a pessoa concordou" só vale se for
+    possível provar com o quê ela concordou.</li>
+  </ul>
+  <p>A política de privacidade foi reescrita explicando, para cada dado
+  coletado, por que ele é coletado.</p>
+  <div class="comover"><b>Onde ver</b> No app do doador, entrando com uma
+  conta: tela <b>"Privacidade e meus dados"</b>. O botão de baixar gera o
+  arquivo na hora. A ONG tem a mesma tela no painel dela.</div>
+</div>
+
+<h2 class="quebra">Ponto 4 — Poucos dados sobre resultados</h2>
+<div class="ponto">
+  <div class="critica"><b>O que os avaliadores disseram</b>
+  Nota 5 no critério "Análise de Dados e Resultados" — o projeto não mostrava
+  se estava dando resultado.</div>
+  <p><b>Qual era o problema de verdade:</b> o sistema mostrava apenas
+  contagens soltas: quantas ONGs, quantos doadores. Isso diz o tamanho, não diz
+  se a plataforma <i>funciona</i>.</p>
+  <p><b>O que mudou:</b> foi criado um painel de indicadores que acompanha o
+  caminho inteiro de uma doação, em quatro etapas: a ONG publica a necessidade
+  → um doador demonstra interesse → a ONG aceita → a doação é concluída. Com
+  isso dá para responder perguntas de verdade: quantas necessidades chegam ao
+  fim, quanto tempo a ONG leva para responder, quais categorias têm mais
+  procura e como está cada estado.</p>
+  <p>A ONG vê os números dela no painel; o visitante vê os números gerais da
+  plataforma na página "Resultados" do site.</p>
+  <p class="nota">Detalhe técnico que vale citar se perguntarem: esses números
+  saem de uma consulta só ao banco, e não de várias. Medido em 26/10/2026, a
+  tela responde em menos de um segundo na primeira vez e praticamente
+  instantaneamente depois disso.</p>
+  <div class="comover"><b>Onde ver</b> No painel da ONG, tela
+  <b>"Indicadores"</b>. No site, página <b>"Resultados"</b>.</div>
+</div>
+
+<h2>Ponto 5 — Pouco pensado para o mercado</h2>
+<div class="ponto">
+  <div class="critica"><b>O que o avaliador disse</b>
+  "Projeto é bom, ideia interessante, mas pouco pensado para o mercado,
+  precisa evoluir nos critérios mercadológicos."</div>
+  <p><b>Qual era o problema de verdade:</b> o projeto resolvia um problema
+  social, mas não explicava como se sustentaria sem depender de doação própria.</p>
+  <p><b>O que mudou:</b> foi escrito um modelo de negócios completo: quem são
+  os clientes, o que cada um ganha, quem são os concorrentes, de onde vem o
+  dinheiro e quanto custa manter a plataforma no ar. A decisão principal, e a
+  que mais chama atenção numa apresentação: <b>não cobrar nada sobre a
+  doação</b>. Quem paga é a empresa que quer usar a plataforma para o programa
+  social dela, com relatório do que foi doado. A ONG e o doador continuam sem
+  pagar.</p>
+  <p>Isso saiu do papel: o site ganhou a página "Para empresas", com os planos.</p>
+  <div class="comover"><b>Onde ver</b> No site, no menu, página
+  <b>"Para empresas"</b>.</div>
+</div>
+
+<h2>Um sexto ponto, que ninguém pediu</h2>
+<div class="ponto">
+  <h3>Uso responsável da inteligência artificial</h3>
+  <p>O Connect ONG usa IA para ajudar a ONG a escrever a apresentação dela e
+  para responder dúvidas do doador. Como o texto sai do nosso servidor para o
+  serviço de IA, havia um risco que os avaliadores comentaram ao perguntar
+  sobre o tema: alguém escrever o próprio telefone no meio da pergunta e esse
+  dado viajar sem necessidade.</p>
+  <p>Agora, antes de enviar, o sistema <b>remove e-mail, telefone, CPF e CNPJ
+  do texto</b>. A IA responde igual, sem receber o dado pessoal — e existe um
+  teste automático que confere isso a cada mudança. Além disso, todas as telas
+  que usam IA avisam que a resposta é gerada por computador e pode errar.</p>
+  <div class="comover"><b>Onde ver</b> No site ou no app, ao abrir a
+  assistente: o aviso aparece antes da primeira resposta.</div>
+</div>
+
+<h2>O que decidimos não fazer (e por quê)</h2>
+<p>Dois pedidos foram recusados de propósito. Registramos aqui porque dizer
+"não fizemos, e este é o motivo" vale mais que uma lista só de acertos.</p>
+<table>
+<thead><tr><th>Pedido</th><th>Decisão</th><th>Motivo</th></tr></thead>
+<tbody>
+<tr><td>Criptografar <b>todos</b> os dados</td><td><span class="tag nao">Não</span></td>
+<td>O e-mail é usado para fazer login e precisa ser procurado no banco; os dados da ONG são públicos por natureza — é o que o doador precisa ver antes de doar. Criptografar tudo impediria a busca sem aumentar a proteção de verdade.</td></tr>
+<tr><td>Conformidade total com a LGPD</td><td><span class="tag nao">Agora não</span></td>
+<td>Os passos que faltam (nomear um encarregado de dados e fazer o relatório de impacto) exigem uma empresa de verdade operando o sistema. Está documentado o que seria necessário no dia em que isso acontecer.</td></tr>
+</tbody>
+</table>
+<p>Fica em aberto, por honestidade: a conversa com ONGs de Limeira para
+validar o sistema com usuários reais depende de agenda de terceiros e não
+couber no prazo; e a lista de necessidades ainda carrega todos os itens de uma
+vez, o que não incomoda hoje, mas precisará ser dividido em páginas quando a
+base crescer.</p>
+
+<div class="caixa">
+<h3>O erro que mais ensinou</h3>
+<p>Na preparação, descobrimos que o site publicado estava <b>fora do ar havia
+três semanas</b> — e ninguém tinha percebido. A causa era um único caractere
+sobrando no código, que impedia o site inteiro de carregar. Os testes
+automáticos não pegaram porque testavam as partes, não o site publicado.</p>
+<p>A lição entrou na rotina da equipe: antes de considerar qualquer coisa
+pronta, abrir no navegador e conferir. "Passou nos testes" não é a mesma coisa
+que "está funcionando para quem acessa".</p>
+</div>
+
+<div class="rodape">
+Connect ONG · Projeto Integrador 2026 · Resumo das mudanças posteriores à FECITEC,
+escrito em 26/10/2026. Documentos complementares: <i>Connect-ONG-Plano-de-Acao.pdf</i>
+(backlog priorizado dos 20 itens, com responsável por item) e
+<i>Connect-ONG-Entrega-Final.pdf</i> (rastreabilidade técnica, modelo de
+negócios, segurança e LGPD, retrospectiva).
+</div>
+
+</body></html>
