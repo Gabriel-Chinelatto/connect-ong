@@ -1,0 +1,65 @@
+/* Folha de estilo dos dois documentos da BANCA FINAL (18/11/2026):
+   o guia de quem conduz e o roteiro de falas da equipe.
+   A4 retrato, letra grande: estes papéis são lidos em pé, minutos antes de
+   apresentar, e o de falas é olhado de relance durante a apresentação. */
+
+@page { size: A4 portrait; margin: 14mm 15mm 16mm; }
+* { box-sizing: border-box; }
+
+body { font-family: "Segoe UI", Arial, sans-serif; color: #1f2a37;
+       font-size: 11pt; line-height: 1.5; margin: 0; }
+
+h1 { font-size: 23pt; color: #0f5132; margin: 0 0 2mm; }
+h2 { font-size: 14.5pt; color: #0f5132; border-bottom: 2px solid #20a464;
+     padding-bottom: 1.5mm; margin: 8mm 0 4mm; break-after: avoid; }
+h3 { font-size: 12pt; color: #14532d; margin: 5mm 0 2mm; break-after: avoid; }
+p { margin: 0 0 3mm; }
+ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+li { margin-bottom: 1.5mm; }
+code { font-family: Consolas, monospace; font-size: 9.5pt; background: #eef2f0;
+       padding: 0 1mm; border-radius: 1mm; }
+
+.capa { border-left: 6px solid #20a464; padding: 5mm 6mm; background: #f0faf4;
+        margin-bottom: 6mm; }
+.sub { color: #4b5563; font-size: 11.5pt; margin-bottom: 4mm; }
+.meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm;
+        margin-top: 4mm; font-size: 9.5pt; }
+.meta div { background: #fff; border: 1px solid #cfe8d9; border-radius: 2mm;
+            padding: 2.5mm 3mm; }
+.meta b { display: block; color: #0f5132; font-size: 8.5pt;
+          text-transform: uppercase; letter-spacing: .03em; }
+
+table { width: 100%; border-collapse: collapse; font-size: 10pt; margin: 2mm 0 4mm; }
+th { background: #14532d; color: #fff; text-align: left; padding: 2mm; font-weight: 600; }
+td { border-bottom: 1px solid #d9e2dc; padding: 2mm; vertical-align: top; }
+tr { break-inside: avoid; }
+tbody tr:nth-child(even) td { background: #f7faf8; }
+
+.caixa { background: #f8fafc; border: 1px solid #dbe3ea; border-radius: 2mm;
+         padding: 3mm 4mm; margin: 3mm 0; break-inside: avoid; }
+.alerta { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 2mm;
+          padding: 3mm 4mm; margin: 3mm 0; break-inside: avoid; }
+.ok { background: #f0faf4; border: 1px solid #a7e3c4; border-radius: 2mm;
+      padding: 3mm 4mm; margin: 3mm 0; break-inside: avoid; }
+.nota { font-size: 9.5pt; color: #6b7280; }
+.quebra { break-before: page; }
+
+/* ---------- blocos de fala (documento 2) ---------- */
+.bloco { border: 1px solid #cfe8d9; border-radius: 2.5mm; padding: 4mm 5mm;
+         margin: 0 0 4mm; break-inside: avoid; }
+.cab { display: flex; align-items: baseline; gap: 3mm; margin-bottom: 2mm;
+       flex-wrap: wrap; }
+.tempo { font-family: Consolas, monospace; font-size: 10pt; color: #0f5132;
+         background: #e7f4ec; border-radius: 2mm; padding: 0.5mm 2mm; font-weight: 700; }
+.quem { font-size: 13pt; font-weight: 800; color: #14532d; }
+.tela { font-size: 9.5pt; color: #4b5563; }
+.origem { font-size: 9pt; color: #9a3412; background: #fff7ed;
+          border: 1px solid #fed7aa; border-radius: 3mm; padding: 0.5mm 2.5mm; }
+.fala { font-size: 11.5pt; line-height: 1.6; margin: 2mm 0 3mm;
+        border-left: 3px solid #20a464; padding-left: 4mm; }
+.chaves { font-size: 10pt; color: #0f5132; background: #f0faf4;
+          border-radius: 2mm; padding: 2mm 3mm; }
+.chaves b { text-transform: uppercase; font-size: 8.5pt; letter-spacing: .04em;
+            color: #6b7280; display: block; margin-bottom: 0.5mm; }
+.rodape { margin-top: 6mm; font-size: 9pt; color: #6b7280;
+          border-top: 1px solid #e5e7eb; padding-top: 2mm; }

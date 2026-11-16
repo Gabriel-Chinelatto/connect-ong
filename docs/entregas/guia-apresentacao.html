@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Connect ONG — Guia da apresentação final</title>
+<link rel="stylesheet" href="estilo-apresentacao.css"></head><body>
+
+<div class="capa">
+  <h1>Guia da apresentação final</h1>
+  <div class="sub">Connect ONG · banca final de 18/11/2026 · como deixar tudo rodando e o que mostrar</div>
+  <div class="meta">
+    <div><b>Duração</b>10 a 15 minutos de apresentação + perguntas</div>
+    <div><b>Equipe</b>Gabriel · Abner · Luan · Arthur</div>
+    <div><b>Documento irmão</b>"Falas da equipe" — quem diz o quê, em ordem</div>
+  </div>
+</div>
+
+<p>Este guia é para quem opera o computador. Ele tem três partes: <b>preparar a máquina</b>, <b>o que mostrar e por quê</b> e <b>o que fazer se algo falhar</b>. As falas de cada integrante estão no outro documento.</p>
+
+<h2>1. A ideia da apresentação em uma frase</h2>
+<div class="ok"><b>A banca já conhece o projeto.</b> O que ela quer ver agora é se o feedback virou trabalho. Então cada tela que vocês abrirem deve vir acompanhada da frase "isto aqui é a resposta ao ponto X que vocês/os avaliadores apontaram". Mostrar função solta, sem ligar ao feedback, é o erro a evitar.</div>
+
+<h3>Os cinco pontos que a Feira apontou (e as notas)</h3>
+<table>
+<thead><tr><th style="width:42%">O que disseram</th><th style="width:14%">Nota</th><th>O que mostramos no lugar</th></tr></thead>
+<tbody>
+<tr><td>"Não tinha validações nos campos, podia colocar o que quisesse em tudo"</td><td>—</td><td>Cadastro recusando CNPJ, telefone e senha inválidos, na tela e no servidor</td></tr>
+<tr><td>"Não tem criptografia em dados sensíveis"</td><td>Segurança: <b>3</b></td><td>A mensagem legível no app e embaralhada no banco, lado a lado</td></tr>
+<tr><td>"Nem LGPD"</td><td>Segurança: <b>3</b></td><td>"Privacidade e meus dados": baixar tudo, ver o consentimento, excluir com anonimização</td></tr>
+<tr><td>Análise de dados e resultados fraca</td><td>Dados: <b>5</b></td><td>Tela de Indicadores: funil, taxa de atendimento e tempo de resposta</td></tr>
+<tr><td>"Pouco pensado para o mercado"</td><td>Negócios: <b>4</b></td><td>Página "Para empresas" no site: quem paga e por quê</td></tr>
+</tbody></table>
+<p class="nota">Da banca de qualificação (1º semestre) veio o pedido de mais interação, respondido pelo match com chat automático — é o primeiro bloco da demonstração.</p>
+
+<h2>2. Preparar a máquina (comece 15 minutos antes)</h2>
+
+<h3>Opção A — no notebook da apresentação (recomendada)</h3>
+<p>Tudo roda local, sem depender da internet da escola. É a opção mais rápida: as telas abrem em menos de meio segundo.</p>
+<ol>
+<li>Abra a pasta <code>FEIRA ESCOLA</code> na Área de Trabalho.</li>
+<li>Dê dois cliques em <b><code>RESTAURAR-DEMO.bat</code></b> e espere terminar (cerca de 50 segundos). Isso devolve a demonstração ao estado inicial: a ONG Lar Viva volta a ter <b>pedidos pendentes para aceitar ao vivo</b>, que é a cena do bloco do match.</li>
+<li>Dê dois cliques em <b><code>INICIAR-FEIRA.bat</code></b>. Ele sobe o banco, o servidor e os três sistemas, aquece as telas e abre as abas sozinho. Espere as janelas pararem de piscar.</li>
+<li>Faça a conferência da página seguinte antes de chamar a banca.</li>
+</ol>
+<div class="alerta"><b>Não feche as janelas pretas</b> que ficam abertas (banco e servidor). Fechar qualquer uma derruba o sistema no meio da apresentação. Minimize, nunca feche.</div>
+
+<h3>Opção B — pelos endereços publicados (reserva)</h3>
+<table>
+<thead><tr><th style="width:34%">O que é</th><th>Endereço</th></tr></thead>
+<tbody>
+<tr><td>Site do doador</td><td>connectong.netlify.app</td></tr>
+<tr><td>App do doador</td><td>gabriel-chinelatto.github.io/connect-ong/</td></tr>
+<tr><td>Painel da ONG</td><td>gabriel-chinelatto.github.io/connect-ong-desktop/</td></tr>
+</tbody></table>
+<div class="alerta"><b>O servidor publicado dorme quando ninguém usa.</b> Medido em 16/11: a primeira visita passou de <b>2 minutos</b> para responder; a seguinte levou 1,4 segundo. Se for usar esta opção, abra qualquer um dos endereços <b>uns 5 minutos antes</b> e espere a tela carregar. Depois disso tudo fica rápido.<br>Nesta opção as ONGs aparecem com a inicial do nome no lugar da foto: as imagens existem só no banco do notebook.</div>
+
+<h2 class="quebra">3. Conferência de 2 minutos, antes de chamar a banca</h2>
+<table>
+<thead><tr><th style="width:34%">Conferir</th><th style="width:33%">Onde</th><th>Tem que aparecer</th></tr></thead>
+<tbody>
+<tr><td>Criptografia ligada</td><td><code>127.0.0.1:8080/publico/seguranca</code></td><td><code>criptografiaEmRepouso: true</code>. Se vier <code>false</code>, falta o arquivo da chave na pasta FEIRA ESCOLA e o bloco da criptografia não terá o que mostrar.</td></tr>
+<tr><td>Assistente de IA respondendo</td><td><code>127.0.0.1:8080/ia/status?ping=true</code></td><td><code>"ping":"ok"</code>. Se vier erro, a Dora ainda responde, mas em "modo básico" — e o bloco da IA fica fraco.</td></tr>
+<tr><td>Pedidos pendentes da Lar Viva</td><td>Painel da ONG → aba Interesses</td><td>Pelo menos um pedido <b>aguardando resposta</b>, para aceitar ao vivo. Se não houver, rode o <code>RESTAURAR-DEMO</code> de novo.</td></tr>
+<tr><td>Login das duas contas</td><td>App do doador e painel</td><td>Entrar e sair das duas antes, para não descobrir problema na frente da banca.</td></tr>
+</tbody></table>
+
+<h3>Contas de demonstração</h3>
+<table>
+<thead><tr><th style="width:30%">Perfil</th><th style="width:45%">E-mail</th><th>Senha</th></tr></thead>
+<tbody>
+<tr><td>Doador (João)</td><td>demo.joao@connectong.com</td><td>demo123</td></tr>
+<tr><td>ONG (Lar Viva)</td><td>demo.larviva@connectong.com</td><td>demo123</td></tr>
+</tbody></table>
+
+<h3>Deixe aberto antes de começar</h3>
+<p>Abas já carregadas, na ordem em que serão usadas. Trocar de aba é rápido; abrir e esperar carregar, na frente da banca, não é.</p>
+<ol>
+<li>App do doador, na lista de necessidades</li>
+<li>Painel da ONG, na aba Interesses</li>
+<li>Site, na página de cadastro de ONG</li>
+<li>Site, na página "Resultados"</li>
+<li>Site, na página "Para empresas"</li>
+<li>Uma aba livre para o endereço da criptografia</li>
+</ol>
+
+<h2>4. A ordem do que mostrar (e de onde veio cada ponto)</h2>
+<table>
+<thead><tr><th style="width:9%">Tempo</th><th style="width:26%">Tela</th><th style="width:26%">O que fazer nela</th><th>Veio de</th></tr></thead>
+<tbody>
+<tr><td>0:00</td><td>Nada (só a equipe)</td><td>Abertura e o que foi apontado</td><td>—</td></tr>
+<tr><td>1:30</td><td>App do doador → painel da ONG</td><td>Demonstrar interesse, aceitar e o chat abrindo sozinho</td><td>Banca: "falta interação"</td></tr>
+<tr><td>3:00</td><td>Site, cadastro de ONG</td><td>CNPJ errado, telefone "abc", senha "123456" — erros embaixo dos campos</td><td>Feira: campos sem validação</td></tr>
+<tr><td>4:30</td><td>Chat + endereço do banco</td><td>A mensagem legível no app e embaralhada no banco</td><td>Feira: sem criptografia</td></tr>
+<tr><td>6:00</td><td>App → Privacidade e meus dados</td><td>Baixar o arquivo e abrir; mostrar o consentimento</td><td>Feira: "nem LGPD"</td></tr>
+<tr><td>7:30</td><td>Painel da ONG → Indicadores</td><td>Funil, taxa de atendimento, tempo de resposta</td><td>Feira: nota 5 em dados</td></tr>
+<tr><td>9:00</td><td>Site → Para empresas</td><td>Quem paga e por que a doação não tem taxa</td><td>Feira: nota 4 em negócios</td></tr>
+<tr><td>10:30</td><td>Assistente Dora</td><td>Uma pergunta e o aviso de IA embaixo</td><td>Feira: uso consciente de IA</td></tr>
+<tr><td>11:15</td><td>Lista de necessidades</td><td>O que não entrou, e por quê</td><td>Exigência do enunciado</td></tr>
+<tr><td>12:00</td><td>Equipe</td><td>Fechamento</td><td>—</td></tr>
+</tbody></table>
+
+<h2 class="quebra">5. Perguntas que a banca provavelmente vai fazer</h2>
+<table>
+<thead><tr><th style="width:38%">Pergunta</th><th>Resposta curta</th></tr></thead>
+<tbody>
+<tr><td>"Onde fica a chave da criptografia?"</td><td>Fora do programa, numa variável de ambiente do servidor. O código não tem a chave; quem olhar o repositório não consegue ler nada. E o banco guarda uma marca da chave: um ambiente com a chave errada se recusa a subir, em vez de corromper os dados.</td></tr>
+<tr><td>"Por que não criptografar tudo?"</td><td>O e-mail é usado para fazer login e precisa ser procurado; os dados da ONG são públicos por natureza. Cifrar isso quebraria a busca sem proteger ninguém. Está justificado no documento de entrega.</td></tr>
+<tr><td>"Vocês estão em conformidade com a LGPD?"</td><td>Implementamos os direitos do titular: acesso, portabilidade, correção, exclusão com anonimização e registro do consentimento. Conformidade completa exige uma empresa de verdade por trás, com encarregado de dados nomeado — isso está listado no documento como o que falta para operar.</td></tr>
+<tr><td>"Esses números dos indicadores são reais?"</td><td>O cálculo é real e roda sobre o banco; os dados são a massa de demonstração que criamos para a feira. Números de uso real dependem das ONGs piloto, e é o nosso próximo passo.</td></tr>
+<tr><td>"Como vocês ganham dinheiro?"</td><td>Nunca com a doação: a ONG recebe 100%. Quem paga é a empresa que precisa comprovar investimento social e a prefeitura que precisa enxergar a rede de assistência. Está na página "Para empresas".</td></tr>
+<tr><td>"O que cada um fez?"</td><td>Cada item do backlog tem um dono, e cada um apresenta a própria frente: Gabriel no servidor e segurança, Luan no servidor e indicadores, Abner nas telas e LGPD, Arthur em testes, mercado e validação.</td></tr>
+<tr><td>"O que não ficou pronto?"</td><td>Dois itens, ditos na apresentação: paginar a lista de necessidades e a conversa com ONGs reais de Limeira. Os dois estão no documento com o motivo.</td></tr>
+</tbody></table>
+
+<h2>6. Se algo der errado</h2>
+<table>
+<thead><tr><th style="width:36%">Se acontecer</th><th>O que fazer</th></tr></thead>
+<tbody>
+<tr><td>Uma tela não carrega e fica rodando</td><td>Veja se a janela preta do servidor ainda está aberta. Se fechou, rode o <code>INICIAR-FEIRA</code> de novo. Enquanto isso, siga falando pelo próximo bloco: ninguém precisa esperar em silêncio.</td></tr>
+<tr><td>A Lar Viva não tem pedido pendente para aceitar</td><td>Não insista na tela. Diga que o fluxo já foi concluído com esse doador, abra um pedido já aceito e mostre o chat existente. A mensagem é a mesma.</td></tr>
+<tr><td>A Dora responde com o selo "Modo básico"</td><td>Diga a verdade, que soma ponto: é o modo de reserva, feito justamente para o sistema nunca ficar sem resposta quando o serviço de IA está fora. É uma decisão de projeto, não um defeito.</td></tr>
+<tr><td>A internet cai</td><td>No notebook, nada muda: tudo roda local. Só o mapa pode aparecer sem o fundo, e as imagens já estão guardadas no disco.</td></tr>
+<tr><td>Travou de vez</td><td>Vá para os endereços publicados. São os mesmos sistemas; só as fotos das ONGs não aparecem.</td></tr>
+</tbody></table>
+
+<h2>7. Lembretes finais</h2>
+<ul>
+<li><b>Os quatro presentes.</b> Na Feira um integrante faltou e isso foi anotado pelo avaliador. É o ponto mais barato de corrigir.</li>
+<li><b>Cada um fala da sua parte.</b> A banca avalia a autonomia da equipe; se uma pessoa responder tudo, isso pesa contra.</li>
+<li><b>Ligue cada tela ao feedback.</b> "Isto é a resposta ao que vocês apontaram" é a frase que faz a apresentação inteira funcionar.</li>
+<li><b>Não prometa o que não está pronto.</b> Dizer "não entrou, e o motivo é este" vale mais do que fingir que está tudo completo — o próprio enunciado pede isso.</li>
+<li><b>Leve os documentos.</b> Plano de Ação, Entrega Final (rastreabilidade e retrospectiva), Resumo do que mudou e o link do vídeo.</li>
+</ul>
+
+<div class="rodape">Connect ONG · Projeto Integrador II · COTIL/UNICAMP · guia da banca final de 18/11/2026</div>
+</body></html>
