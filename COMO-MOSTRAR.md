@@ -3,6 +3,15 @@
 Guia curto para **apresentar** o projeto. Nada aqui exige instalar programa,
 clonar repositório ou abrir o IntelliJ.
 
+> ## Banca final (18/11/2026)
+> Para a apresentação ao vivo e para o vídeo, siga o **roteiro pronto**:
+> `docs/entregas/Connect-ONG-Roteiro-do-Video.pdf` — ele tem a ordem das telas,
+> a fala de cada integrante e o checklist do que conferir antes de começar
+> (criptografia ligada, IA respondendo, Lar Viva com pedidos pendentes).
+> As telas novas desde a FECITEC: **validação dos campos** (cadastro recusando
+> telefone e CNPJ inválidos), **Privacidade e meus dados** (LGPD),
+> **Resultados / Indicadores** e **Segurança e LGPD** no site.
+
 ---
 
 ## 1. O jeito simples: só o navegador
@@ -16,6 +25,9 @@ Abra os três endereços. É tudo que precisa em um PC que não é o seu:
 | Painel da ONG (Flutter web) | https://gabriel-chinelatto.github.io/connect-ong-desktop/ |
 
 ### ⏰ O único cuidado importante
+
+⚠️ **Medido em 16/11/2026: a primeira chamada passou de 2 minutos.** Abra um
+dos endereços e espere a tela carregar ANTES de a banca entrar.
 
 A API roda no plano **gratuito** do Render, que **desliga o servidor depois de
 ~15 minutos sem acesso**. A primeira visita depois disso espera o servidor
