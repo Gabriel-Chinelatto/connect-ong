@@ -38,8 +38,8 @@
 <p>Na FECITEC o projeto recebeu média <b>6,6</b>. As notas mais altas foram em Interface (9), Arquitetura (9), Impacto e Ética (9) e Inovação (8). As mais baixas foram em <b>Segurança e Privacidade (3)</b>, <b>Modelo de Negócios (4)</b> e <b>Análise de Dados (5)</b>, e o avaliador 2 resumiu o principal problema técnico: <i>"não tinha validações nos campos, podia colocar o que quisesse em tudo"</i> e <i>"não tem criptografia em dados sensíveis ou LGPD"</i>. Este documento mostra o que foi feito para cada ponto, onde conferir e o que ficou para depois (com o motivo).</p>
 <div class="numeros">
   <div><b>11 de 12</b>itens Must entregues (+2 de 3 Should)</div>
-  <div><b>430</b>testes automatizados verdes (eram 344)</div>
-  <div><b>86</b>testes novos, só desta entrega</div>
+  <div><b>431</b>testes automatizados verdes (eram 344)</div>
+  <div><b>87</b>testes novos, só desta entrega</div>
   <div><b>4</b>frentes alteradas: API, app, painel e site</div>
   <div><b>1</b>defeito grave achado e corrigido (site fora do ar)</div>
 </div>
@@ -136,6 +136,13 @@ O painel da ONG tem a mesma tela e, no Windows, <b>salva o arquivo</b>.</div>
 <h3>3.10 Achado da verificação: o site publicado estava fora do ar desde 01/09</h3>
 <div class="alerta">Ao conferir as páginas novas no navegador, o console mostrou <code>Uncaught SyntaxError: Unexpected identifier 'let'</code>. Uma chave <code>}</code> a mais, entrada na véspera da feira (rolagem infinita da lista de ONGs), impedia o JavaScript inteiro de carregar. O site <b>publicado</b> só exibia o login, que não funcionava. A falha foi confirmada no endereço público, corrigida e verificada de novo. <b>Lição:</b> passar a checar o console do site automaticamente antes de publicar (ver retrospectiva).</div>
 
+<h3>3.11 Depois da entrega de setembro: duas correções achadas no uso (outubro)</h3>
+<p>O sistema continuou sendo usado e testado até a banca final. Duas falhas apareceram e foram corrigidas, ambas publicadas e cobertas por teste:</p>
+<ul>
+<li><b>Emoji derrubava o "Salvar" do perfil da ONG.</b> O MySQL da escola usa uma codificação antiga de 3 bytes: qualquer emoji fazia a gravação falhar e a API respondia um erro genérico de servidor, sem dizer o motivo. Aparecia justamente no "Escrever com IA", porque o modelo gosta de enfeitar o texto com coração e estrela. Agora o sistema remove só o caractere impossível e grava o resto, e qualquer campo livre (chat, necessidade, avaliação) responde explicando o problema em vez de um erro genérico.</li>
+<li><b>Um dos modelos de IA foi desligado pelo fornecedor</b> (a Groq aposentou o <code>qwen3.6</code> em setembro). O projeto continuou funcionando porque o sistema tenta os modelos em cadeia, mas a reserva estava morta. Trocado pelo <code>qwen3.8</code> e conferido com chamada real ao provedor.</li>
+</ul>
+
 <h2 class="quebra">4. Modelo de negócios (F-06): resposta a "pouco pensado para o mercado"</h2>
 <div class="canvas">
   <div class="c-prob"><b>Problema</b>ONGs pequenas não têm equipe de comunicação nem canal para pedir o item certo. Doadores não sabem onde doar e desconfiam do destino da doação. Empresas precisam comprovar investimento social e não têm como medir.</div>
@@ -221,7 +228,7 @@ O painel da ONG tem a mesma tela e, no Windows, <b>salva o arquivo</b>.</div>
 <table>
 <thead><tr><th>Frente</th><th>Antes</th><th>Agora</th><th>O que os testes novos provam</th></tr></thead>
 <tbody>
-<tr><td>API (Java, JUnit)</td><td>191</td><td><b>231</b></td><td>Cada regra de formato; cadastro que exige aceite e grava o consentimento; exportação só para o dono; anonimização; telefone e mensagem cifrados no banco e legíveis na API; adulteração detectada; migração do legado; ambiente com a chave errada não sobe; indicadores conferidos número a número.</td></tr>
+<tr><td>API (Java, JUnit)</td><td>191</td><td><b>232</b></td><td>Cada regra de formato; cadastro que exige aceite e grava o consentimento; exportação só para o dono; anonimização; telefone e mensagem cifrados no banco e legíveis na API; adulteração detectada; migração do legado; ambiente com a chave errada não sobe; indicadores conferidos número a número.</td></tr>
 <tr><td>App do doador (Dart)</td><td>101</td><td><b>124</b></td><td>As mesmas regras da API, com os mesmos casos, e as máscaras de telefone e CNPJ.</td></tr>
 <tr><td>Painel da ONG (Dart)</td><td>52</td><td><b>75</b></td><td>Idem.</td></tr>
 <tr><td>Site (JavaScript)</td><td>—</td><td>navegador</td><td>Teste automatizado no Chrome: três cadastros inválidos barrados com a mensagem certa e um válido que entra na plataforma; console sem erros.</td></tr>
