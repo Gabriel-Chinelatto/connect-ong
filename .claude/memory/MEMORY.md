@@ -1,5 +1,8 @@
 # Memory Index
 
+> ## ✅ BANCA FINAL 18/11/2026 — conferido em 16/11
+> Produção toda verde (criptografia, IA, validação, indicadores, demo com pendentes para aceitar ao vivo) e **431 testes** (232/124/75). Falta só o que é humano: **gravar o vídeo** (roteiro pronto em `docs/entregas/Connect-ONG-Roteiro-do-Video.pdf`) e **atualizar o computador da apresentação**. ⚠️ **A API hiberna e a 1ª chamada passou de 2 min** — abrir o site uns 5 min antes da banca. Ver [conferência da banca final](connect-ong-conferencia-banca-final-2026-11-16.md).
+>
 > ## 💻 EM OUTRO COMPUTADOR? Siga o [checklist de atualização](connect-ong-atualizar-outro-computador-2026-09-22.md): puxar os 4 repos, pôr `APP_CRYPTO_KEY` local (valor no Render), recompilar FEIRA ESCOLA e substituir os PDFs em `Área de Trabalho\Connect ONG - Entregas`.
 >
 > ## 🆕 PÓS-FECITEC (2026-09-22) — LEIA PRIMEIRO
